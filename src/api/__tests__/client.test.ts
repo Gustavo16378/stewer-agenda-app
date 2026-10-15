@@ -11,6 +11,7 @@ import {
   definirSessaoAtiva,
   desembrulha,
   desembrulhaCriado,
+  aoAcordarServidor,
   TIMEOUT_MS,
 } from '../client';
 import { ApiError } from '../errors';
@@ -244,19 +245,25 @@ describe('422 e 400 com violacoes', () => {
 // ---------------------------------------------------------------------------
 
 describe('erro de rede', () => {
+  // Falha de conexao e repetida enquanto o servidor pode estar acordando (ver
+  // "servidor acordando"), entao estes casos so chegam ao erro final depois
+  // das esperas entre tentativas.
+  beforeEach(() => jest.useFakeTimers());
+  afterEach(() => jest.useRealTimers());
+
   it('fetch rejeitando vira ApiError de rede, com dica de localhost', async () => {
     definirSessaoAtiva({ token: 'jwt', expiraEm: Date.now() + 3_600_000 });
     fetchMock.mockRejectedValue(new TypeError('Network request failed'));
 
-    expect.assertions(3);
-    try {
-      await desembrulha(api.GET('/servicos', { params: { query: { incluirInativos: false } } }));
-    } catch (e) {
-      const erro = e as ApiError;
-      expect(erro).toBeInstanceOf(ApiError);
-      expect(erro.kind).toBe('rede');
-      expect(erro.message).toMatch(/localhost/i);
-    }
+    const chamada = desembrulha(
+      api.GET('/servicos', { params: { query: { incluirInativos: false } } })
+    );
+    const esperado = expect(chamada).rejects.toMatchObject({
+      kind: 'rede',
+      message: expect.stringMatching(/localhost/i),
+    });
+    await jest.advanceTimersByTimeAsync(60_000);
+    await esperado;
   });
 
   it('falha de rede NAO desloga (o token pode continuar bom)', async () => {
@@ -265,9 +272,12 @@ describe('erro de rede', () => {
     definirAoDeslogar(deslogar);
     fetchMock.mockRejectedValue(new TypeError('Network request failed'));
 
-    await expect(
-      desembrulha(api.GET('/servicos', { params: { query: { incluirInativos: false } } }))
-    ).rejects.toBeInstanceOf(ApiError);
+    const chamada = desembrulha(
+      api.GET('/servicos', { params: { query: { incluirInativos: false } } })
+    );
+    const esperado = expect(chamada).rejects.toBeInstanceOf(ApiError);
+    await jest.advanceTimersByTimeAsync(60_000);
+    await esperado;
 
     expect(deslogar).not.toHaveBeenCalled();
   });
@@ -349,7 +359,8 @@ describe('timeout', () => {
     );
     const esperado = expect(chamada).rejects.toMatchObject({ kind: 'rede' });
 
-    await jest.advanceTimersByTimeAsync(TIMEOUT_MS + 100);
+    // 3 tentativas de TIMEOUT_MS, mais as esperas entre elas.
+    await jest.advanceTimersByTimeAsync(3 * TIMEOUT_MS + 20_000);
     await esperado;
   });
 
@@ -360,5 +371,128 @@ describe('timeout', () => {
     await expect(
       desembrulha(api.GET('/servicos', { params: { query: { incluirInativos: false } } }))
     ).resolves.toEqual([]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+
+describe('servidor acordando', () => {
+  beforeEach(() => jest.useFakeTimers());
+  afterEach(() => jest.useRealTimers());
+
+  /** Deixa as esperas entre tentativas passarem sem segurar o teste. */
+  async function correrOsRelogios(ms = 60_000) {
+    await jest.advanceTimersByTimeAsync(ms);
+  }
+
+  it('502 enquanto a instancia sobe vira sucesso na tentativa seguinte', async () => {
+    definirSessaoAtiva({ token: 'jwt-abc', expiraEm: Date.now() + 3_600_000 });
+    fetchMock
+      .mockResolvedValueOnce(respostaVazia(502))
+      .mockResolvedValueOnce(resposta(200, [{ id: 's1' }]));
+
+    const chamada = desembrulha(
+      api.GET('/servicos', { params: { query: { incluirInativos: false } } })
+    );
+    await correrOsRelogios();
+
+    await expect(chamada).resolves.toEqual([{ id: 's1' }]);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it('falha de conexao tambem e repetida', async () => {
+    definirSessaoAtiva({ token: 'jwt-abc', expiraEm: Date.now() + 3_600_000 });
+    fetchMock
+      .mockRejectedValueOnce(new TypeError('Network request failed'))
+      .mockResolvedValueOnce(resposta(200, []));
+
+    const chamada = desembrulha(
+      api.GET('/servicos', { params: { query: { incluirInativos: false } } })
+    );
+    await correrOsRelogios();
+
+    await expect(chamada).resolves.toEqual([]);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it('desiste depois das tentativas e devolve erro de rede', async () => {
+    definirSessaoAtiva({ token: 'jwt-abc', expiraEm: Date.now() + 3_600_000 });
+    fetchMock.mockResolvedValue(respostaVazia(503));
+
+    const chamada = desembrulha(
+      api.GET('/servicos', { params: { query: { incluirInativos: false } } })
+    );
+    const esperado = expect(chamada).rejects.toMatchObject({ status: 503 });
+    await correrOsRelogios();
+    await esperado;
+
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+  });
+
+  it('erro comum (404) NAO e repetido', async () => {
+    definirSessaoAtiva({ token: 'jwt-abc', expiraEm: Date.now() + 3_600_000 });
+    fetchMock.mockResolvedValue(resposta(404, { codigo: 'RECURSO_NAO_ENCONTRADO' }));
+
+    const chamada = desembrulha(
+      api.GET('/servicos', { params: { query: { incluirInativos: false } } })
+    );
+    const esperado = expect(chamada).rejects.toMatchObject({ kind: 'nao_encontrado' });
+    await correrOsRelogios();
+    await esperado;
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('login e repetido: mandar duas vezes nao cria nada em duplicidade', async () => {
+    fetchMock
+      .mockResolvedValueOnce(respostaVazia(503))
+      .mockResolvedValueOnce(resposta(200, { token: 'jwt-novo' }));
+
+    const chamada = desembrulha(
+      api.POST('/auth/login', { body: { email: 'a@b.dev', senha: 'segredo123' } })
+    );
+    await correrOsRelogios();
+
+    await expect(chamada).resolves.toMatchObject({ token: 'jwt-novo' });
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it('POST que cria recurso NAO e repetido em 502: evita duplicar agendamento', async () => {
+    definirSessaoAtiva({ token: 'jwt-abc', expiraEm: Date.now() + 3_600_000 });
+    fetchMock.mockResolvedValue(respostaVazia(502));
+
+    const chamada = desembrulha(
+      api.POST('/agendamentos', {
+        body: {
+          profissionalId: '11111111-1111-1111-1111-111111111111',
+          servicoId: '22222222-2222-2222-2222-222222222222',
+          inicio: '2026-12-07T12:00:00Z',
+        },
+      })
+    );
+    const esperado = expect(chamada).rejects.toMatchObject({ status: 502 });
+    await correrOsRelogios();
+    await esperado;
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('avisa a interface enquanto espera e para de avisar no fim', async () => {
+    definirSessaoAtiva({ token: 'jwt-abc', expiraEm: Date.now() + 3_600_000 });
+    fetchMock.mockResolvedValueOnce(respostaVazia(502)).mockResolvedValueOnce(resposta(200, []));
+
+    const avisos: boolean[] = [];
+    const cancelar = aoAcordarServidor((acordando) => avisos.push(acordando));
+
+    const chamada = desembrulha(
+      api.GET('/servicos', { params: { query: { incluirInativos: false } } })
+    );
+    await correrOsRelogios();
+    await chamada;
+    cancelar();
+
+    // primeiro aviso e o estado inicial (false), depois true ao esperar e
+    // false de novo quando a chamada termina
+    expect(avisos).toEqual([false, true, false]);
   });
 });
