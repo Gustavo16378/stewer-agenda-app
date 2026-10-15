@@ -1,7 +1,9 @@
 # Stewer Gabriel — app de agendamento
 
 App mobile do estúdio de visagismo e consultoria de imagem masculina **Stewer Gabriel**.
-Cliente da [`stewer-agenda-api`](../stewer-agenda-api) (Quarkus, REST + JWT, multi-tenant).
+Cliente da [`stewer-agenda-api`](https://github.com/Gustavo16378/stewer-agenda-api)
+(Quarkus, REST + JWT, multi-tenant). Clone os dois repositórios lado a lado — os comandos
+abaixo assumem `stewer-agenda-api/` como pasta irmã desta.
 
 Expo SDK 57 · React Native 0.86 · TypeScript strict · Expo Router · NativeWind 4 ·
 TanStack Query 5 · openapi-fetch · date-fns
