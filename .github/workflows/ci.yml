@@ -1,0 +1,44 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  qualidade:
+    name: Typecheck, lint e testes
+    runs-on: ubuntu-latest
+
+    # EXPO_PUBLIC_API_URL e lida em tempo de build por src/api/config.ts, que
+    # recusa subir sem ela. O valor aqui nao chama ninguem -- nenhum teste faz
+    # requisicao de verdade -- mas precisa existir para o bundle resolver.
+    env:
+      EXPO_PUBLIC_API_URL: http://localhost:8080
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Instalar dependencias
+        # `npm ci` e nao `npm install`: respeita o package-lock e falha se ele
+        # estiver fora de sincronia com o package.json.
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Testes
+        # O TZ dos workers e fixado em America/Sao_Paulo por jest.global-setup,
+        # entao os casos de borda de fuso valem igual aqui e na maquina de
+        # quem desenvolve -- um runner em UTC nao esconde regressao.
+        run: npm test -- --ci
