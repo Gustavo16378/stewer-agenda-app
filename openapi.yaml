@@ -1,0 +1,1258 @@
+---
+openapi: 3.1.0
+components:
+  schemas:
+    Agendamento:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        clienteId:
+          $ref: '#/components/schemas/UUID'
+        clienteNome:
+          type: string
+        profissionalId:
+          $ref: '#/components/schemas/UUID'
+        profissionalNome:
+          type: string
+        servicoId:
+          $ref: '#/components/schemas/UUID'
+        servicoNome:
+          type: string
+        duracaoMinutos:
+          type: integer
+          format: int32
+        precoCentavos:
+          type: integer
+          format: int64
+        inicio:
+          $ref: '#/components/schemas/OffsetDateTime'
+        fim:
+          $ref: '#/components/schemas/OffsetDateTime'
+        status:
+          $ref: '#/components/schemas/StatusAgendamento'
+        observacao:
+          type: string
+        createdAt:
+          $ref: '#/components/schemas/OffsetDateTime'
+    AgendamentoRequest:
+      type: object
+      required:
+        - profissionalId
+        - servicoId
+        - inicio
+      description: Dados para reservar um horario
+      properties:
+        profissionalId:
+          $ref: '#/components/schemas/UUID'
+          type: string
+          description: Profissional que vai atender
+        servicoId:
+          $ref: '#/components/schemas/UUID'
+          type: string
+          description: Servico desejado; a duracao dele define o fim do atendimento
+        inicio:
+          $ref: '#/components/schemas/OffsetDateTime'
+          type: string
+          examples:
+            - 2026-03-02T09:00:00Z
+          description: Inicio do atendimento em ISO-8601 com offset
+        observacao:
+          type: string
+          maxLength: 2000
+          description: Recado do cliente para o profissional
+    Anotacao:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        clienteId:
+          $ref: '#/components/schemas/UUID'
+        profissionalId:
+          $ref: '#/components/schemas/UUID'
+        profissionalNome:
+          type: string
+        agendamentoId:
+          $ref: '#/components/schemas/UUID'
+        texto:
+          type: string
+        createdAt:
+          $ref: '#/components/schemas/OffsetDateTime'
+        updatedAt:
+          $ref: '#/components/schemas/OffsetDateTime'
+    AnotacaoRequest:
+      type: object
+      required:
+        - texto
+      properties:
+        texto:
+          type: string
+          maxLength: 8000
+          pattern: \S
+        agendamentoId:
+          $ref: '#/components/schemas/UUID'
+          type: string
+          description: Atendimento a que a anotacao se refere; opcional
+    AtualizarStatusRequest:
+      type: object
+      required:
+        - status
+      description: Novo status do agendamento
+      properties:
+        status:
+          $ref: '#/components/schemas/StatusAgendamento'
+          type: string
+          examples:
+            - CANCELADO
+          description: Situacao final desejada
+    Bloqueio:
+      type: object
+      description: Janela em que o profissional nao atende
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        profissionalId:
+          $ref: '#/components/schemas/UUID'
+        inicio:
+          $ref: '#/components/schemas/OffsetDateTime'
+        fim:
+          $ref: '#/components/schemas/OffsetDateTime'
+        motivo:
+          type: string
+        createdAt:
+          $ref: '#/components/schemas/OffsetDateTime'
+    BloqueioRequest:
+      type: object
+      required:
+        - inicio
+        - fim
+      description: Janela em que o profissional nao atende
+      properties:
+        inicio:
+          $ref: '#/components/schemas/OffsetDateTime'
+          type: string
+          examples:
+            - 2026-03-10T13:00:00Z
+        fim:
+          $ref: '#/components/schemas/OffsetDateTime'
+          type: string
+          examples:
+            - 2026-03-10T15:00:00Z
+        motivo:
+          type: string
+          examples:
+            - Consulta medica
+          maxLength: 240
+    ClienteDetalhe:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        tenantId:
+          $ref: '#/components/schemas/UUID'
+        nome:
+          type: string
+        email:
+          type: string
+        telefone:
+          type: string
+        createdAt:
+          $ref: '#/components/schemas/OffsetDateTime'
+        agendamentos:
+          type: array
+          items:
+            $ref: '#/components/schemas/Agendamento'
+    ClienteResumo:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        nome:
+          type: string
+        email:
+          type: string
+        telefone:
+          type: string
+        createdAt:
+          $ref: '#/components/schemas/OffsetDateTime'
+    Disponibilidade:
+      type: object
+      description: Faixa de atendimento recorrente
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        profissionalId:
+          $ref: '#/components/schemas/UUID'
+        diaSemana:
+          type: integer
+          format: int16
+          examples:
+            - 1
+          description: 0 = domingo ... 6 = sabado
+        horaInicio:
+          type: string
+          format: time
+          examples:
+            - 09:00
+          externalDocs:
+            description: As defined by 'partial-time' in RFC3339
+            url: https://www.rfc-editor.org/rfc/rfc3339.html#section-5.6
+        horaFim:
+          type: string
+          format: time
+          examples:
+            - 18:00
+          externalDocs:
+            description: As defined by 'partial-time' in RFC3339
+            url: https://www.rfc-editor.org/rfc/rfc3339.html#section-5.6
+    Erro:
+      type: object
+      description: Resposta de erro padronizada
+      properties:
+        codigo:
+          type: string
+          examples:
+            - RECURSO_NAO_ENCONTRADO
+          description: Codigo estavel do erro
+        mensagem:
+          type: string
+          examples:
+            - Servico nao encontrado
+          description: Mensagem legivel
+        status:
+          type: integer
+          format: int32
+          examples:
+            - 404
+          description: Status HTTP
+        timestamp:
+          $ref: '#/components/schemas/OffsetDateTime'
+          type: string
+          examples:
+            - 2022-03-10T12:15:50-04:00
+          description: Momento do erro (UTC)
+        violacoes:
+          type: array
+          items:
+            type: object
+            additionalProperties:
+              type: string
+          description: 'Detalhes por campo, quando houver falha de validacao'
+    FaixaHoraria:
+      type: object
+      required:
+        - diaSemana
+        - horaInicio
+        - horaFim
+      description: Faixa de atendimento de um dia da semana
+      properties:
+        diaSemana:
+          type: integer
+          format: int32
+          examples:
+            - 1
+          description: 0 = domingo ... 6 = sabado
+          maximum: 6
+          minimum: 0
+        horaInicio:
+          type: string
+          format: time
+          examples:
+            - 09:00
+          externalDocs:
+            description: As defined by 'partial-time' in RFC3339
+            url: https://www.rfc-editor.org/rfc/rfc3339.html#section-5.6
+        horaFim:
+          type: string
+          format: time
+          examples:
+            - 18:00
+          externalDocs:
+            description: As defined by 'partial-time' in RFC3339
+            url: https://www.rfc-editor.org/rfc/rfc3339.html#section-5.6
+    GradeSemanal:
+      type: object
+      required:
+        - faixas
+      description: Faixas de atendimento da semana inteira
+      properties:
+        faixas:
+          type: array
+          items:
+            $ref: '#/components/schemas/FaixaHoraria'
+          description: Faixas da semana. Lista vazia zera a agenda do profissional.
+    HorarioLivre:
+      type: object
+      description: Janela livre pronta para ser reservada
+      properties:
+        inicio:
+          $ref: '#/components/schemas/OffsetDateTime'
+        fim:
+          $ref: '#/components/schemas/OffsetDateTime'
+    HorariosLivres:
+      type: object
+      description: Slots livres de um profissional em um dia
+      properties:
+        data:
+          $ref: '#/components/schemas/LocalDate'
+        profissionalId:
+          $ref: '#/components/schemas/UUID'
+        servicoId:
+          $ref: '#/components/schemas/UUID'
+        duracaoMinutos:
+          type: integer
+          format: int32
+        horarios:
+          type: array
+          items:
+            $ref: '#/components/schemas/HorarioLivre'
+    LocalDate:
+      type: string
+      format: date
+      examples:
+        - 2022-03-10
+    LocalTime:
+      type: string
+      format: local-time
+      externalDocs:
+        description: As defined by 'partial-time' in RFC3339
+        url: https://www.rfc-editor.org/rfc/rfc3339.html#section-5.6
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - senha
+      properties:
+        email:
+          type: string
+          examples:
+            - stewer@stewer.dev
+          pattern: \S
+        senha:
+          type: string
+          examples:
+            - dev12345
+          pattern: \S
+        tenantSlug:
+          type: string
+          examples:
+            - stewer-gabriel
+          description: 'Slug do estabelecimento. Omitido, usa o tenant padrao.'
+    OffsetDateTime:
+      type: string
+      format: date-time
+    Profissional:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        tenantId:
+          $ref: '#/components/schemas/UUID'
+        usuarioId:
+          $ref: '#/components/schemas/UUID'
+        nome:
+          type: string
+        email:
+          type: string
+        telefone:
+          type: string
+        especialidade:
+          type: string
+        bio:
+          type: string
+        fotoUrl:
+          type: string
+        ativo:
+          type: boolean
+        createdAt:
+          $ref: '#/components/schemas/OffsetDateTime'
+        updatedAt:
+          $ref: '#/components/schemas/OffsetDateTime'
+    ProfissionalRequest:
+      type: object
+      required:
+        - usuarioId
+      properties:
+        usuarioId:
+          $ref: '#/components/schemas/UUID'
+          type: string
+          examples:
+            - 3f4a1c8e-6b2d-4f11-9c7a-0d5e8b2a1f34
+          description: Usuario do estabelecimento que passa a atender
+        especialidade:
+          type: string
+          examples:
+            - Visagismo e consultoria de imagem
+          maxLength: 120
+        bio:
+          type: string
+          examples:
+            - 'Dez anos de estudio, especialista em colorimetria.'
+          maxLength: 4000
+        fotoUrl:
+          type: string
+          examples:
+            - https://cdn.stewer.dev/fotos/gabriel.webp
+          maxLength: 500
+        ativo:
+          type: boolean
+          examples:
+            - true
+          description: 'Se aparece na agenda. Omitido na criacao, assume true.'
+    RegistrarRequest:
+      type: object
+      required:
+        - nome
+        - email
+        - senha
+      properties:
+        nome:
+          type: string
+          examples:
+            - Joana Ribeiro
+          maxLength: 120
+          pattern: \S
+        email:
+          type: string
+          examples:
+            - joana@exemplo.dev
+          maxLength: 180
+          pattern: \S
+        telefone:
+          type: string
+          examples:
+            - '+5511999990003'
+          maxLength: 30
+        senha:
+          type: string
+          minLength: 8
+          examples:
+            - dev12345
+          maxLength: 72
+          pattern: \S
+        tenantSlug:
+          type: string
+          examples:
+            - stewer-gabriel
+          description: 'Slug do estabelecimento. Omitido, usa o tenant padrao.'
+    Role:
+      type: string
+      enum:
+        - CLIENTE
+        - PROFISSIONAL
+        - ADMIN
+    Servico:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        tenantId:
+          $ref: '#/components/schemas/UUID'
+        nome:
+          type: string
+        descricao:
+          type: string
+        duracaoMinutos:
+          type: integer
+          format: int32
+          examples:
+            - 60
+          description: Duracao em minutos
+        precoCentavos:
+          type: integer
+          format: int64
+          examples:
+            - 25000
+          description: Preco em centavos
+        ativo:
+          type: boolean
+        createdAt:
+          $ref: '#/components/schemas/OffsetDateTime'
+        updatedAt:
+          $ref: '#/components/schemas/OffsetDateTime'
+    ServicoRequest:
+      type: object
+      required:
+        - nome
+        - duracaoMinutos
+        - precoCentavos
+      properties:
+        nome:
+          type: string
+          examples:
+            - Consultoria de imagem
+          maxLength: 140
+          pattern: \S
+        descricao:
+          type: string
+          examples:
+            - Analise de visagismo com proposta de corte e coloracao
+          maxLength: 2000
+        duracaoMinutos:
+          type: integer
+          format: int32
+          examples:
+            - 60
+          maximum: 600
+          minimum: 5
+        precoCentavos:
+          type: integer
+          format: int64
+          examples:
+            - 25000
+          description: Preco em centavos
+          minimum: 0
+        ativo:
+          type: boolean
+          examples:
+            - true
+          description: 'Servico visivel para agendamento. Omitido, assume true.'
+    StatusAgendamento:
+      type: string
+      enum:
+        - AGENDADO
+        - CONCLUIDO
+        - CANCELADO
+        - NAO_COMPARECEU
+    TokenResponse:
+      type: object
+      properties:
+        token:
+          type: string
+          description: 'JWT assinado; mande em Authorization: Bearer <token>'
+        tipo:
+          type: string
+          examples:
+            - Bearer
+        expiraEmSegundos:
+          type: integer
+          format: int64
+          examples:
+            - 28800
+          description: Validade em segundos
+        usuario:
+          $ref: '#/components/schemas/Usuario'
+    UUID:
+      type: string
+      format: uuid
+      pattern: '[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}'
+    Usuario:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        tenantId:
+          $ref: '#/components/schemas/UUID'
+        nome:
+          type: string
+        email:
+          type: string
+        telefone:
+          type: string
+        role:
+          $ref: '#/components/schemas/Role'
+  securitySchemes:
+    bearerAuth:
+      description: Authentication
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+tags:
+  - name: Agenda do profissional
+    description: Grade semanal de atendimento e bloqueios
+  - name: Agendamentos
+    description: Horarios livres e reservas
+  - name: Auth
+    description: Cadastro e autenticacao
+  - name: Clientes
+    description: Base de clientes e anotacoes de visagismo
+  - name: Profissionais
+    description: Equipe que atende no estabelecimento
+  - name: Servicos
+    description: Catalogo de servicos do estabelecimento
+paths:
+  /agendamentos:
+    post:
+      summary: Cliente reserva um horario para si
+      tags:
+        - Agendamentos
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgendamentoRequest'
+        required: true
+      responses:
+        '201':
+          description: Agendamento criado
+        '404':
+          description: Profissional ou servico nao encontrado
+        '409':
+          description: Horario ocupado ou bloqueado
+        '422':
+          description: Horario no passado ou fora da grade
+        '400':
+          description: Bad Request
+      security:
+        - bearerAuth: []
+  /agendamentos/agenda:
+    get:
+      summary: 'Agenda de um dia, com todos os status'
+      tags:
+        - Agendamentos
+      parameters:
+        - description: 'Dia a consultar, no formato YYYY-MM-DD'
+          name: data
+          in: query
+          schema:
+            $ref: '#/components/schemas/LocalDate'
+          required: true
+        - description: Obrigatorio para ADMIN; ignorado para PROFISSIONAL
+          name: profissionalId
+          in: query
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: Agenda do dia
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Agendamento'
+        '422':
+          description: ADMIN chamou sem informar profissionalId
+      security:
+        - bearerAuth: []
+  /agendamentos/meus:
+    get:
+      summary: Agendamentos do cliente logado
+      tags:
+        - Agendamentos
+      parameters:
+        - description: 'futuros, historico ou todos'
+          name: periodo
+          in: query
+          schema:
+            type: string
+            default: todos
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Agendamento'
+      security:
+        - bearerAuth: []
+  /agendamentos/{id}/status:
+    patch:
+      summary: 'Concluir, cancelar ou marcar nao comparecimento'
+      tags:
+        - Agendamentos
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AtualizarStatusRequest'
+        required: true
+      responses:
+        '200':
+          description: Status atualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Agendamento'
+        '403':
+          description: Sem permissao sobre este agendamento
+        '404':
+          description: Agendamento nao encontrado
+        '409':
+          description: Agendamento ja esta num status final
+      security:
+        - bearerAuth: []
+  /auth/eu:
+    get:
+      summary: Dados do usuario do token atual
+      tags:
+        - Auth
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Usuario'
+      security:
+        - bearerAuth: []
+  /auth/login:
+    post:
+      summary: Autentica e devolve um JWT com role e tenant
+      tags:
+        - Auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+        required: true
+      responses:
+        '200':
+          description: Autenticado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '401':
+          description: E-mail ou senha invalidos
+        '400':
+          description: Bad Request
+  /auth/registrar:
+    post:
+      summary: Cria uma conta de CLIENTE e ja devolve o token
+      tags:
+        - Auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegistrarRequest'
+        required: true
+      responses:
+        '201':
+          description: Conta criada
+        '409':
+          description: E-mail ja cadastrado no estabelecimento
+        '400':
+          description: Bad Request
+  /clientes:
+    get:
+      summary: Lista os clientes do estabelecimento
+      description: "A busca casa trecho de nome, e-mail ou telefone. O tamanho da\
+        \ pagina e limitado a 100 itens."
+      tags:
+        - Clientes
+      parameters:
+        - name: busca
+          in: query
+          schema:
+            type: string
+        - name: pagina
+          in: query
+          schema:
+            type: integer
+            format: int32
+            default: 0
+        - name: tamanho
+          in: query
+          schema:
+            type: integer
+            format: int32
+            default: 20
+      responses:
+        '200':
+          description: Pagina de clientes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ClienteResumo'
+        '403':
+          description: Somente profissional ou admin
+      security:
+        - bearerAuth: []
+  /clientes/{id}:
+    get:
+      summary: Ficha do cliente com o historico de atendimentos
+      tags:
+        - Clientes
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: Cliente e historico
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClienteDetalhe'
+        '404':
+          description: Nao existe cliente com este id no estabelecimento
+      security:
+        - bearerAuth: []
+  /clientes/{id}/anotacoes:
+    get:
+      summary: 'Anotacoes do cliente, da mais nova para a mais antiga'
+      tags:
+        - Clientes
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: Anotacoes do cliente
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Anotacao'
+        '404':
+          description: Cliente inexistente no estabelecimento
+      security:
+        - bearerAuth: []
+    post:
+      summary: Registra uma anotacao de visagismo sobre o cliente
+      description: A anotacao e assinada pelo profissional do token; admin nao anota.
+      tags:
+        - Clientes
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AnotacaoRequest'
+        required: true
+      responses:
+        '201':
+          description: Anotacao criada
+        '404':
+          description: Cliente inexistente no estabelecimento
+        '422':
+          description: Autor sem ficha de profissional ou agendamento invalido
+        '400':
+          description: Bad Request
+      security:
+        - bearerAuth: []
+  /profissionais:
+    get:
+      summary: Lista os profissionais do estabelecimento
+      tags:
+        - Profissionais
+      parameters:
+        - description: Traz tambem os inativos. Ignorado para quem nao e ADMIN.
+          name: incluirInativos
+          in: query
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Profissional'
+      security:
+        - bearerAuth: []
+    post:
+      summary: Transforma um usuario do estabelecimento em profissional
+      tags:
+        - Profissionais
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProfissionalRequest'
+        required: true
+      responses:
+        '201':
+          description: Profissional cadastrado
+        '404':
+          description: Usuario informado nao existe no estabelecimento
+        '409':
+          description: O usuario ja e profissional
+        '400':
+          description: Bad Request
+      security:
+        - bearerAuth: []
+  /profissionais/{id}:
+    delete:
+      summary: Remove o profissional da equipe (soft delete)
+      tags:
+        - Profissionais
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '204':
+          description: Profissional removido
+        '404':
+          description: Profissional inexistente ou removido
+      security:
+        - bearerAuth: []
+    get:
+      summary: Detalha um profissional
+      tags:
+        - Profissionais
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: Profissional encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Profissional'
+        '404':
+          description: Profissional inexistente ou removido
+      security:
+        - bearerAuth: []
+    put:
+      summary: Atualiza a ficha do profissional
+      tags:
+        - Profissionais
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProfissionalRequest'
+        required: true
+      responses:
+        '200':
+          description: Ficha atualizada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Profissional'
+        '404':
+          description: Profissional inexistente ou removido
+        '422':
+          description: Tentativa de trocar o usuario da ficha
+        '400':
+          description: Bad Request
+      security:
+        - bearerAuth: []
+  /profissionais/{profissionalId}/bloqueios:
+    get:
+      summary: Bloqueios vigentes do profissional
+      tags:
+        - Agenda do profissional
+      parameters:
+        - name: profissionalId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: Bloqueios do profissional
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Bloqueio'
+        '404':
+          description: Profissional inexistente ou removido
+      security:
+        - bearerAuth: []
+    post:
+      summary: 'Bloqueia uma janela da agenda (folga, curso, compromisso)'
+      tags:
+        - Agenda do profissional
+      parameters:
+        - name: profissionalId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BloqueioRequest'
+        required: true
+      responses:
+        '201':
+          description: Bloqueio criado
+        '403':
+          description: Profissional tentando bloquear agenda alheia
+        '404':
+          description: Profissional inexistente ou removido
+        '422':
+          description: Fim do bloqueio anterior ou igual ao inicio
+        '400':
+          description: Bad Request
+      security:
+        - bearerAuth: []
+  /profissionais/{profissionalId}/bloqueios/{bloqueioId}:
+    delete:
+      summary: Libera a janela bloqueada (soft delete)
+      tags:
+        - Agenda do profissional
+      parameters:
+        - name: bloqueioId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: profissionalId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '204':
+          description: Bloqueio removido
+        '403':
+          description: Profissional tentando mexer em agenda alheia
+        '404':
+          description: Bloqueio inexistente ou de outro profissional
+      security:
+        - bearerAuth: []
+  /profissionais/{profissionalId}/disponibilidade:
+    put:
+      summary: Substitui a grade semanal inteira pelas faixas enviadas
+      tags:
+        - Agenda do profissional
+      parameters:
+        - name: profissionalId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GradeSemanal'
+        required: true
+      responses:
+        '200':
+          description: Grade substituida
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Disponibilidade'
+        '403':
+          description: Profissional tentando editar agenda alheia
+        '404':
+          description: Profissional inexistente ou removido
+        '422':
+          description: Faixa invertida ou faixas sobrepostas no mesmo dia
+        '400':
+          description: Bad Request
+      security:
+        - bearerAuth: []
+    get:
+      summary: 'Grade semanal vigente, ordenada por dia e hora de inicio'
+      tags:
+        - Agenda do profissional
+      parameters:
+        - name: profissionalId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: Grade do profissional
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Disponibilidade'
+        '404':
+          description: Profissional inexistente ou removido
+      security:
+        - bearerAuth: []
+  /profissionais/{profissionalId}/horarios-livres:
+    get:
+      summary: 'Slots livres do profissional em um dia, fatiados pela duracao do servico'
+      tags:
+        - Agendamentos
+      parameters:
+        - name: profissionalId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - description: 'Dia a consultar, no formato YYYY-MM-DD'
+          example: 2026-03-02
+          name: data
+          in: query
+          schema:
+            $ref: '#/components/schemas/LocalDate'
+          required: true
+        - description: Servico desejado; a duracao dele define o tamanho do slot
+          name: servicoId
+          in: query
+          schema:
+            $ref: '#/components/schemas/UUID'
+          required: true
+      responses:
+        '200':
+          description: Lista de slots; vazia quando o profissional nao atende no dia
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HorariosLivres'
+        '404':
+          description: Profissional ou servico nao encontrado
+        '422':
+          description: Servico ou profissional inativo
+      security:
+        - bearerAuth: []
+  /servicos:
+    get:
+      summary: 'Lista os servicos do estabelecimento, ordenados por nome'
+      tags:
+        - Servicos
+      parameters:
+        - description: Traz tambem os servicos desativados. Somente ADMIN; para os demais
+            o parametro e ignorado.
+          name: incluirInativos
+          in: query
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Servico'
+      security:
+        - bearerAuth: []
+    post:
+      summary: Cadastra um servico no catalogo
+      tags:
+        - Servicos
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServicoRequest'
+        required: true
+      responses:
+        '201':
+          description: Servico criado
+        '403':
+          description: Somente ADMIN gerencia o catalogo
+        '409':
+          description: Ja existe servico com este nome
+        '400':
+          description: Bad Request
+      security:
+        - bearerAuth: []
+  /servicos/{id}:
+    delete:
+      summary: Remove um servico do catalogo (soft delete)
+      tags:
+        - Servicos
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '204':
+          description: Servico removido
+        '403':
+          description: Somente ADMIN gerencia o catalogo
+        '404':
+          description: Servico inexistente ou removido
+      security:
+        - bearerAuth: []
+    get:
+      summary: Detalhe de um servico
+      tags:
+        - Servicos
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: Servico encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Servico'
+        '404':
+          description: Servico inexistente ou removido
+      security:
+        - bearerAuth: []
+    put:
+      summary: Atualiza um servico do catalogo
+      tags:
+        - Servicos
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServicoRequest'
+        required: true
+      responses:
+        '200':
+          description: Servico atualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Servico'
+        '403':
+          description: Somente ADMIN gerencia o catalogo
+        '404':
+          description: Servico inexistente ou removido
+        '409':
+          description: Ja existe servico com este nome
+        '400':
+          description: Bad Request
+      security:
+        - bearerAuth: []
+info:
+  title: Stewer Agenda API
+  version: 1.0.0
+  description: API de agendamento do estudio de visagismo e consultoria de imagem.

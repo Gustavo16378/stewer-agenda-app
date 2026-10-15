@@ -1,0 +1,93 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ===========================================================================
+   Tokens do design — definidos UMA VEZ, aqui.
+   Valores extraidos de design/Stewer Gabriel App.dc.html (CSS literal, sem aproximar).
+
+   Os pares dark/light NAO sao simetricos: o divisor e ink@.1 no dark e ink@.12 no light,
+   o contorno de campo vai de .16 para .18, e os textos fortes andam na direcao contraria
+   (.85 -> .8). Por isso token semantico com variavel CSS, e nao `dark:` repetido em cada
+   classe — o par vive num lugar so.
+
+   O dourado tem comportamento condicional: como TEXTO muda (#C9A96A -> #A8894F);
+   como BORDA nao muda (#C9A96A nos dois temas). Dai `gold` e `gold-border` separados.
+
+   `:root` = LIGHT, `.dark:root` = DARK, porque o NativeWind so acrescenta a classe
+   `.dark` quando o esquema e escuro. O produto e dark-first (17 dos 19 frames), e quem
+   garante isso e o app.config (`userInterfaceStyle`) + o ThemeProvider, nao o CSS.
+   =========================================================================== */
+
+/* ---------- LIGHT (frames 18-19) ---------- */
+:root {
+  /* canais crus: habilitam as utilidades de alfa (text-ink/45, border-ink/18, ...) */
+  --ink-rgb: 10 10 10; /* #0A0A0A */
+  --canvas-rgb: 241 235 224; /* #F1EBE0 */
+
+  --color-canvas: #f1ebe0; /* fundo de tela */
+  --color-ink-inverse: #f1ebe0; /* texto sobre botao primario */
+  --color-surface: rgba(10, 10, 10, 0.04); /* superficie elevada (extrapolado) */
+  --color-wash: rgba(255, 255, 255, 0.35); /* preenchimento do card em destaque */
+  --color-sunken: rgba(10, 10, 10, 0.04); /* (extrapolado) */
+  --color-gold: #a8894f; /* dourado como TEXTO/icone */
+  --color-gold-border: #c9a96a; /* dourado como BORDA — igual nos 2 temas */
+
+  --color-divider: rgba(10, 10, 10, 0.12);
+  --color-divider-card: rgba(10, 10, 10, 0.12);
+  --color-card-border: rgba(10, 10, 10, 0.16); /* (extrapolado) */
+  --color-field-border: rgba(10, 10, 10, 0.18);
+  --color-ghost-border: rgba(10, 10, 10, 0.25); /* (extrapolado) */
+  --color-indicator: rgba(10, 10, 10, 0.22);
+
+  --color-text-strong: rgba(10, 10, 10, 0.85); /* (extrapolado) */
+  --color-text-body: rgba(10, 10, 10, 0.8);
+  --color-text-meta: rgba(10, 10, 10, 0.6);
+  --color-text-label: rgba(10, 10, 10, 0.5); /* eyebrow */
+  --color-text-muted: rgba(10, 10, 10, 0.45); /* metadado em caps */
+  --color-text-dim: rgba(10, 10, 10, 0.45); /* tab bar inativa */
+  --color-text-faint: rgba(10, 10, 10, 0.38); /* placeholder (extrapolado) */
+  --color-text-disabled: rgba(10, 10, 10, 0.25);
+  --color-day: rgba(10, 10, 10, 0.75); /* dia de calendario disponivel */
+  --color-nav-arrow: rgba(10, 10, 10, 0.7);
+  --color-accent-line: rgba(10, 10, 10, 0.65); /* "SEX, 11 SET" 10.5px/500/.16em */
+  --color-status-dim: rgba(10, 10, 10, 0.3);
+  --color-battery: rgba(10, 10, 10, 0.4);
+  --color-slot-off: rgba(10, 10, 10, 0.25);
+}
+
+/* ---------- DARK (frames 01-17) ---------- */
+.dark:root {
+  --ink-rgb: 241 235 224; /* #F1EBE0 */
+  --canvas-rgb: 10 10 10; /* #0A0A0A */
+
+  --color-canvas: #0a0a0a;
+  --color-ink-inverse: #0a0a0a;
+  --color-surface: #121110; /* superficie elevada (agenda, anotacoes) */
+  --color-wash: transparent; /* o card em destaque do dark NAO tem preenchimento */
+  --color-sunken: #0e0e0d; /* bloco INTERVALO */
+  --color-gold: #c9a96a;
+  --color-gold-border: #c9a96a;
+
+  --color-divider: rgba(241, 235, 224, 0.1);
+  --color-divider-card: rgba(241, 235, 224, 0.12);
+  --color-card-border: rgba(241, 235, 224, 0.14);
+  --color-field-border: rgba(241, 235, 224, 0.16);
+  --color-ghost-border: rgba(241, 235, 224, 0.22);
+  --color-indicator: rgba(241, 235, 224, 0.2);
+
+  --color-text-strong: rgba(241, 235, 224, 0.88);
+  --color-text-body: rgba(241, 235, 224, 0.85);
+  --color-text-meta: rgba(241, 235, 224, 0.62);
+  --color-text-label: rgba(241, 235, 224, 0.48);
+  --color-text-muted: rgba(241, 235, 224, 0.45);
+  --color-text-dim: rgba(241, 235, 224, 0.4);
+  --color-text-faint: rgba(241, 235, 224, 0.35);
+  --color-text-disabled: rgba(241, 235, 224, 0.25);
+  --color-day: rgba(241, 235, 224, 0.8);
+  --color-nav-arrow: rgba(241, 235, 224, 0.75);
+  --color-accent-line: rgba(241, 235, 224, 0.72);
+  --color-status-dim: rgba(241, 235, 224, 0.35);
+  --color-battery: rgba(241, 235, 224, 0.45);
+  --color-slot-off: rgba(241, 235, 224, 0.22);
+}
