@@ -195,20 +195,21 @@ de 13/09 isso já diz `2026-09-14` e o usuário recebe a agenda do dia errado. O
 rodam com `TZ=America/Sao_Paulo` fixo justamente para travar esse caso — em CI rodando em
 UTC o bug passaria despercebido.
 
-### ⚠️ Quirk de fuso da API (não é bug do app)
+### Fuso do estabelecimento
 
-A API interpreta a hora de parede da grade **como se fosse UTC** — está documentado no
-próprio backend, em `HorariosLivresService.java:52`.
+A hora de parede da grade é resolvida **pela API**, no fuso do estabelecimento
+(`tenant.fuso`; `America/Araguaina` para o estúdio, que fica em Palmas). Com a grade do
+seed (seg–sáb, 09:00–19:00), `GET /horarios-livres` devolve `09:00:00-03:00` …
+`19:00:00-03:00`.
 
-Com a grade do seed (seg–sáb, 09:00–19:00), `GET /horarios-livres` devolve slots
-`09:00:00Z` … `19:00:00Z`. Num aparelho em `America/Sao_Paulo` (UTC‑3), esses instantes
-são **06:00 … 16:00**.
+O app não compensa nada: recebe instantes e os exibe no fuso do aparelho, que é o correto
+para um instante. Num celular no mesmo fuso do estúdio — o caso normal — a tela mostra
+exatamente o relógio de quem atende. Quem estiver viajando vê o mesmo atendimento na hora
+local dele, que também é o certo.
 
-O app está certo ao exibir o instante no fuso do aparelho — foi o comportamento pedido, e
-é o correto para um instante. Mas isso significa que **um horário de 09:00 na grade
-aparece como 06:00 na tela**. O conserto é na API: ela precisa carregar o `ZoneId` do
-estabelecimento e montar os instantes com esse fuso. Enquanto isso não acontece, toda
-formatação passa por `src/lib/datetime.ts`, que é o único ponto a mudar.
+> Até a correção do fuso, a API montava esses instantes com `atOffset(UTC)` e um horário de
+> 09:00 na grade chegava como `09:00Z`, aparecendo **06:00** num aparelho em UTC‑3. Se
+> você encontrar essa descrição em algum documento antigo, ela está desatualizada.
 
 ### Dinheiro
 

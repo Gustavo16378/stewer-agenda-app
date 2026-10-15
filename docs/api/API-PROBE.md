@@ -68,20 +68,25 @@ então todo campo opcional tem de ser tratado como `| undefined`.
 `PUT` do mesmo recurso **aceita `"09:00"` (HH:mm)** e devolve HH:mm:ss. Confirmado.
 => Parse tem de aceitar HH:mm e HH:mm:ss; envio em HH:mm.
 
-## 4. ⚠️ QUIRK CRÍTICO DE FUSO DA API
+## 4. Fuso da grade — CORRIGIDO na API
 
-A API interpreta a hora de parede da grade **como UTC**. Está documentado no próprio backend
-(`HorariosLivresService.java:52`: "a hora ... (LocalTime) e interpretada em UTC").
+> **Histórico:** até a migration `V3` a API interpretava a hora de parede da grade **como
+> UTC**, e o slot "09:00 da grade" chegava como `09:00Z` — 06:00 local num aparelho em
+> UTC-3. Era o defeito mais caro do produto. O que vale hoje é o parágrafo abaixo.
+
+A API resolve a hora de parede no fuso do estabelecimento (`tenant.fuso`, padrão
+`America/Araguaina`) antes de devolver o instante.
 
 Grade do seed: seg–sáb 09:00–19:00. `GET /horarios-livres?data=2026-09-14&servicoId=...0001` devolve:
-`{"inicio":"2026-09-14T09:00:00Z","fim":"2026-09-14T10:00:00Z"}` ... até `18:00Z–19:00Z`.
+`{"inicio":"2026-09-14T09:00:00-03:00","fim":"2026-09-14T10:00:00-03:00"}` ... até `18:00–19:00`.
 
-Ou seja o slot "09:00 da grade" chega como `09:00Z`, que em America/Sao_Paulo (UTC-3) é **06:00 local**.
+O mesmo fuso define onde começa e termina o dia de calendário pedido em `?data=`, tanto em
+`horarios-livres` quanto em `GET /agendamentos/agenda`.
 
-Decisão do app: seguir a regra pedida (instantes exibidos no fuso do aparelho). A consequência é que
-um slot de grade 09:00 aparece como 06:00 num aparelho em UTC-3. Isso é limitação da API, não do app.
-O módulo de datas expõe o fuso de exibição num único ponto para virar one-liner quando a API for
-corrigida para carregar o ZoneId do estabelecimento.
+Decisão do app: inalterada — instantes continuam exibidos no fuso do aparelho, que é o correto
+para um instante. Num celular no fuso do estúdio a tela passa a bater com o relógio de quem
+atende. Instantes lidos de coluna `timestamptz` (ex.: `Agendamento.inicio`) continuam chegando
+em `Z`; o parse é genérico e aceita os dois.
 
 ## 5. Papéis e gating observado
 

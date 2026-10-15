@@ -60,7 +60,7 @@ Contas do seed (senha `dev12345`): `admin@stewer.dev` ADMIN · `stewer@stewer.de
 
 ## Quirks reais da API (não tente "compensar" na tela)
 
-- **Grade tratada como UTC** (`HorariosLivresService.java:52`): slot 09:00 chega `09:00Z` → aparece 06:00 em UTC‑3. App está certo; conserto é na API.
+- **A grade vem resolvida no fuso do estabelecimento** (`tenant.fuso`, `America/Araguaina`): o slot 09:00 chega `09:00:00-03:00` e aparece 09:00 num aparelho em UTC‑3. Nada a compensar na tela.
 - **401 e 403 vêm sem corpo**; validação vem em **400** `codigo: VALIDACAO` com `violacoes: [{campo, mensagem}]` (a spec diz 422). `src/api/errors.ts` normaliza tudo.
 - **Não existe `GET /agendamentos/{id}`**: o detalhe usa o objeto da lista — semear com `useSemearAgendamento()` antes do push; `useAgendamento` refaz a lista de origem se o cache estiver frio.
 - `DELETE` de serviço/profissional é soft delete **irreversível** (some até de `incluirInativos=true`). "Desativar" reversível é `PUT` com `ativo:false`.

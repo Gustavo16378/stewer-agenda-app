@@ -89,9 +89,11 @@ describe('instantes', () => {
     expect(formatHora('2026-09-14T12:00:00Z')).toBe(formatHora('2026-09-14T09:00:00-03:00'));
   });
 
-  it('mostra o quirk da API: slot de grade 09:00 chega como 09:00Z e aparece 06:00 local', () => {
-    // documenta comportamento REAL da API (grade interpretada como UTC), nao um desejo
-    expect(formatHora('2026-09-14T09:00:00Z')).toBe('06:00');
+  it('slot de grade 09:00 chega resolvido no fuso do estudio e aparece 09:00', () => {
+    // A API converte a hora de parede da grade pelo tenant.fuso (America/Araguaina)
+    // antes de devolver o instante. Num aparelho em UTC-3 a tela bate com o relogio
+    // de quem atende, que e o ponto todo da correcao.
+    expect(formatHora('2026-09-14T09:00:00-03:00')).toBe('09:00');
   });
 
   it('formata o carimbo curto em caps igual ao design ("SEX, 11 SET")', () => {

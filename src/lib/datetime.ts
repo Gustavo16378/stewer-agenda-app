@@ -28,11 +28,15 @@
  * Como toda formatacao passa por aqui, este modulo e o unico ponto a mudar se um dia
  * o app precisar fixar o fuso do estabelecimento.
  *
- * ATENCAO — quirk conhecido da stewer-agenda-api: o backend interpreta a hora de parede
- * da grade COMO SE FOSSE UTC (documentado em HorariosLivresService.java:52). Uma grade
- * 09:00-19:00 volta como slots "09:00:00Z".."19:00:00Z", que num aparelho em UTC-3
- * aparecem como 06:00..16:00. O app esta certo ao exibir o instante no fuso local;
- * o conserto e a API passar a carregar o ZoneId do estabelecimento. Ver README.
+ * A API resolve a hora de parede da grade no fuso do ESTABELECIMENTO
+ * (`tenant.fuso`, America/Araguaina para Palmas) antes de devolver o instante: uma
+ * grade 09:00-19:00 volta como "09:00:00-03:00".."19:00:00-03:00". Num aparelho no
+ * mesmo fuso do estudio — o caso normal — a tela mostra 09:00..19:00, igual ao
+ * relogio de quem atende.
+ *
+ * Quem viaja continua vendo o instante no fuso do PROPRIO aparelho, que e o
+ * comportamento correto para um instante: o atendimento acontece na hora que
+ * acontece, independente de onde o cliente esteja olhando.
  */
 import { format, isValid, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
