@@ -12,6 +12,10 @@ TanStack Query 5 · openapi-fetch · date-fns
 
 ## Como rodar
 
+> Para apontar o app para a **API publicada** (e nao para a sua maquina), veja
+> [`stewer-agenda-api/DEPLOY.md`](https://github.com/Gustavo16378/stewer-agenda-api/blob/main/DEPLOY.md) —
+> ele cobre o deploy da API e a troca da URL aqui.
+
 ### 1. Suba a API
 
 ```bash
