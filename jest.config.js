@@ -5,7 +5,10 @@ module.exports = {
   globalSetup: '<rootDir>/jest.global-setup.js',
   setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
   transformIgnorePatterns: [
-    'node_modules/(?!((jest-)?react-native|@react-native(-community)?|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@unimodules/.*|unimodules|sentry-expo|native-base|react-native-svg|nativewind|react-native-css-interop))',
+    // `standard-navigation` entra na lista porque o expo-router o importa como ESM
+    // puro: sem transformar, qualquer teste de tela que toque em navegacao morre em
+    // "Must use import to load ES Module".
+    'node_modules/(?!((jest-)?react-native|@react-native(-community)?|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|standard-navigation|@unimodules/.*|unimodules|sentry-expo|native-base|react-native-svg|nativewind|react-native-css-interop))',
   ],
   moduleNameMapper: {
     // o global.css e compilado pelo nativewind/metro, que nao roda no Jest
