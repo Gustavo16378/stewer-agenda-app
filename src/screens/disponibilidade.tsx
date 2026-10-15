@@ -12,14 +12,24 @@
  * MODELO — o cuidado desta tela:
  *   A API guarda a grade como `Disponibilidade[]`: uma FAIXA por item
  *   ({diaSemana 0..6, horaInicio, horaFim}), e o PUT substitui a SEMANA INTEIRA.
- *   O design simplifica em "dias + inicio + termino + intervalo". A tela traduz:
- *     leitura : dias = os diaSemana presentes; inicio = a menor horaInicio; termino = a
- *               maior horaFim; intervalo = o vao entre a 1a e a 2a faixa de um dia que
- *               tenha duas.
- *     escrita : para cada dia ligado, uma faixa [inicio, termino] — ou duas, em volta do
- *               intervalo. Sempre a grade INTEIRA, a partir do estado local.
- *   Grades com horario diferente por dia nao cabem nesse modelo: o design nao as
- *   representa. Registrado no relatorio.
+ *   Aqui a grade e um horario POR DIA: os dias presentes sao os ligados, cada um
+ *   com o seu {inicio, fim, intervalo}.
+ *     leitura : agrupa as faixas por dia; duas faixas no mesmo dia viram o almoco
+ *               daquele dia.
+ *     escrita : para cada dia ligado, uma faixa [inicio, fim] — ou duas, em volta
+ *               do intervalo DELE. Sempre a semana inteira, do estado local.
+ *
+ *   Ligar ou desligar um dia mexe SO naquele dia. O modelo anterior guardava um
+ *   horario unico para a semana (a menor abertura e o maior fechamento de todos
+ *   os dias) e reescrevia esse par em cada dia ligado ao salvar: um sabado que
+ *   fechava 13:00 virava 19:00 so por alguem desligar a quarta. Por isso o
+ *   horario mora no dia, e nao na semana.
+ *
+ *   A tela mostra as tres linhas do design (Inicio / Termino / Intervalo) quando
+ *   a semana e uniforme, que e o caso que o frame desenhou. Quando os dias
+ *   divergem, lista uma linha por dia no mesmo vocabulario visual — melhor do
+ *   que um resumo que esconde a diferenca. No modal de um dia so, um interruptor
+ *   permite aplicar aquele horario a todos os dias ligados.
  *
  *   `horaInicio`/`horaFim` sao HORA DE PAREDE: passam por parseWallTime (aceita
  *   "09:00:00" e "09:00", devolve "09:00", que e o que a API aceita) e NUNCA por Date.
@@ -66,64 +76,78 @@ import {
   type WallTime,
 } from '@/lib/datetime';
 
-interface Grade {
-  dias: Set<DiaSemana>;
+/** O horario de UM dia. Cada dia ligado tem o seu. */
+export interface HorarioDoDia {
   inicio: WallTime;
   fim: WallTime;
   intervalo: { inicio: WallTime; fim: WallTime } | null;
 }
 
-const GRADE_VAZIA: Grade = { dias: new Set(), inicio: '09:00', fim: '18:00', intervalo: null };
+/**
+ * A grade: os dias presentes sao os dias ligados, cada um com horario proprio.
+ *
+ * Antes isto era `{dias: Set, inicio, fim, intervalo}` — um horario so para a
+ * semana inteira. Como a leitura pegava a MENOR abertura e o MAIOR fechamento
+ * de todos os dias, e a escrita reenviava esse par para todo dia ligado, um
+ * sabado que fechava 13:00 virava 19:00 assim que qualquer outro dia fosse
+ * ligado ou desligado. O horario precisa morar no dia.
+ */
+export type Grade = Partial<Record<DiaSemana, HorarioDoDia>>;
 
-/** Disponibilidade[] da API -> o modelo simplificado do design. */
-function gradeDeFaixas(faixas: Disponibilidade[]): Grade {
-  if (faixas.length === 0) return GRADE_VAZIA;
-  const dias = new Set<DiaSemana>();
-  const inicios: string[] = [];
-  const fins: string[] = [];
-  let intervalo: Grade['intervalo'] = null;
+const HORARIO_PADRAO: HorarioDoDia = { inicio: '09:00', fim: '18:00', intervalo: null };
 
-  const porDia = new Map<number, Disponibilidade[]>();
+const GRADE_VAZIA: Grade = {};
+
+function diasLigados(g: Grade): DiaSemana[] {
+  return DIAS_SEMANA.filter((d) => g[d] !== undefined);
+}
+
+/** Disponibilidade[] da API -> uma entrada por dia, com o horario daquele dia. */
+export function gradeDeFaixas(faixas: Disponibilidade[]): Grade {
+  const porDia = new Map<DiaSemana, Disponibilidade[]>();
   for (const f of faixas) {
     if (typeof f.diaSemana !== 'number') continue;
-    porDia.set(f.diaSemana, [...(porDia.get(f.diaSemana) ?? []), f]);
+    const dia = f.diaSemana as DiaSemana;
+    porDia.set(dia, [...(porDia.get(dia) ?? []), f]);
   }
+
+  const grade: Grade = {};
   for (const [dia, lista] of porDia) {
-    dias.add(dia as DiaSemana);
     const ordenada = [...lista].sort((a, b) =>
       comparaWallTime(a.horaInicio ?? '', b.horaInicio ?? '')
     );
     const primeira = ordenada[0];
     const ultima = ordenada[ordenada.length - 1];
-    if (primeira?.horaInicio) inicios.push(parseWallTime(primeira.horaInicio) ?? '');
-    if (ultima?.horaFim) fins.push(parseWallTime(ultima.horaFim) ?? '');
+    const inicio = parseWallTime(primeira?.horaInicio);
+    const fim = parseWallTime(ultima?.horaFim);
+    if (!inicio || !fim) continue;
+
+    // Duas faixas no mesmo dia = almoco no meio. Tres ou mais o design nao
+    // representa; guardamos a primeira folga e o resto vira horario corrido.
     const segunda = ordenada[1];
-    if (!intervalo && primeira?.horaFim && segunda?.horaInicio) {
-      intervalo = {
-        inicio: parseWallTime(primeira.horaFim) ?? '',
-        fim: parseWallTime(segunda.horaInicio) ?? '',
-      };
-    }
+    const folgaInicio = parseWallTime(primeira?.horaFim);
+    const folgaFim = parseWallTime(segunda?.horaInicio);
+    const intervalo =
+      segunda && folgaInicio && folgaFim ? { inicio: folgaInicio, fim: folgaFim } : null;
+
+    grade[dia] = { inicio, fim, intervalo };
   }
-  inicios.sort(comparaWallTime);
-  fins.sort(comparaWallTime);
-  return {
-    dias,
-    inicio: inicios[0] || GRADE_VAZIA.inicio,
-    fim: fins[fins.length - 1] || GRADE_VAZIA.fim,
-    intervalo,
-  };
+  return grade;
 }
 
-/** O modelo do design -> o body do PUT (a semana inteira). */
-function faixasDaGrade(g: Grade): { diaSemana: number; horaInicio: string; horaFim: string }[] {
+/** A grade -> o body do PUT (a semana inteira, cada dia com o horario dele). */
+export function faixasDaGrade(
+  g: Grade
+): { diaSemana: number; horaInicio: string; horaFim: string }[] {
   const out: { diaSemana: number; horaInicio: string; horaFim: string }[] = [];
-  for (const dia of [...g.dias].sort()) {
-    if (g.intervalo) {
-      out.push({ diaSemana: dia, horaInicio: g.inicio, horaFim: g.intervalo.inicio });
-      out.push({ diaSemana: dia, horaInicio: g.intervalo.fim, horaFim: g.fim });
+  for (const dia of diasLigados(g)) {
+    const h = g[dia];
+    if (!h) continue;
+    if (h.intervalo) {
+      out.push({ diaSemana: dia, horaInicio: h.inicio, horaFim: h.intervalo.inicio });
+      out.push({ diaSemana: dia, horaInicio: h.intervalo.fim, horaFim: h.fim });
     } else {
-      out.push({ diaSemana: dia, horaInicio: g.inicio, horaFim: g.fim });
+      out.push({ diaSemana: dia, horaInicio: h.inicio, horaFim: h.fim });
     }
   }
   return out;
@@ -133,18 +157,68 @@ function gradesIguais(a: Grade, b: Grade): boolean {
   return JSON.stringify(faixasDaGrade(a)) === JSON.stringify(faixasDaGrade(b));
 }
 
-/** Valida a grade antes do PUT (a API responderia 422 nos mesmos casos). */
-function problemaDaGrade(g: Grade): string | null {
-  if (g.dias.size === 0) return null; // lista vazia zera a agenda: permitido
-  if (!faixaValida(g.inicio, g.fim)) return 'O início precisa vir antes do término.';
-  if (g.intervalo) {
-    if (!faixaValida(g.intervalo.inicio, g.intervalo.fim))
+function horariosIguais(a: HorarioDoDia, b: HorarioDoDia): boolean {
+  return (
+    a.inicio === b.inicio &&
+    a.fim === b.fim &&
+    a.intervalo?.inicio === b.intervalo?.inicio &&
+    a.intervalo?.fim === b.intervalo?.fim
+  );
+}
+
+/**
+ * O horario que vale para a semana toda, ou `null` quando os dias divergem.
+ *
+ * E o que decide a tela: com semana uniforme ela mostra as tres linhas do
+ * design (Inicio / Termino / Intervalo); com horario diferente por dia, uma
+ * linha por dia, para que nenhum deles fique escondido atras de um resumo.
+ */
+export function horarioUniforme(g: Grade): HorarioDoDia | null {
+  const dias = diasLigados(g);
+  const primeiro = dias[0] !== undefined ? g[dias[0]] : undefined;
+  if (!primeiro) return null;
+  return dias.every((d) => {
+    const h = g[d];
+    return h !== undefined && horariosIguais(h, primeiro);
+  })
+    ? primeiro
+    : null;
+}
+
+/** Horario sugerido ao LIGAR um dia novo: o da semana, ou o padrao do design. */
+function horarioSugerido(g: Grade): HorarioDoDia {
+  return horarioUniforme(g) ?? g[diasLigados(g)[0] as DiaSemana] ?? HORARIO_PADRAO;
+}
+
+function problemaDoHorario(h: HorarioDoDia): string | null {
+  if (!faixaValida(h.inicio, h.fim)) return 'O início precisa vir antes do término.';
+  if (h.intervalo) {
+    if (!faixaValida(h.intervalo.inicio, h.intervalo.fim))
       return 'O intervalo precisa ter início antes do fim.';
-    if (!faixaValida(g.inicio, g.intervalo.inicio) || !faixaValida(g.intervalo.fim, g.fim)) {
+    if (!faixaValida(h.inicio, h.intervalo.inicio) || !faixaValida(h.intervalo.fim, h.fim)) {
       return 'O intervalo precisa caber dentro do horário de trabalho.';
     }
   }
   return null;
+}
+
+/** Valida a grade antes do PUT (a API responderia 422 nos mesmos casos). */
+function problemaDaGrade(g: Grade): string | null {
+  const dias = diasLigados(g);
+  if (dias.length === 0) return null; // lista vazia zera a agenda: permitido
+  for (const dia of dias) {
+    const h = g[dia];
+    if (!h) continue;
+    const problema = problemaDoHorario(h);
+    if (problema) return `${nomeDiaSemana(dia)}: ${problema}`;
+  }
+  return null;
+}
+
+/** "09:00 — 19:00" ou, com almoco, "09:00 — 12:30 · 13:30 — 19:00". */
+function resumoDoHorario(h: HorarioDoDia): string {
+  if (!h.intervalo) return `${h.inicio} — ${h.fim}`;
+  return `${h.inicio} — ${h.intervalo.inicio} · ${h.intervalo.fim} — ${h.fim}`;
 }
 
 function LinhaHorario({
@@ -210,19 +284,30 @@ export function TelaDisponibilidade({
   const mudou = !gradesIguais(grade, gradeSalva);
   const problema = problemaDaGrade(grade);
 
+  const ligados = diasLigados(grade);
+  const uniforme = horarioUniforme(grade);
+
   // --- modal de horarios ---
   const [modalHorario, setModalHorario] = useState(false);
+  /** `null` = editando a semana inteira; um dia = editando so aquele dia. */
+  const [diaEmEdicao, setDiaEmEdicao] = useState<DiaSemana | null>(null);
+  const [aplicarATodos, setAplicarATodos] = useState(false);
   const [fInicio, setFInicio] = useState('');
   const [fFim, setFFim] = useState('');
   const [fIntInicio, setFIntInicio] = useState('');
   const [fIntFim, setFIntFim] = useState('');
   const [erroHorario, setErroHorario] = useState<string | null>(null);
 
-  function abrirHorario() {
-    setFInicio(grade.inicio);
-    setFFim(grade.fim);
-    setFIntInicio(grade.intervalo?.inicio ?? '');
-    setFIntFim(grade.intervalo?.fim ?? '');
+  function abrirHorario(dia: DiaSemana | null) {
+    const base = (dia !== null ? grade[dia] : uniforme) ?? horarioSugerido(grade);
+    setDiaEmEdicao(dia);
+    // Editando a semana inteira, o alcance ja e todo mundo. Editando um dia so,
+    // comeca restrito a ele -- aplicar aos outros tem de ser escolha explicita.
+    setAplicarATodos(dia === null);
+    setFInicio(base.inicio);
+    setFFim(base.fim);
+    setFIntInicio(base.intervalo?.inicio ?? '');
+    setFIntFim(base.intervalo?.fim ?? '');
     setErroHorario(null);
     setModalHorario(true);
   }
@@ -231,8 +316,9 @@ export function TelaDisponibilidade({
     const inicio = parseWallTime(fInicio);
     const fim = parseWallTime(fFim);
     if (!inicio || !fim) return setErroHorario('Use o formato HH:mm, por exemplo 09:00.');
+
     const temIntervalo = fIntInicio.trim() || fIntFim.trim();
-    let intervalo: Grade['intervalo'] = null;
+    let intervalo: HorarioDoDia['intervalo'] = null;
     if (temIntervalo) {
       const ii = parseWallTime(fIntInicio);
       const ifim = parseWallTime(fIntFim);
@@ -240,21 +326,30 @@ export function TelaDisponibilidade({
         return setErroHorario('Intervalo: use HH:mm nos dois campos, ou deixe os dois vazios.');
       intervalo = { inicio: ii, fim: ifim };
     }
-    const nova: Grade = { ...grade, inicio, fim, intervalo };
-    const p = problemaDaGrade(nova);
+
+    const novo: HorarioDoDia = { inicio, fim, intervalo };
+    const p = problemaDoHorario(novo);
     if (p) return setErroHorario(p);
+
+    const alvos = aplicarATodos || diaEmEdicao === null ? ligados : [diaEmEdicao];
     setEditando(true);
-    setGrade(nova);
+    setGrade((g) => {
+      const nova: Grade = { ...g };
+      for (const dia of alvos) nova[dia] = novo;
+      return nova;
+    });
     setModalHorario(false);
   }
 
   function alternarDia(dia: DiaSemana) {
     setEditando(true);
     setGrade((g) => {
-      const dias = new Set(g.dias);
-      if (dias.has(dia)) dias.delete(dia);
-      else dias.add(dia);
-      return { ...g, dias };
+      const nova: Grade = { ...g };
+      // Desligar apaga so o dia tocado; ligar da a ele um horario proprio.
+      // Nenhum outro dia e reescrito: era exatamente isso que apagava o sabado.
+      if (nova[dia]) delete nova[dia];
+      else nova[dia] = horarioSugerido(g);
+      return nova;
     });
   }
 
@@ -347,7 +442,7 @@ export function TelaDisponibilidade({
             </LabelCaps>
             <View className="mt-4 flex-row gap-[9px]">
               {DIAS_SEMANA.map((dia) => {
-                const ligado = grade.dias.has(dia);
+                const ligado = grade[dia] !== undefined;
                 return (
                   <Pressable
                     key={dia}
@@ -376,19 +471,50 @@ export function TelaDisponibilidade({
             <LabelCaps papel="secao" className="mt-[42px]">
               HORÁRIO DE TRABALHO
             </LabelCaps>
-            <View className="mt-[6px]">
-              <LinhaHorario rotulo="Início" valor={grade.inicio} aoTocar={abrirHorario} />
-              <LinhaHorario rotulo="Término" valor={grade.fim} aoTocar={abrirHorario} />
-              <LinhaHorario
-                rotulo="Intervalo"
-                valor={
-                  grade.intervalo
-                    ? `${grade.intervalo.inicio} — ${grade.intervalo.fim}`
-                    : 'Sem intervalo'
-                }
-                aoTocar={abrirHorario}
-              />
-            </View>
+            {ligados.length === 0 ? (
+              <Text className="mt-4 font-sans text-help text-ink/42">
+                Ligue ao menos um dia para definir o horário.
+              </Text>
+            ) : uniforme ? (
+              // O caso do design: a semana inteira no mesmo horario, tres linhas.
+              <View className="mt-[6px]">
+                <LinhaHorario
+                  rotulo="Início"
+                  valor={uniforme.inicio}
+                  aoTocar={() => abrirHorario(null)}
+                />
+                <LinhaHorario
+                  rotulo="Término"
+                  valor={uniforme.fim}
+                  aoTocar={() => abrirHorario(null)}
+                />
+                <LinhaHorario
+                  rotulo="Intervalo"
+                  valor={
+                    uniforme.intervalo
+                      ? `${uniforme.intervalo.inicio} — ${uniforme.intervalo.fim}`
+                      : 'Sem intervalo'
+                  }
+                  aoTocar={() => abrirHorario(null)}
+                />
+              </View>
+            ) : (
+              // Horario diferente por dia: uma linha por dia, no mesmo vocabulario
+              // visual. Nenhum dia fica escondido atras de um resumo que mente.
+              <View className="mt-[6px]">
+                {ligados.map((dia) => {
+                  const h = grade[dia];
+                  return h ? (
+                    <LinhaHorario
+                      key={dia}
+                      rotulo={nomeDiaSemana(dia)}
+                      valor={resumoDoHorario(h)}
+                      aoTocar={() => abrirHorario(dia)}
+                    />
+                  ) : null;
+                })}
+              </View>
+            )}
 
             {problema ? (
               <Text className="mt-3 font-sans text-help text-red-500">{problema}</Text>
@@ -399,7 +525,7 @@ export function TelaDisponibilidade({
             {mudou ? (
               <Botao
                 className="mt-5"
-                titulo={grade.dias.size === 0 ? 'ZERAR A AGENDA' : 'SALVAR GRADE'}
+                titulo={ligados.length === 0 ? 'ZERAR A AGENDA' : 'SALVAR GRADE'}
                 carregando={salvar.isPending}
                 disabled={!!problema}
                 onPress={salvarGrade}
@@ -466,8 +592,28 @@ export function TelaDisponibilidade({
             keyboardShouldPersistTaps="handled"
             contentContainerClassName="px-screen-x pb-10 pt-8"
           >
-            <LabelCaps papel="secao">HORÁRIO DE TRABALHO</LabelCaps>
-            <Titulo className="mt-3 text-d-23">Hora de parede do ateliê</Titulo>
+            <LabelCaps papel="secao">
+              {diaEmEdicao === null
+                ? 'HORÁRIO DE TRABALHO'
+                : `HORÁRIO DE ${nomeDiaSemana(diaEmEdicao).toUpperCase()}`}
+            </LabelCaps>
+            <Titulo className="mt-3 text-d-23">
+              {diaEmEdicao === null
+                ? 'Hora de parede do ateliê'
+                : `${nomeDiaSemana(diaEmEdicao)} no ateliê`}
+            </Titulo>
+            {diaEmEdicao !== null && ligados.length > 1 ? (
+              <View className="mt-5 flex-row items-center justify-between border-b border-divider py-[19px]">
+                <Text className="font-sans text-body-lg text-text-body">
+                  Aplicar a todos os dias
+                </Text>
+                <Interruptor
+                  rotulo="Aplicar a todos os dias"
+                  ligado={aplicarATodos}
+                  aoMudar={setAplicarATodos}
+                />
+              </View>
+            ) : null}
             <Campo
               className="mt-6"
               rotulo="INÍCIO"
