@@ -11,6 +11,7 @@ import {
   definirSessaoAtiva,
   desembrulha,
   desembrulhaCriado,
+  TIMEOUT_MS,
 } from '../client';
 import { ApiError } from '../errors';
 
@@ -322,5 +323,42 @@ describe('204 sem corpo', () => {
     await expect(
       desembrulha(api.DELETE('/servicos/{id}', { params: { path: { id: 'abc' } } }))
     ).resolves.toBeUndefined();
+  });
+});
+
+// ---------------------------------------------------------------------------
+
+describe('timeout', () => {
+  beforeEach(() => jest.useFakeTimers());
+  afterEach(() => jest.useRealTimers());
+
+  it('a chamada que nunca responde vira erro de rede, nao fica pendurada', async () => {
+    definirSessaoAtiva({ token: 'jwt-abc', expiraEm: Date.now() + 3_600_000 });
+    // A rede aceitou a conexao e emudeceu: so o nosso relogio resolve isso.
+    fetchMock.mockImplementation(
+      (_input: unknown, init: RequestInit) =>
+        new Promise((_resolve, reject) => {
+          init.signal?.addEventListener('abort', () =>
+            reject(new Error('Aborted: the operation was aborted'))
+          );
+        })
+    );
+
+    const chamada = desembrulha(
+      api.GET('/servicos', { params: { query: { incluirInativos: false } } })
+    );
+    const esperado = expect(chamada).rejects.toMatchObject({ kind: 'rede' });
+
+    await jest.advanceTimersByTimeAsync(TIMEOUT_MS + 100);
+    await esperado;
+  });
+
+  it('resposta dentro do prazo nao e cancelada', async () => {
+    definirSessaoAtiva({ token: 'jwt-abc', expiraEm: Date.now() + 3_600_000 });
+    fetchMock.mockResolvedValue(resposta(200, []));
+
+    await expect(
+      desembrulha(api.GET('/servicos', { params: { query: { incluirInativos: false } } }))
+    ).resolves.toEqual([]);
   });
 });

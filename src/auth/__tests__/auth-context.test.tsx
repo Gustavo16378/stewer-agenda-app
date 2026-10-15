@@ -85,7 +85,9 @@ describe('restauracao ao abrir o app', () => {
 
     const tela = await montar();
 
-    await waitFor(() => expect(tela.getByTestId('estado')).toHaveTextContent('autenticado|CLIENTE'));
+    await waitFor(() =>
+      expect(tela.getByTestId('estado')).toHaveTextContent('autenticado|CLIENTE')
+    );
     expect(await sessionStore.lerSessao()).not.toBeNull();
   });
 
@@ -101,7 +103,9 @@ describe('restauracao ao abrir o app', () => {
 
     const tela = await montar();
 
-    await waitFor(() => expect(tela.getByTestId('estado')).toHaveTextContent('autenticado|CLIENTE'));
+    await waitFor(() =>
+      expect(tela.getByTestId('estado')).toHaveTextContent('autenticado|CLIENTE')
+    );
     expect(await sessionStore.lerSessao()).not.toBeNull();
   });
 

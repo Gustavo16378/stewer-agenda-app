@@ -98,6 +98,19 @@ const authMiddleware: Middleware = {
   },
 };
 
+/**
+ * Quanto tempo uma chamada pode ficar pendurada antes de virar erro de rede.
+ *
+ * Sem isto, uma rede que aceita a conexao e nunca responde — portal cativo de
+ * hotel, proxy engasgado, container da API subindo — deixa a promise pendente
+ * para sempre. Era assim que a splash travava: o app esperava `GET /auth/eu`
+ * que nunca chegava, sem nada para interromper.
+ *
+ * 15s e folgado para a chamada mais lenta da API (a agenda da semana do ADMIN)
+ * e ainda curto o bastante para o usuario nao achar que o app morreu.
+ */
+export const TIMEOUT_MS = 15_000;
+
 export const api = createClient<paths>({
   baseUrl: API_URL,
   // Content-Type nao entra aqui: o openapi-fetch so o adiciona quando ha corpo,
@@ -106,8 +119,25 @@ export const api = createClient<paths>({
   // Resolve o `fetch` a CADA chamada, em vez de capturar `globalThis.fetch` na criacao
   // do client. Isso importa quando o fetch e trocado depois que este modulo carrega —
   // um polyfill do RN, ou o mock dos testes.
-  fetch: (...args) => globalThis.fetch(...args),
+  fetch: (input: Request, init?: RequestInit) => comTimeout(input, init),
 });
+
+/** Dispara o `fetch` com um relogio por cima, respeitando quem ja cancelou. */
+function comTimeout(input: Request, init?: RequestInit): Promise<Response> {
+  const controle = new AbortController();
+  const relogio = setTimeout(() => controle.abort(), TIMEOUT_MS);
+
+  // Se quem chamou trouxe o proprio sinal, um cancelamento dele tambem vale.
+  const externo = init?.signal ?? input?.signal;
+  if (externo) {
+    if (externo.aborted) controle.abort();
+    else externo.addEventListener('abort', () => controle.abort(), { once: true });
+  }
+
+  return globalThis
+    .fetch(input, { ...(init ?? {}), signal: controle.signal })
+    .finally(() => clearTimeout(relogio));
+}
 
 api.use(authMiddleware);
 

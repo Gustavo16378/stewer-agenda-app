@@ -93,6 +93,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [sair]);
 
   // Restauracao ao abrir o app.
+  //
+  // O token guardado ja basta para entrar: ele carrega validade e foi emitido
+  // por esta API. `GET /auth/eu` serve para ATUALIZAR quem e o usuario (o papel
+  // pode ter mudado desde o login), nao para autorizar a abertura. Por isso a
+  // sessao e aplicada antes da chamada e a tela sai de 'carregando' na hora.
+  //
+  // Antes era o contrario: o app so entrava depois da resposta, e qualquer
+  // falha apagava o token. Quem abrisse o app sem sinal era deslogado, e uma
+  // rede que aceitasse a conexao sem responder prendia a splash para sempre.
   useEffect(() => {
     let cancelado = false;
 
@@ -110,16 +119,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       aplicarSessao(guardada);
+      if (!cancelado && guardada.usuario) {
+        // Abre com o usuario guardado; a confirmacao corrige logo abaixo.
+        setUsuario(guardada.usuario);
+        setStatus('autenticado');
+      }
+
       try {
         const eu = await desembrulha(api.GET('/auth/eu'));
         if (cancelado) return;
         setUsuario(eu);
         setStatus('autenticado');
-      } catch {
-        // token revogado, API fora do ar ou rede caida: nao da para confirmar quem e o usuario
+        // o papel pode ter mudado desde o login; guarda a versao nova
+        void gravarSessao({ ...guardada, usuario: eu });
+      } catch (e) {
         if (cancelado) return;
+
+        // So credencial recusada desloga. Rede caida, API fora do ar ou 5xx
+        // sao problema do caminho, nao do token: a sessao continua valendo e o
+        // app segue com o usuario guardado.
+        const erro = comoApiError(e);
+        if (erro.kind !== 'autenticacao') {
+          if (!guardada.usuario) {
+            // Sessao antiga, gravada antes de guardarmos o usuario: sem papel
+            // nao da para escolher a area, entao pede login de novo. O token
+            // fica, para o proximo login nao comecar do zero.
+            setStatus('deslogado');
+          }
+          return;
+        }
+
         await apagarSessao();
         aplicarSessao(null);
+        setUsuario(null);
         setStatus('deslogado');
       }
     })();
@@ -140,6 +172,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const sessao: SessaoGuardada = {
         token,
         expiraEm: expiraEmDeSegundos(resposta.expiraEmSegundos),
+        // guardado junto para que a proxima abertura funcione offline
+        usuario: dono,
       };
       await gravarSessao(sessao);
       aplicarSessao(sessao);
