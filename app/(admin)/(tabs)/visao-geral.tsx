@@ -22,6 +22,11 @@
  *   cacheadas por 1 minuto; com muitos profissionais o custo cresce linearmente.
  *
  * Nenhum numero aqui e inventado: se a fonte falha, o bloco mostra "—" e o erro.
+ *
+ * DESVIO: SAIR no cabecalho. O design nao desenhou saida para o ADMIN e este papel
+ * nao tem aba de perfil, entao a acao fica na linha do eyebrow, igual a agenda do
+ * profissional. Sem ela, quem entra como administrador num aparelho compartilhado
+ * fica administrador ate o token vencer.
  */
 import { useMemo } from 'react';
 import { RefreshControl, Text, View } from 'react-native';
@@ -33,6 +38,8 @@ import {
   useTodosClientes,
 } from '@/api/hooks';
 import type { Agendamento } from '@/api/types';
+import { useAuth } from '@/auth/auth-context';
+import { AcaoLinha } from '@/components/ui/botao';
 import { Carregando, EstadoErro } from '@/components/ui/estados';
 import { TelaRolavel } from '@/components/ui/tela';
 import { LabelCaps, Titulo } from '@/components/ui/texto';
@@ -56,6 +63,7 @@ const LETRAS = ['S', 'T', 'Q', 'Q', 'S', 'S', 'D']; // segunda..domingo, como o 
 const conta = (a: Agendamento) => a.status === 'AGENDADO' || a.status === 'CONCLUIDO';
 
 export default function VisaoGeral() {
+  const { sair } = useAuth();
   const hoje = hojeCalendarDate();
   const semana = useMemo(() => semanaDe(hoje), [hoje]);
   const agora = new Date();
@@ -129,7 +137,12 @@ export default function VisaoGeral() {
       }
     >
       <View className="pt-10">
-        <LabelCaps papel="tela">VISÃO GERAL</LabelCaps>
+        {/* SAIR na linha do eyebrow, igual a agenda do profissional: o design nao
+            desenhou saida para este papel, e o ADMIN nao tem aba de perfil. */}
+        <View className="flex-row items-center justify-between">
+          <LabelCaps papel="tela">VISÃO GERAL</LabelCaps>
+          <AcaoLinha titulo="SAIR" onPress={() => void sair()} />
+        </View>
         <Titulo className="mt-3 text-d-29">Esta semana</Titulo>
         <LabelCaps papel="meta" className="mt-[14px]">
           {formatFaixaDiasCaps(semana[0] ?? hoje, semana[6] ?? hoje)}
