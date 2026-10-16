@@ -52,3 +52,6 @@ scripts/e2e/capturas/
 
 # guia local do Claude Code (não versionado)
 CLAUDE.md
+
+# configurações pessoais do editor
+.vscode/settings.json
