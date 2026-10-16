@@ -49,3 +49,6 @@ coverage/
 
 # capturas do smoke web
 scripts/e2e/capturas/
+
+# guia local do Claude Code (não versionado)
+CLAUDE.md

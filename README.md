@@ -176,7 +176,6 @@ tela do usuário.
 
 ## Documentação para quem chega agora
 
-- [`CLAUDE.md`](CLAUDE.md) — o guia curto: fontes de verdade, regras inegociáveis, papéis, quirks da API, onde está cada coisa. Qualquer sessão do Claude Code lê este arquivo sozinha.
 - [`docs/`](docs/README.md) — a análise completa do design (tokens exatos, 41 componentes, tela a tela) e os achados reais da API medidos por curl e lendo o backend. Inclui o mapa frame → arquivo e a lista de lacunas.
 
 ---
