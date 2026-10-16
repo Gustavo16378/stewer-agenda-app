@@ -4,7 +4,7 @@
 
 /* ===========================================================================
    Tokens do design — definidos UMA VEZ, aqui.
-   Valores extraidos de design/Stewer Gabriel App.dc.html (CSS literal, sem aproximar).
+   Valores extraidos do design (CSS literal, sem aproximar).
 
    Os pares dark/light NAO sao simetricos: o divisor e ink@.1 no dark e ink@.12 no light,
    o contorno de campo vai de .16 para .18, e os textos fortes andam na direcao contraria

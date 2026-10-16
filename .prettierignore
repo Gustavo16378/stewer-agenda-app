@@ -6,8 +6,6 @@ android/
 ios/
 # gerado por `npm run api:types`
 src/api/schema.d.ts
-# export do Claude Design, nao formatar
-design/
 package-lock.json
 # gerado pelo Expo
 expo-env.d.ts

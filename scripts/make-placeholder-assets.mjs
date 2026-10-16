@@ -14,7 +14,7 @@ import { deflateSync } from 'node:zlib';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
-// Tokens do design (design/Stewer Gabriel App.dc.html)
+// Tokens do design
 const INK_BG = [0x0a, 0x0a, 0x0a, 0xff]; // #0A0A0A fundo de tela dark
 const GOLD = [0xc9, 0xa9, 0x6a, 0xff]; // #C9A96A acento
 const CREAM = [0xf1, 0xeb, 0xe0, 0xff]; // #F1EBE0 tinta clara

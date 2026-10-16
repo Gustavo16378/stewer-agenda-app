@@ -16,8 +16,6 @@ module.exports = defineConfig([
       'src/api/schema.d.ts',
       // gerado pelo Expo em `expo start`/`export`, ja esta no .gitignore
       'expo-env.d.ts',
-      // export do Claude Design: support.js e image-slot.js sao runtime do export, nao codigo do app
-      'design/*',
     ],
   },
   {

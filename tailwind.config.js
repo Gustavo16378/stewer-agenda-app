@@ -3,8 +3,8 @@
  * Os VALORES moram em src/styles/global.css (variaveis CSS, par dark/light);
  * aqui so os NOMES das utilidades. Nenhum valor de cor literal do tema entra neste arquivo.
  *
- * As escalas (fontSize, letterSpacing, spacing, radius) sao os valores EXATOS medidos em
- * design/Stewer Gabriel App.dc.html — inclusive os fracionarios (8.5px, 10.5px, 13.5px).
+ * As escalas (fontSize, letterSpacing, spacing, radius) sao os valores EXATOS medidos
+ * no design, inclusive os fracionarios (8.5px, 10.5px, 13.5px).
  *
  * @type {import('tailwindcss').Config}
  */

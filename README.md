@@ -141,7 +141,6 @@ src/
     fonts.ts                  Playfair Display + Inter (expo-font)
     theme-context.tsx         tema: segue o sistema, com toggle manual persistido
 
-design/                       export do Claude Design (fonte de verdade visual)
 openapi.yaml                  contrato da API (fonte de verdade dos dados)
 tailwind.config.js            os NOMES das utilidades; os VALORES vêm do global.css
 ```
@@ -176,7 +175,7 @@ tela do usuário.
 
 ## Documentação para quem chega agora
 
-- [`docs/`](docs/README.md) — a análise completa do design (tokens exatos, 41 componentes, tela a tela) e os achados reais da API medidos por curl e lendo o backend. Inclui o mapa frame → arquivo e a lista de lacunas.
+- [`docs/`](docs/README.md): os achados reais da API medidos por curl e lendo o backend, o mapa tela do design → arquivo e a lista de lacunas.
 
 ---
 
