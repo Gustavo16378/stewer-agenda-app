@@ -56,7 +56,7 @@ export function NumerosDoCliente({ m }: { m: MetricasCliente | undefined }) {
         />
         <Bloco valor={formatCentavos(m.ticketMedioCentavos)} legenda="por visita, em média" />
         <Bloco
-          valor={ritmo(m.intervaloMedioDias) ?? 'primeira vez'}
+          valor={ritmo(m.intervaloMedioDias) ?? 'novo'}
           legenda={m.intervaloMedioDias ? 'é o ritmo dele' : 'ritmo aparece na 2ª visita'}
         />
         <Bloco valor={haQuantoTempo(m.diasDesdeUltimaVisita) ?? 'nunca'} legenda="última visita" />
@@ -67,7 +67,11 @@ export function NumerosDoCliente({ m }: { m: MetricasCliente | undefined }) {
         />
         <Bloco
           valor={String(m.cancelamentosEmCimaDaHora ?? 0)}
-          legenda={`cancelou em cima da hora (de ${m.cancelamentos ?? 0} cancelados)`}
+          legenda={
+            m.cancelamentos
+              ? `cancelou em cima da hora, de ${m.cancelamentos} ${m.cancelamentos === 1 ? 'cancelamento' : 'cancelamentos'}`
+              : 'cancelou em cima da hora'
+          }
           alerta={(m.cancelamentosEmCimaDaHora ?? 0) > 0}
         />
       </View>
