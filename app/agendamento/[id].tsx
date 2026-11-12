@@ -26,26 +26,21 @@
  */
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMemo } from 'react';
-import { Text, View } from 'react-native';
+import { Linking, Text, View } from 'react-native';
 
 import { useAgendamento, useAnotacoes, useAtualizarStatus, useCliente } from '@/api/hooks';
-import {
-  ROTULO_STATUS_CAPS,
-  isStatusFinal,
-  type Periodo,
-  type StatusAgendamento,
-} from '@/api/types';
+import { ROTULO_STATUS, isStatusFinal, type Periodo, type StatusAgendamento } from '@/api/types';
 import { useAuth } from '@/auth/auth-context';
-import { AcaoLinha, Botao } from '@/components/ui/botao';
+import { BotaoAtelie } from '@/components/atelie/base';
 import { CabecalhoVoltar } from '@/components/ui/cabecalho';
 import { Carregando, EstadoErro } from '@/components/ui/estados';
-import { Card } from '@/components/ui/superficies';
 import { TelaRolavel } from '@/components/ui/tela';
-import { LabelCaps, Titulo } from '@/components/ui/texto';
+import { LOCAL } from '@/content/atelie';
+import { cn } from '@/lib/cn';
 import { confirmar } from '@/lib/confirmar';
 import {
   calendarDateDoInstante,
-  formatDiaCurtoCaps,
+  diaPorExtenso,
   formatDiaMesCurto,
   formatFaixaHoras,
   formatMesAnoCurto,
@@ -53,15 +48,6 @@ import {
   parseInstant,
 } from '@/lib/datetime';
 import { formatCentavos } from '@/lib/money';
-
-function LinhaCard({ rotulo, children }: { rotulo: string; children: React.ReactNode }) {
-  return (
-    <View className="flex-row items-center justify-between gap-4">
-      <LabelCaps papel="campo">{rotulo}</LabelCaps>
-      {children}
-    </View>
-  );
-}
 
 /** Metricas do resumo, derivadas de ClienteDetalhe.agendamentos (nao ha endpoint). */
 function ResumoDoCliente({ clienteId }: { clienteId: string }) {
@@ -81,12 +67,12 @@ function ResumoDoCliente({ clienteId }: { clienteId: string }) {
   // cliente promovido a profissional: a ficha responde 404 mesmo com o agendamento existindo
   if (cliente.error?.status === 404) {
     return (
-      <Text className="mt-[38px] font-sans text-help text-ink/42">
+      <Text className="mt-10 font-sans text-ui text-texto-3">
         Este usuário não está mais na base de clientes.
       </Text>
     );
   }
-  if (cliente.isLoading) return <Carregando className="mt-[38px] py-4" />;
+  if (cliente.isLoading) return <Carregando className="mt-10 py-4" />;
   if (cliente.error)
     return (
       <EstadoErro
@@ -98,44 +84,37 @@ function ResumoDoCliente({ clienteId }: { clienteId: string }) {
 
   const ultimaAnotacao = anotacoes.data?.[0];
 
+  const numeros = [
+    { valor: String(metricas.visitas), legenda: 'visitas' },
+    { valor: formatMesAnoCurto(metricas.desde) || 'novo', legenda: 'cliente desde' },
+    { valor: formatDiaMesCurto(metricas.ultima) || 'nunca', legenda: 'última visita' },
+  ];
+
   return (
     <>
-      <LabelCaps papel="secao" className="mt-[38px]">
-        RESUMO DO CLIENTE
-      </LabelCaps>
-      <View className="mt-[18px] flex-row gap-11">
-        <View className="gap-[6px]">
-          <Titulo className="text-d-21">{metricas.visitas}</Titulo>
-          <LabelCaps papel="micro" className="text-text-muted">
-            VISITAS
-          </LabelCaps>
-        </View>
-        <View className="gap-[6px]">
-          <Titulo className="text-d-21">{formatMesAnoCurto(metricas.desde) || '—'}</Titulo>
-          <LabelCaps papel="micro" className="text-text-muted">
-            CLIENTE DESDE
-          </LabelCaps>
-        </View>
-        <View className="gap-[6px]">
-          <Titulo className="text-d-21">{formatDiaMesCurto(metricas.ultima) || '—'}</Titulo>
-          <LabelCaps papel="micro" className="text-text-muted">
-            ÚLTIMA VISITA
-          </LabelCaps>
-        </View>
+      <Text className="mt-10 font-sans-medium text-ui-sm text-texto-3">Sobre o cliente</Text>
+      <View className="mt-4 flex-row gap-8">
+        {numeros.map((n) => (
+          <View key={n.legenda} className="gap-1">
+            <Text className="font-display text-ds-24 text-latao">{n.valor}</Text>
+            <Text className="font-sans text-ui-sm text-texto-3">{n.legenda}</Text>
+          </View>
+        ))}
       </View>
 
-      <View className="mt-[34px] rounded-token bg-surface px-[22px] py-5">
-        <LabelCaps papel="campo">ANOTAÇÕES DE VISAGISMO</LabelCaps>
-        <Text className="mt-3 font-sans text-body leading-[22.75px] text-ink/75">
+      <View className="mt-6 rounded-[3px] bg-superficie px-5 py-5">
+        <Text className="font-sans-medium text-ui-sm text-texto-3">
+          Última anotação de visagismo
+        </Text>
+        <Text className="mt-2 font-sans text-ui text-texto-2">
           {ultimaAnotacao?.texto ?? 'Nenhuma anotação ainda.'}
         </Text>
-        <View className="mt-[14px] self-start">
-          <AcaoLinha
-            titulo="VER FICHA COMPLETA"
-            destaque
-            onPress={() => router.push(`/cliente/${clienteId}` as never)}
-          />
-        </View>
+        <BotaoAtelie
+          className="mt-2 self-start"
+          variante="texto"
+          titulo="Ver ficha completa"
+          onPress={() => router.push(`/cliente/${clienteId}` as never)}
+        />
       </View>
     </>
   );
@@ -183,12 +162,9 @@ export default function DetalheAgendamento() {
     });
   }
 
-  const rotuloDireita =
-    origem === 'agenda' ? (ehHoje ? 'AGENDA · HOJE' : 'AGENDA') : 'MEUS HORÁRIOS';
-
   return (
     <TelaRolavel>
-      <CabecalhoVoltar passo={rotuloDireita} />
+      <CabecalhoVoltar />
 
       {consulta.isLoading ? (
         <Carregando className="mt-8" />
@@ -199,94 +175,107 @@ export default function DetalheAgendamento() {
           aoTentarDeNovo={() => (router.canGoBack() ? router.back() : void consulta.refetch())}
         />
       ) : (
-        <View className="pt-[34px]">
-          <Titulo className="text-d-29">
+        <View className="pt-8">
+          <View
+            className={cn(
+              'self-start rounded-full px-3 py-1',
+              item.status === 'AGENDADO' ? 'bg-latao/14' : 'bg-borda/60'
+            )}
+          >
+            <Text
+              className={cn(
+                'font-sans-medium text-ui-xs',
+                item.status === 'AGENDADO' ? 'text-latao' : 'text-texto-3'
+              )}
+            >
+              {item.status ? ROTULO_STATUS[item.status] : ''}
+            </Text>
+          </View>
+          <Text accessibilityRole="header" className="mt-4 font-display text-ds-38 text-texto">
             {profissional ? item.clienteNome : item.servicoNome}
-          </Titulo>
-          <LabelCaps papel="meta" className="mt-[14px] text-caps-md tracking-row text-ink/55">
-            {ehHoje ? 'HOJE' : formatDiaCurtoCaps(item.inicio)} ·{' '}
-            {formatFaixaHoras(item.inicio, item.fim)}
-          </LabelCaps>
+          </Text>
 
-          <Card className="mt-[30px] gap-[18px] p-6">
-            <LinhaCard rotulo="SERVIÇO">
-              <Text className="flex-1 text-right font-sans text-row text-ink" numberOfLines={1}>
-                {item.servicoNome}
-              </Text>
-            </LinhaCard>
-            {!profissional ? (
-              <LinhaCard rotulo="PROFISSIONAL">
-                <Text className="flex-1 text-right font-sans text-row text-ink" numberOfLines={1}>
-                  {item.profissionalNome}
-                </Text>
-              </LinhaCard>
-            ) : null}
-            <LinhaCard rotulo="VALOR">
-              <Text className="font-sans text-row text-ink">
-                {formatCentavos(item.precoCentavos)}
-              </Text>
-            </LinhaCard>
-            <LinhaCard rotulo="STATUS">
-              <LabelCaps papel="meta" className="tracking-row text-gold">
-                {item.status ? ROTULO_STATUS_CAPS[item.status] : ''}
-              </LabelCaps>
-            </LinhaCard>
-            {item.observacao ? (
-              <View className="gap-2">
-                <LabelCaps papel="campo">OBSERVAÇÃO</LabelCaps>
-                <Text className="font-sans text-body leading-[22.75px] text-ink/75">
-                  {item.observacao}
-                </Text>
-              </View>
-            ) : null}
-          </Card>
+          <View className="mt-6 rounded-[3px] border border-l-2 border-borda border-l-latao bg-superficie p-6">
+            <Text className="font-display text-ds-24 text-texto">
+              {ehHoje ? 'Hoje' : diaDoItem ? diaPorExtenso(diaDoItem) : ''}
+            </Text>
+            <Text className="mt-1 font-sans-semibold text-ui-lg text-latao">
+              {formatFaixaHoras(item.inicio, item.fim)}
+            </Text>
+            <View className="my-5 h-px bg-borda" />
+            <View className="gap-4">
+              {profissional ? <Linha rotulo="Serviço" valor={item.servicoNome} /> : null}
+              {!profissional ? <Linha rotulo="Com" valor={item.profissionalNome} /> : null}
+              <Linha rotulo="Valor" valor={formatCentavos(item.precoCentavos)} />
+              {!profissional ? <Linha rotulo="Onde" valor={LOCAL.nome} /> : null}
+              {item.observacao ? <Linha rotulo="Recado" valor={item.observacao} /> : null}
+            </View>
+          </View>
 
           {profissional && item.clienteId ? <ResumoDoCliente clienteId={item.clienteId} /> : null}
 
           {atualizar.error ? (
-            <Text className="mt-6 font-sans text-help text-red-500">{atualizar.error.message}</Text>
+            <Text className="mt-6 font-sans text-ui-sm text-cadeira">
+              {atualizar.error.message}
+            </Text>
           ) : null}
 
-          {profissional ? (
-            <Botao
-              className="mt-[34px]"
-              titulo="CONCLUIR ATENDIMENTO"
-              disabled={final}
-              carregando={atualizar.isPending && atualizar.variables?.status === 'CONCLUIDO'}
-              onPress={() => mudarStatus('CONCLUIDO', 'Marcar este atendimento como concluído?')}
-            />
-          ) : null}
-
-          <View className={profissional ? 'mt-3 flex-row gap-3' : 'mt-[34px] flex-row gap-3'}>
-            <Botao
-              className="flex-1"
-              variante="fantasma"
-              titulo="REMARCAR"
-              disabled={final}
-              onPress={() => remarcar(item)}
-            />
-            <Botao
-              className="flex-1"
-              variante="fantasma"
-              titulo="CANCELAR"
-              disabled={final}
-              carregando={atualizar.isPending && atualizar.variables?.status === 'CANCELADO'}
-              onPress={() =>
-                mudarStatus('CANCELADO', 'Cancelar este agendamento? Não dá para desfazer.')
-              }
-            />
-          </View>
-
-          {profissional && !final ? (
-            <View className="mt-5 items-center">
-              <AcaoLinha
-                titulo="REGISTRAR NÃO COMPARECIMENTO"
-                onPress={() => mudarStatus('NAO_COMPARECEU', 'O cliente não compareceu?')}
-              />
+          {final ? null : (
+            <View className="mt-8 gap-3">
+              {profissional ? (
+                <BotaoAtelie
+                  titulo="Concluir atendimento"
+                  carregando={atualizar.isPending && atualizar.variables?.status === 'CONCLUIDO'}
+                  onPress={() =>
+                    mudarStatus('CONCLUIDO', 'Marcar este atendimento como concluído?')
+                  }
+                />
+              ) : null}
+              <View className="flex-row gap-3">
+                <BotaoAtelie
+                  className="flex-1"
+                  variante="contorno"
+                  titulo="Remarcar"
+                  onPress={() => remarcar(item)}
+                />
+                <BotaoAtelie
+                  className="flex-1"
+                  variante="perigo"
+                  titulo="Cancelar horário"
+                  carregando={atualizar.isPending && atualizar.variables?.status === 'CANCELADO'}
+                  onPress={() =>
+                    mudarStatus('CANCELADO', 'Cancelar este horário? Não dá para desfazer.')
+                  }
+                />
+              </View>
+              {profissional ? (
+                <BotaoAtelie
+                  className="self-center"
+                  variante="texto"
+                  titulo="Registrar que não veio"
+                  onPress={() => mudarStatus('NAO_COMPARECEU', 'O cliente não compareceu?')}
+                />
+              ) : (
+                <BotaoAtelie
+                  className="self-center"
+                  variante="texto"
+                  titulo="Como chegar"
+                  onPress={() => void Linking.openURL(LOCAL.mapa)}
+                />
+              )}
             </View>
-          ) : null}
+          )}
         </View>
       )}
     </TelaRolavel>
+  );
+}
+
+function Linha({ rotulo, valor }: { rotulo: string; valor?: string | null }) {
+  return (
+    <View className="flex-row justify-between gap-6">
+      <Text className="font-sans text-ui text-texto-3">{rotulo}</Text>
+      <Text className="flex-1 text-right font-sans-medium text-ui text-texto">{valor ?? ''}</Text>
+    </View>
   );
 }

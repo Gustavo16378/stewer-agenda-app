@@ -21,71 +21,105 @@ import { useRouter } from 'expo-router';
 import { Pressable, RefreshControl, Text, View } from 'react-native';
 
 import { useMeusAgendamentos, useSemearAgendamento } from '@/api/hooks';
-import { ROTULO_STATUS_CAPS, type Agendamento, type Periodo } from '@/api/types';
+import { ROTULO_STATUS, type Agendamento, type Periodo } from '@/api/types';
 import { Carregando, EstadoErro, EstadoVazio } from '@/components/ui/estados';
 import { TelaRolavel } from '@/components/ui/tela';
-import { LabelCaps, Titulo } from '@/components/ui/texto';
 import { cn } from '@/lib/cn';
 import {
   formatDiaMesCurtoCaps,
   formatDiaNumero,
+  formatDiaSemanaDiaMes,
   formatHora,
   formatMesCurtoCaps,
+  parseInstant,
 } from '@/lib/datetime';
+import { emFrase } from '@/lib/frase';
 
-function CardProximo({ item, aoAbrir }: { item: Agendamento; aoAbrir: () => void }) {
+const SEMANA = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado'];
+
+/** Um horario que vem pela frente: a data grande em latao, a hora, o servico e com quem. */
+function CardProximo({
+  item,
+  primeiro,
+  aoAbrir,
+}: {
+  item: Agendamento;
+  primeiro: boolean;
+  aoAbrir: () => void;
+}) {
+  const data = parseInstant(item.inicio);
   return (
     <Pressable
       onPress={aoAbrir}
       accessibilityRole="button"
-      className="mt-4 flex-row items-center gap-5 rounded-token border border-field-border px-[22px] py-5"
-      style={({ pressed }) => (pressed ? { opacity: 0.7 } : null)}
+      accessibilityLabel={`${item.servicoNome ?? 'Horário'}, ${formatDiaSemanaDiaMes(item.inicio)} às ${formatHora(item.inicio)}`}
+      className={cn(
+        'mt-3 flex-row items-center gap-5 rounded-[3px] border border-borda bg-superficie px-5 py-5',
+        primeiro && 'border-l-2 border-l-latao'
+      )}
+      style={({ pressed }) => (pressed ? { opacity: 0.8 } : null)}
     >
-      <View className="w-11 items-center gap-1">
-        <Titulo className="text-d-26">{formatDiaNumero(item.inicio)}</Titulo>
-        <LabelCaps papel="micro" className="tracking-wide text-text-muted">
-          {formatMesCurtoCaps(item.inicio)}
-        </LabelCaps>
+      <View className="w-14 items-center">
+        <Text className="font-display text-ds-38 text-latao">{formatDiaNumero(item.inicio)}</Text>
+        <Text className="font-sans-medium text-ui-xs text-texto-3">
+          {emFrase(formatMesCurtoCaps(item.inicio)).toLowerCase()}
+        </Text>
       </View>
-      <View className="w-px self-stretch bg-divider-card" />
-      {/* O status sobe para cima do titulo: na lateral ele roubava a largura e cortava
-          nome de servico e de profissional cedo demais ("Corte + Vis..."). */}
-      <View className="flex-1 gap-[7px]">
-        <LabelCaps papel="micro" className="text-gold">
-          {item.status ? ROTULO_STATUS_CAPS[item.status] : ''}
-        </LabelCaps>
-        <Titulo className="text-d-18" numberOfLines={2}>
+      <View className="flex-1 gap-1">
+        <Text className="font-sans-semibold text-ui-lg text-texto">
+          {formatHora(item.inicio)}
+          <Text className="font-sans text-ui text-texto-3">
+            {data ? `, ${SEMANA[data.getDay()]}` : ''}
+          </Text>
+        </Text>
+        <Text className="font-display text-ds-20 text-texto" numberOfLines={2}>
           {item.servicoNome}
-        </Titulo>
-        <LabelCaps papel="meta" className="tracking-chip text-ink/50" numberOfLines={2}>
-          {formatHora(item.inicio)} · {(item.profissionalNome ?? '').toUpperCase()}
-        </LabelCaps>
+        </Text>
+        {item.profissionalNome ? (
+          <Text className="font-sans text-ui-sm text-texto-2">com {item.profissionalNome}</Text>
+        ) : null}
       </View>
+      <Text className="font-sans text-ds-24 text-texto-3">›</Text>
     </Pressable>
   );
 }
 
 function LinhaHistorico({ item, aoAbrir }: { item: Agendamento; aoAbrir: () => void }) {
-  const cancelado = item.status === 'CANCELADO' || item.status === 'NAO_COMPARECEU';
+  const encerradoSemVisita = item.status === 'CANCELADO' || item.status === 'NAO_COMPARECEU';
   return (
     <Pressable
       onPress={aoAbrir}
       accessibilityRole="button"
-      className={cn(
-        'flex-row items-center gap-[18px] border-b border-divider py-[19px]',
-        cancelado && 'opacity-45'
-      )}
+      className="flex-row items-center gap-4 border-b border-borda/70 py-4"
       style={({ pressed }) => (pressed ? { opacity: 0.6 } : null)}
     >
-      <LabelCaps papel="meta" className="w-14 text-caps-sm tracking-tab">
-        {formatDiaMesCurtoCaps(item.inicio)}
-      </LabelCaps>
-      <Text className="flex-1 font-sans text-row text-text-body" numberOfLines={1}>
+      <Text className="w-16 font-sans-medium text-ui-sm text-texto-3">
+        {emFrase(formatDiaMesCurtoCaps(item.inicio)).toLowerCase()}
+      </Text>
+      <Text
+        className={cn(
+          'flex-1 font-sans text-ui',
+          encerradoSemVisita ? 'text-texto-3 line-through' : 'text-texto'
+        )}
+        numberOfLines={1}
+      >
         {item.servicoNome}
       </Text>
-      <LabelCaps papel="micro" className="text-text-dim">
-        {item.status ? ROTULO_STATUS_CAPS[item.status] : ''}
-      </LabelCaps>
+      <View
+        className={cn(
+          'rounded-full px-3 py-1',
+          item.status === 'CONCLUIDO' ? 'bg-latao/14' : 'bg-borda/60'
+        )}
+      >
+        <Text
+          className={cn(
+            'font-sans-medium text-ui-xs',
+            item.status === 'CONCLUIDO' ? 'text-latao' : 'text-texto-3'
+          )}
+        >
+          {item.status ? ROTULO_STATUS[item.status] : ''}
+        </Text>
+      </View>
     </Pressable>
   );
 }
@@ -125,39 +159,42 @@ export default function MeusHorarios() {
         />
       }
     >
-      <View className="pt-[44px]">
-        <Titulo className="text-d-29">Meus agendamentos</Titulo>
+      <View className="pt-10">
+        <Text accessibilityRole="header" className="font-display text-ds-38 text-texto">
+          Meus horários
+        </Text>
 
         {carregando ? (
-          <Carregando className="mt-[42px]" />
+          <Carregando className="mt-10" />
         ) : erro ? (
-          <EstadoErro className="mt-[42px]" erro={erro} aoTentarDeNovo={refetch} />
+          <EstadoErro className="mt-10" erro={erro} aoTentarDeNovo={refetch} />
         ) : (
           <>
-            <LabelCaps papel="secao" className="mt-[42px]">
-              PRÓXIMOS
-            </LabelCaps>
+            <Text className="mt-10 font-sans-medium text-ui-sm text-texto-3">Próximos</Text>
             {proximos.length === 0 ? (
               <EstadoVazio
                 className="py-8"
                 titulo="Nada marcado por enquanto."
-                descricao="Reserve um horário pela aba AGENDAR."
+                descricao="Escolha o serviço e o melhor dia. Leva menos de um minuto."
                 acao={{
-                  titulo: 'NOVO AGENDAMENTO',
+                  titulo: 'Agendar horário',
                   aoTocar: () => router.push('/novo-agendamento/servico' as never),
                 }}
               />
             ) : (
-              proximos.map((item) => (
-                <CardProximo key={item.id} item={item} aoAbrir={() => abrir(item, 'futuros')} />
+              proximos.map((item, i) => (
+                <CardProximo
+                  key={item.id}
+                  item={item}
+                  primeiro={i === 0}
+                  aoAbrir={() => abrir(item, 'futuros')}
+                />
               ))
             )}
 
-            <LabelCaps papel="secao" className="mt-11">
-              HISTÓRICO
-            </LabelCaps>
+            <Text className="mt-12 font-sans-medium text-ui-sm text-texto-3">Histórico</Text>
             {(historico.data ?? []).length === 0 ? (
-              <Text className="mt-4 font-sans text-help text-ink/42">
+              <Text className="mt-4 font-sans text-ui text-texto-3">
                 Nenhuma visita registrada ainda.
               </Text>
             ) : (
