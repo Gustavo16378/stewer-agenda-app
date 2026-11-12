@@ -40,35 +40,37 @@ export default function HorarioMarcado() {
         {/* o className vai num View comum: o Animated.View nao recebe as classes do NativeWind */}
         <Animated.View entering={entrar(1050)}>
           <View className="mt-6 gap-1">
-          <Text className="font-display text-ds-24 text-texto">
-            {dia ? diaPorExtenso(dia) : ''}
-          </Text>
-          <Text className="font-sans-semibold text-ui-lg text-latao">às {formatHora(inicio)}</Text>
-          <Text className="mt-3 font-sans text-ui text-texto-2">
-            {[servico, profissional ? `com ${profissional}` : null].filter(Boolean).join(' ')}
-          </Text>
-          <Text className="font-sans text-ui text-texto-3">
-            {LOCAL.nome}, {LOCAL.endereco}
-          </Text>
+            <Text className="font-display text-ds-24 text-texto">
+              {dia ? diaPorExtenso(dia) : ''}
+            </Text>
+            <Text className="font-sans-semibold text-ui-lg text-latao">
+              às {formatHora(inicio)}
+            </Text>
+            <Text className="mt-3 font-sans text-ui text-texto-2">
+              {[servico, profissional ? `com ${profissional}` : null].filter(Boolean).join(' ')}
+            </Text>
+            <Text className="font-sans text-ui text-texto-3">
+              {LOCAL.nome}, {LOCAL.endereco}
+            </Text>
           </View>
         </Animated.View>
 
         <Animated.View entering={entrar(1200)}>
           <View className="mt-10 gap-3">
-          <BotaoAtelie
-            titulo="Ver meus horários"
-            onPress={() => router.replace('/(cliente)/(tabs)/meus-horarios' as never)}
-          />
-          <BotaoAtelie
-            variante="contorno"
-            titulo="Como chegar"
-            onPress={() => void Linking.openURL(LOCAL.mapa)}
-          />
-          <BotaoAtelie
-            variante="texto"
-            titulo="Voltar ao início"
-            onPress={() => router.replace('/(cliente)/(tabs)/inicio' as never)}
-          />
+            <BotaoAtelie
+              titulo="Ver meus horários"
+              onPress={() => router.replace('/(cliente)/(tabs)/meus-horarios' as never)}
+            />
+            <BotaoAtelie
+              variante="contorno"
+              titulo="Como chegar"
+              onPress={() => void Linking.openURL(LOCAL.mapa)}
+            />
+            <BotaoAtelie
+              variante="texto"
+              titulo="Voltar ao início"
+              onPress={() => router.replace('/(cliente)/(tabs)/inicio' as never)}
+            />
           </View>
         </Animated.View>
       </View>

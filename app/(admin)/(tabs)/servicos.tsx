@@ -195,7 +195,7 @@ export default function GestaoDeServicos() {
       </View>
 
       <Modal visible={!!form} transparent animationType="fade" onRequestClose={() => setForm(null)}>
-        <View className="flex-1 justify-end bg-canvas/95">
+        <View className="flex-1 justify-end bg-fundo">
           <ScrollView
             keyboardShouldPersistTaps="handled"
             contentContainerClassName="px-screen-x pb-10 pt-8"

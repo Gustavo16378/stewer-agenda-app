@@ -5,9 +5,7 @@ import { abrirPaginaDoSite } from '@/lib/site';
 
 export function AvisoLegal({ className }: { className?: string }) {
   return (
-    <Text
-      className={className ?? 'mt-10 text-center font-sans text-ui-sm text-texto-3'}
-    >
+    <Text className={className ?? 'mt-10 text-center font-sans text-ui-sm text-texto-3'}>
       Ao continuar, você aceita os{' '}
       <Text
         className="text-texto-2 underline"

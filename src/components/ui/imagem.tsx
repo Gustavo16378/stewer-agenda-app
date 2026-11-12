@@ -13,7 +13,7 @@
  * slots de imagem no design: sao avatares de iniciais mesmo.
  */
 import { Image } from 'expo-image';
-import { Text, View } from 'react-native';
+import { Text, View, type ImageSourcePropType } from 'react-native';
 
 import { cn } from '@/lib/cn';
 
@@ -21,10 +21,13 @@ const PLACEHOLDER = require('@/assets/images/photo-placeholder.png') as number;
 
 export function SlotImagem({
   uri,
+  fonte,
   altura,
   className,
   acessibilidade,
 }: {
+  /** Imagem local que substitui a URL (o retrato do Stewer enquanto ele nao sobe um). */
+  fonte?: ImageSourcePropType | null;
   /** `Profissional.fotoUrl`. Ausente, mostra so o placeholder. */
   uri?: string | null;
   altura: number;
@@ -34,10 +37,10 @@ export function SlotImagem({
   return (
     <View className={cn('overflow-hidden bg-surface', className)} style={{ height: altura }}>
       <Image
-        source={uri ? { uri } : PLACEHOLDER}
+        source={fonte ?? (uri ? { uri } : PLACEHOLDER)}
         placeholder={PLACEHOLDER}
         placeholderContentFit="contain"
-        contentFit={uri ? 'cover' : 'contain'}
+        contentFit={fonte || uri ? 'cover' : 'contain'}
         transition={220}
         style={{ width: '100%', height: '100%' }}
         accessible

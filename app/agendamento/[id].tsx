@@ -86,8 +86,11 @@ function ResumoDoCliente({ clienteId }: { clienteId: string }) {
 
   const numeros = [
     { valor: String(metricas.visitas), legenda: 'visitas' },
-    { valor: formatMesAnoCurto(metricas.desde) || 'novo', legenda: 'cliente desde' },
-    { valor: formatDiaMesCurto(metricas.ultima) || 'nunca', legenda: 'última visita' },
+    { valor: formatMesAnoCurto(metricas.desde).toLowerCase() || 'novo', legenda: 'cliente desde' },
+    {
+      valor: formatDiaMesCurto(metricas.ultima).toLowerCase() || 'nunca',
+      legenda: 'última visita',
+    },
   ];
 
   return (

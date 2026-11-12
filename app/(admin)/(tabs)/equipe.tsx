@@ -42,6 +42,7 @@ import { Interruptor } from '@/components/ui/interruptor';
 import { Divisor } from '@/components/ui/superficies';
 import { TelaRolavel } from '@/components/ui/tela';
 import { LabelCaps, Titulo } from '@/components/ui/texto';
+import { fotoDoProfissional } from '@/content/atelie';
 import { cn } from '@/lib/cn';
 import { confirmar } from '@/lib/confirmar';
 import {
@@ -80,9 +81,9 @@ function ResumoDaAgenda({ profissionalId }: { profissionalId: string }) {
       primeiro !== undefined && ultimo !== undefined && isDiaSemana(primeiro) && isDiaSemana(ultimo)
         ? primeiro === ultimo
           ? nomeDiaSemanaCurtoCaps(primeiro)
-          : `${nomeDiaSemanaCurtoCaps(primeiro)} — ${nomeDiaSemanaCurtoCaps(ultimo)}`
+          : `${nomeDiaSemanaCurtoCaps(primeiro)} A ${nomeDiaSemanaCurtoCaps(ultimo)}`
         : '';
-    return `${diasTxt}, ${formatWallTime(inicios[0])} — ${formatWallTime(fins[fins.length - 1])}`;
+    return `${diasTxt}, ${formatWallTime(inicios[0])} ÀS ${formatWallTime(fins[fins.length - 1])}`;
   }, [grade.data]);
 
   if (grade.isLoading)
@@ -272,6 +273,7 @@ export default function GestaoDeEquipe() {
               <View className="flex-row items-center gap-[18px]">
                 <SlotImagem
                   uri={p.fotoUrl}
+                  fonte={fotoDoProfissional(p)}
                   altura={64}
                   className="w-16 rounded-token"
                   acessibilidade={`Foto de ${p.nome ?? 'profissional'}`}
@@ -326,7 +328,7 @@ export default function GestaoDeEquipe() {
       </View>
 
       <Modal visible={!!form} transparent animationType="fade" onRequestClose={() => setForm(null)}>
-        <View className="flex-1 justify-end bg-canvas/95">
+        <View className="flex-1 justify-end bg-fundo">
           <ScrollView
             keyboardShouldPersistTaps="handled"
             contentContainerClassName="px-screen-x pb-10 pt-8"

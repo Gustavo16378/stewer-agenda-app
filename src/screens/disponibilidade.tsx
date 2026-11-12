@@ -591,7 +591,7 @@ export function TelaDisponibilidade({
         animationType="fade"
         onRequestClose={() => setModalHorario(false)}
       >
-        <View className="flex-1 justify-end bg-canvas/95">
+        <View className="flex-1 justify-end bg-fundo">
           <ScrollView
             keyboardShouldPersistTaps="handled"
             contentContainerClassName="px-screen-x pb-10 pt-8"
@@ -672,7 +672,7 @@ export function TelaDisponibilidade({
         animationType="fade"
         onRequestClose={() => setModalBloqueio(false)}
       >
-        <View className="flex-1 justify-end bg-canvas/95">
+        <View className="flex-1 justify-end bg-fundo">
           <ScrollView
             keyboardShouldPersistTaps="handled"
             contentContainerClassName="px-screen-x pb-10 pt-8"
