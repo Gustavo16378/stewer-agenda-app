@@ -5,6 +5,7 @@ import { Text } from 'react-native';
 
 import { ApiError } from '@/api/errors';
 import { useTrocarSenha } from '@/api/hooks';
+import { GuardaDePapel } from '@/auth/guarda';
 import { Botao } from '@/components/ui/botao';
 import { CabecalhoVoltar } from '@/components/ui/cabecalho';
 import { Campo } from '@/components/ui/campo';
@@ -13,7 +14,7 @@ import { LabelCaps, Titulo } from '@/components/ui/texto';
 
 const SENHA_MIN = 8;
 
-export default function TrocarSenha() {
+function TrocarSenha() {
   const router = useRouter();
   const trocar = useTrocarSenha();
   const [atual, setAtual] = useState('');
@@ -99,5 +100,14 @@ export default function TrocarSenha() {
         </>
       )}
     </TelaRolavel>
+  );
+}
+
+/** Direto pelo link ou depois de recarregar: so mostra a tela com a sessao ja restaurada. */
+export default function RotaTrocarSenha() {
+  return (
+    <GuardaDePapel permitidos={['CLIENTE', 'PROFISSIONAL', 'ADMIN']}>
+      <TrocarSenha />
+    </GuardaDePapel>
   );
 }

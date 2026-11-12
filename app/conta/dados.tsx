@@ -5,18 +5,20 @@ import { Text } from 'react-native';
 
 import { ApiError } from '@/api/errors';
 import { useAuth } from '@/auth/auth-context';
+import { GuardaDePapel } from '@/auth/guarda';
 import { Botao } from '@/components/ui/botao';
 import { CabecalhoVoltar } from '@/components/ui/cabecalho';
 import { Campo } from '@/components/ui/campo';
 import { TelaRolavel } from '@/components/ui/tela';
 import { LabelCaps, Titulo } from '@/components/ui/texto';
+import { mascaraTelefone } from '@/lib/telefone';
 
-export default function EditarDados() {
+function EditarDados() {
   const router = useRouter();
   const { usuario, atualizarPerfil } = useAuth();
   const [nome, setNome] = useState(usuario?.nome ?? '');
   const [email, setEmail] = useState(usuario?.email ?? '');
-  const [telefone, setTelefone] = useState(usuario?.telefone ?? '');
+  const [telefone, setTelefone] = useState(mascaraTelefone(usuario?.telefone ?? ''));
   const [erro, setErro] = useState<ApiError | null>(null);
   const [enviando, setEnviando] = useState(false);
 
@@ -28,7 +30,7 @@ export default function EditarDados() {
     preenchido.current = true;
     setNome(usuario.nome ?? '');
     setEmail(usuario.email ?? '');
-    setTelefone(usuario.telefone ?? '');
+    setTelefone(mascaraTelefone(usuario.telefone ?? ''));
   }, [usuario]);
 
   const podeSalvar = nome.trim().length > 0 && email.trim().length > 0 && !enviando;
@@ -84,8 +86,8 @@ export default function EditarDados() {
         className="mt-[22px]"
         rotulo="Telefone"
         value={telefone}
-        onChangeText={setTelefone}
-        placeholder="(63) 90000-0000"
+        onChangeText={(t) => setTelefone(mascaraTelefone(t))}
+        placeholder="(63) 9 8511-6783"
         keyboardType="phone-pad"
         autoComplete="tel"
         maxLength={30}
@@ -107,5 +109,14 @@ export default function EditarDados() {
         onPress={() => void aoSalvar()}
       />
     </TelaRolavel>
+  );
+}
+
+/** Direto pelo link ou depois de recarregar: so mostra a tela com a sessao ja restaurada. */
+export default function RotaEditarDados() {
+  return (
+    <GuardaDePapel permitidos={['CLIENTE', 'PROFISSIONAL', 'ADMIN']}>
+      <EditarDados />
+    </GuardaDePapel>
   );
 }

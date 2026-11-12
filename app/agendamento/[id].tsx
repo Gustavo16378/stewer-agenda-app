@@ -31,6 +31,7 @@ import { Linking, Text, View } from 'react-native';
 import { useAgendamento, useAnotacoes, useAtualizarStatus, useCliente } from '@/api/hooks';
 import { ROTULO_STATUS, isStatusFinal, type Periodo, type StatusAgendamento } from '@/api/types';
 import { useAuth } from '@/auth/auth-context';
+import { GuardaDePapel } from '@/auth/guarda';
 import { BotaoAtelie } from '@/components/atelie/base';
 import { CabecalhoVoltar } from '@/components/ui/cabecalho';
 import { Carregando, EstadoErro } from '@/components/ui/estados';
@@ -123,7 +124,7 @@ function ResumoDoCliente({ clienteId }: { clienteId: string }) {
   );
 }
 
-export default function DetalheAgendamento() {
+function DetalheAgendamento() {
   const router = useRouter();
   const { role } = useAuth();
   const { id, origem, data, periodo } = useLocalSearchParams<{
@@ -280,5 +281,14 @@ function Linha({ rotulo, valor }: { rotulo: string; valor?: string | null }) {
       <Text className="font-sans text-ui text-texto-3">{rotulo}</Text>
       <Text className="flex-1 text-right font-sans-medium text-ui text-texto">{valor ?? ''}</Text>
     </View>
+  );
+}
+
+/** Direto pelo link ou depois de recarregar: so mostra a tela com a sessao ja restaurada. */
+export default function RotaDetalheAgendamento() {
+  return (
+    <GuardaDePapel permitidos={['CLIENTE', 'PROFISSIONAL', 'ADMIN']}>
+      <DetalheAgendamento />
+    </GuardaDePapel>
   );
 }

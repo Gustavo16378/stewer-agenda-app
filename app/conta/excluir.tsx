@@ -12,6 +12,7 @@ import { Text, View } from 'react-native';
 import { api, desembrulha } from '@/api/client';
 import { ApiError } from '@/api/errors';
 import { useAuth } from '@/auth/auth-context';
+import { GuardaDePapel } from '@/auth/guarda';
 import { Botao } from '@/components/ui/botao';
 import { CabecalhoVoltar } from '@/components/ui/cabecalho';
 import { Campo } from '@/components/ui/campo';
@@ -25,7 +26,7 @@ const CONSEQUENCIAS = [
   'Seu nome, e-mail e telefone saem do sistema. Não dá para desfazer.',
 ];
 
-export default function ExcluirConta() {
+function ExcluirConta() {
   const router = useRouter();
   const { sair } = useAuth();
   const [senha, setSenha] = useState('');
@@ -92,5 +93,14 @@ export default function ExcluirConta() {
         }
       />
     </TelaRolavel>
+  );
+}
+
+/** Direto pelo link ou depois de recarregar: so mostra a tela com a sessao ja restaurada. */
+export default function RotaExcluirConta() {
+  return (
+    <GuardaDePapel permitidos={['CLIENTE', 'PROFISSIONAL', 'ADMIN']}>
+      <ExcluirConta />
+    </GuardaDePapel>
   );
 }
