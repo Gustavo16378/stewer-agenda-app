@@ -53,3 +53,22 @@ test.describe('abertura', () => {
     await expect(naTela(page, 'Bem-vindo de volta.')).toBeVisible({ timeout: 8000 });
   });
 });
+
+test('o tema acompanha o aparelho (claro ou escuro)', async ({ page }, info) => {
+  await page.goto('/');
+  await expect(naTela(page, 'Bem-vindo de volta.')).toBeVisible();
+  const escuro = info.project.use.colorScheme === 'dark';
+  await expect(page.locator('html')).toHaveClass(escuro ? /\bdark\b/ : /^(?!.*\bdark\b)/);
+  // o fundo da tela tem de ser o carvao no escuro e o papel no claro
+  const fundo = await naTela(page, 'Bem-vindo de volta.').evaluate((el) => {
+    let n: Element | null = el;
+    while (n) {
+      const cor = getComputedStyle(n).backgroundColor;
+      if (cor && cor !== 'rgba(0, 0, 0, 0)' && cor !== 'transparent') return cor;
+      n = n.parentElement;
+    }
+    return '';
+  });
+  const [r] = (fundo.match(/\d+/g) ?? ['0']).map(Number);
+  expect(escuro ? r! < 60 : r! > 200, `fundo ${fundo}`).toBe(true);
+});

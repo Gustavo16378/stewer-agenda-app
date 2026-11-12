@@ -5,7 +5,8 @@ name: CI
 #   qualidade ─┬─> build web ─┬─> E2E iphone
 #   unitarios ─┘   api (jar) ─┼─> E2E android
 #                             ├─> E2E desktop
-#                             └─> E2E safari (WebKit, o motor do iPhone)
+#                             ├─> E2E safari (WebKit, o motor do iPhone)
+#                             └─> E2E escuro (tema escuro: telas, vitrine, contraste)
 #
 # Os E2E sobem a stewer-agenda-api de verdade (perfil dev, com o seed) num PostgreSQL do
 # proprio runner e usam o app exatamente como ele vai para o Cloudflare Pages.
@@ -133,7 +134,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        aparelho: [iphone, android, desktop, safari]
+        aparelho: [iphone, android, desktop, safari, escuro]
     services:
       postgres:
         image: postgres:16-alpine

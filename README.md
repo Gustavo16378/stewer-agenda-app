@@ -290,6 +290,9 @@ relatório.
 | `acesso` | senha errada avisa, a certa entra, sair volta ao login, "esqueci a senha" manda código |
 | `vitrine` | retrato, quem é o Stewer, o trabalho e o mapa da Boss House; abas embaixo no celular e menu lateral no desktop; a abertura com o S sai sozinha |
 | `acessibilidade` | axe-core: contraste, botões e links com nome, imagens com descrição |
+| `galeria` | passa por todas as telas de cada papel e guarda um print de cada uma |
+
+O projeto `escuro` repete galeria, vitrine e acessibilidade com o aparelho no tema escuro.
 
 Toda tela visitada também passa pela checagem de que nada vaza para o lado.
 
@@ -306,7 +309,7 @@ Para a API aceitar o navegador: `CORS_HABILITADO=true CORS_ORIGINS=http://localh
 [`.github/workflows/ci.yml`](.github/workflows/ci.yml) roda em filas separadas, cada uma com
 o próprio nome no PR: typecheck e lint, testes unitários (com cobertura no resumo), build web,
 a API empacotada a partir da `main` dela, e as jornadas E2E em paralelo por aparelho
-(iphone, android, desktop, safari), cada uma com o próprio PostgreSQL. Os relatórios com os
+(iphone, android, desktop, safari e escuro), cada uma com o próprio PostgreSQL. Os relatórios com os
 prints ficam como artefato da execução.
 
 ---

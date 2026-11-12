@@ -9,24 +9,27 @@
  * Pre-requisitos: `npm run build` com EXPO_PUBLIC_API_URL apontando para a API, e a API
  * no ar com o seed de dev e CORS liberado para http://localhost:4173.
  */
-import { defineConfig, devices } from '@playwright/test';
+import { defineConfig, devices, type Project } from '@playwright/test';
 
 const PORTA = 4173;
 const CI = !!process.env.CI;
 
-const aparelhos = [
+const aparelhos: Project[] = [
   { name: 'iphone', use: { ...devices['iPhone 14'], browserName: 'chromium' as const } },
   { name: 'android', use: { ...devices['Pixel 7'] } },
   {
     name: 'desktop',
     use: { ...devices['Desktop Chrome'], viewport: { width: 1366, height: 820 } },
   },
+  // o tema escuro: todas as telas, a vitrine e o contraste medido de novo
+  {
+    name: 'escuro',
+    use: { ...devices['iPhone 14'], browserName: 'chromium', colorScheme: 'dark' },
+    testMatch: /(galeria|vitrine|acessibilidade)\.spec\.ts/,
+  },
 ];
 if (process.env.E2E_WEBKIT) {
-  aparelhos.push({
-    name: 'safari',
-    use: { ...devices['iPhone 14'] },
-  } as (typeof aparelhos)[number]);
+  aparelhos.push({ name: 'safari', use: { ...devices['iPhone 14'] } });
 }
 
 export default defineConfig({
