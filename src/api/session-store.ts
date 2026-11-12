@@ -5,10 +5,26 @@
  * o INSTANTE de expiracao calculado no momento do login e, passado esse instante, tratamos
  * como deslogado sem nem tentar a chamada — melhor que descobrir por um 401 no meio da tela.
  */
-import * as SecureStore from 'expo-secure-store';
+import * as SecureStoreNativo from 'expo-secure-store';
+import { Platform } from 'react-native';
 
 import { MARGEM_EXPIRACAO_MS } from './config';
 import type { Usuario } from './types';
+
+/**
+ * No navegador nao existe Keychain: o expo-secure-store nao funciona e cada F5
+ * deslogava. Na versao web a sessao vai para o localStorage, que e o que todo
+ * site faz com o token; no celular continua no armazenamento seguro.
+ */
+const SecureStore =
+  Platform.OS === 'web'
+    ? {
+        getItemAsync: async (chave: string) => globalThis.localStorage?.getItem(chave) ?? null,
+        setItemAsync: async (chave: string, valor: string) =>
+          globalThis.localStorage?.setItem(chave, valor),
+        deleteItemAsync: async (chave: string) => globalThis.localStorage?.removeItem(chave),
+      }
+    : SecureStoreNativo;
 
 const CHAVE_TOKEN = 'stewer.jwt';
 const CHAVE_EXPIRA_EM = 'stewer.jwt.expiraEm';
@@ -60,7 +76,7 @@ export async function lerSessao(): Promise<SessaoGuardada | null> {
     if (!Number.isFinite(expiraEm)) return null;
     return { token, expiraEm, usuario: lerUsuario(usuarioRaw) };
   } catch {
-    // SecureStore indisponivel (ex.: web sem https) — trata como deslogado
+    // armazenamento indisponivel (keychain travado, navegador bloqueando) — trata como deslogado
     return null;
   }
 }
