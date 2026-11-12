@@ -59,3 +59,6 @@ CLAUDE.md
 # relatorios e prints dos testes E2E (Playwright)
 e2e/relatorio/
 e2e/.resultados/
+
+# cache do Python dos scripts
+__pycache__/
