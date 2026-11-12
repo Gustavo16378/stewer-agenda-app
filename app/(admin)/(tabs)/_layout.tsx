@@ -22,6 +22,7 @@ export default function TabsAdmin() {
       <Tabs.Screen name="servicos" options={{ title: 'Serviços' }} />
       <Tabs.Screen name="equipe" options={{ title: 'Equipe' }} />
       {/* no celular estas duas abrem pelos atalhos do Painel (ver SO_NO_MENU_LATERAL) */}
+      <Tabs.Screen name="financeiro" options={{ title: 'Financeiro' }} />
       <Tabs.Screen name="estudio" options={{ title: 'Estúdio' }} />
       <Tabs.Screen name="auditoria" options={{ title: 'Auditoria' }} />
     </Tabs>

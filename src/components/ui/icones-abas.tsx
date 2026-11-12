@@ -114,6 +114,18 @@ const DESENHOS: Record<string, (cor: string) => React.ReactNode> = {
       />
     </>
   ),
+  // uma nota com o cifrao: o dinheiro que entrou
+  financeiro: (c) => (
+    <>
+      <Rect x={3.5} y={6} width={17} height={12} rx={1.5} stroke={c} strokeWidth={1.6} />
+      <Path
+        d="M14 9.6c-.4-.6-1.1-.9-2-.9-1.2 0-2 .6-2 1.5s.8 1.2 2 1.5 2 .7 2 1.6-.9 1.6-2 1.6c-.9 0-1.7-.4-2.1-1M12 7.7v1M12 14.9v1.2"
+        stroke={c}
+        strokeWidth={1.4}
+        strokeLinecap="round"
+      />
+    </>
+  ),
   // a fachada do estudio: toldo e porta
   estudio: (c) => (
     <>

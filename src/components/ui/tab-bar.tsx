@@ -109,7 +109,7 @@ export function TabBar(props: BottomTabBarProps) {
  * Abas que so aparecem no menu lateral. No celular a barra de baixo fica com cinco; estas
  * abrem pelos atalhos do Painel.
  */
-const SO_NO_MENU_LATERAL = new Set(['estudio', 'auditoria']);
+const SO_NO_MENU_LATERAL = new Set(['financeiro', 'estudio', 'auditoria']);
 
 function BarraDeBaixo({ state, descriptors, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
