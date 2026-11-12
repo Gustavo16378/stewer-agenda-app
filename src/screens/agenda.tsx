@@ -36,33 +36,40 @@ import {
   useMeuProfissional,
   useSemearAgendamento,
 } from '@/api/hooks';
-import { ROTULO_STATUS_CAPS, type Agendamento } from '@/api/types';
+import { ROTULO_STATUS, type Agendamento } from '@/api/types';
 import { useAuth } from '@/auth/auth-context';
-import { AcaoLinha } from '@/components/ui/botao';
+import { BotaoAtelie } from '@/components/atelie/base';
 import { Carregando, EstadoErro, EstadoVazio } from '@/components/ui/estados';
 import { TelaRolavel } from '@/components/ui/tela';
-import { LabelCaps, Titulo } from '@/components/ui/texto';
 import { cn } from '@/lib/cn';
 import {
   comparaWallTime,
+  diaPorExtenso,
   diaSemanaDe,
-  formatDiaSemanaEData,
   formatHora,
   formatWallTime,
   hojeCalendarDate,
   isHoje,
+  nomeDiaSemana,
+  parseCalendarDate,
   parseInstant,
   somaDias,
   type CalendarDate,
+  type DiaSemana,
 } from '@/lib/datetime';
-import { formatDuracaoCaps } from '@/lib/money';
+import { formatDuracao } from '@/lib/money';
 
-type Bloco =
+export type Bloco =
   | { tipo: 'atendimento'; hora: string; item: Agendamento }
-  | { tipo: 'vago'; hora: string; chave: string };
+  | { tipo: 'vago'; hora: string; chave: string }
+  | { tipo: 'agora'; hora: string };
 
-/** Ordena por inicio e insere um bloco "vago" em cada intervalo entre atendimentos. */
-function montarTimeline(agenda: Agendamento[]): Bloco[] {
+/**
+ * Ordena por inicio e insere um bloco "vago" em cada intervalo entre atendimentos. Com
+ * `agora` (so na agenda de hoje), poe a linha de agora antes do primeiro atendimento
+ * que ainda nao comecou: o Stewer bate o olho e sabe quem e o proximo.
+ */
+export function montarTimeline(agenda: Agendamento[], agora?: Date): Bloco[] {
   const ativos = agenda
     .filter((a) => a.status !== 'CANCELADO' && a.inicio)
     .sort(
@@ -79,6 +86,15 @@ function montarTimeline(agenda: Agendamento[]): Bloco[] {
       blocos.push({ tipo: 'vago', hora: formatHora(item.fim), chave: `vago-${item.id}` });
     }
   });
+  if (agora) {
+    const i = blocos.findIndex(
+      (b) =>
+        b.tipo === 'atendimento' && (parseInstant(b.item.inicio)?.getTime() ?? 0) > agora.getTime()
+    );
+    const marca: Bloco = { tipo: 'agora', hora: formatHora(agora.toISOString()) };
+    if (i === -1) blocos.push(marca);
+    else blocos.splice(i > 0 && blocos[i - 1]?.tipo === 'vago' ? i - 1 : i, 0, marca);
+  }
   return blocos;
 }
 
@@ -94,7 +110,11 @@ export default function AgendaDoDia() {
   const semFicha = role === 'ADMIN' && !carregandoFicha && !profissional;
   const grade = useDisponibilidade(profissional?.id);
 
-  const blocos = useMemo(() => montarTimeline(agenda.data ?? []), [agenda.data]);
+  const hoje = isHoje(data);
+  const blocos = useMemo(
+    () => montarTimeline(agenda.data ?? [], hoje ? new Date() : undefined),
+    [agenda.data, hoje]
+  );
   const cancelados = useMemo(
     () => (agenda.data ?? []).filter((a) => a.status === 'CANCELADO'),
     [agenda.data]
@@ -124,7 +144,8 @@ export default function AgendaDoDia() {
     if (novo) setData(novo);
   }
 
-  const hoje = isHoje(data);
+  const dataDate = parseCalendarDate(data);
+  const semana = dataDate ? nomeDiaSemana(dataDate.getDay() as DiaSemana) : '';
 
   return (
     <TelaRolavel
@@ -134,48 +155,49 @@ export default function AgendaDoDia() {
       }
     >
       <View className="pt-10">
-        {/* SAIR na linha do eyebrow, para o titulo de 27px ter a largura toda (o design
-            nao desenhou saida para este papel; ver cabecalho do arquivo) */}
         <View className="flex-row items-center justify-between">
-          <LabelCaps papel="tela">{hoje ? 'AGENDA · HOJE' : 'AGENDA'}</LabelCaps>
-          <AcaoLinha titulo="Conta" onPress={() => router.push('/conta' as never)} />
+          <Text className="font-sans-medium text-ui-sm text-texto-3">Sua agenda</Text>
+          <BotaoAtelie
+            variante="texto"
+            titulo="Conta"
+            onPress={() => router.push('/conta' as never)}
+          />
         </View>
-        <View className="flex-row items-end justify-between">
-          <View className="flex-1 pr-3">
-            <Titulo className="mt-3 text-d-27">{formatDiaSemanaEData(data)}</Titulo>
+
+        <View className="mt-1 flex-row items-end justify-between gap-3">
+          <View className="flex-1">
+            <Text accessibilityRole="header" className="font-display text-ds-48 text-texto">
+              {hoje ? 'Hoje' : semana}
+            </Text>
+            <Text className="mt-1 font-sans text-ui-lg text-texto-2">
+              {dataDate ? diaPorExtenso(data).split(', ')[1] : ''}
+            </Text>
           </View>
-          <View className="flex-row items-center gap-4 pb-1">
-            <View className="flex-row gap-2">
-              <Pressable
-                onPress={() => mudarDia(-1)}
-                hitSlop={12}
-                accessibilityRole="button"
-                accessibilityLabel="Dia anterior"
-              >
-                <Text className="font-sans text-icon-sm text-text-dim">‹</Text>
-              </Pressable>
-              <Pressable
-                onPress={() => mudarDia(1)}
-                hitSlop={12}
-                accessibilityRole="button"
-                accessibilityLabel="Próximo dia"
-              >
-                <Text className="font-sans text-icon-sm text-nav-arrow">›</Text>
-              </Pressable>
-            </View>
+          <View className="flex-row items-center gap-2 pb-1">
+            {hoje ? null : (
+              <BotaoAtelie
+                variante="texto"
+                titulo="Hoje"
+                onPress={() => setData(hojeCalendarDate())}
+              />
+            )}
+            <Seta direcao={-1} aoTocar={() => mudarDia(-1)} rotulo="Dia anterior" />
+            <Seta direcao={1} aoTocar={() => mudarDia(1)} rotulo="Próximo dia" />
           </View>
         </View>
 
-        <LabelCaps papel="meta" className="mt-[14px]">
-          {totalAtendimentos} {totalAtendimentos === 1 ? 'ATENDIMENTO' : 'ATENDIMENTOS'}
-          {faixaDoDia ? ` · ${faixaDoDia}` : ''}
-        </LabelCaps>
+        <Text className="mt-4 font-sans text-ui text-texto-2">
+          {totalAtendimentos === 0
+            ? 'Nenhum atendimento'
+            : `${totalAtendimentos} ${totalAtendimentos === 1 ? 'atendimento' : 'atendimentos'}`}
+          {faixaDoDia ? `, das ${faixaDoDia}` : ''}
+        </Text>
 
         {semFicha ? (
           <EstadoVazio
             className="mt-7"
             titulo="Você ainda não atende."
-            descricao="Para ter agenda, crie a sua ficha em EQUIPE, em ADICIONAR PROFISSIONAL."
+            descricao="Para ter agenda, crie a sua ficha na aba Equipe, em Adicionar profissional."
           />
         ) : agenda.isLoading || carregandoFicha ? (
           <Carregando className="mt-7" />
@@ -185,64 +207,72 @@ export default function AgendaDoDia() {
             erro={agenda.error}
             aoTentarDeNovo={() => void agenda.refetch()}
           />
-        ) : blocos.length === 0 ? (
+        ) : totalAtendimentos === 0 ? (
           <EstadoVazio
             className="mt-7"
-            titulo={faixaDoDia ? 'Nenhum atendimento neste dia.' : 'Sem atendimento neste dia.'}
+            titulo={faixaDoDia ? 'Agenda livre.' : 'Dia de folga.'}
             descricao={
-              faixaDoDia ? 'A agenda está livre.' : 'Este dia está fora da sua grade semanal.'
+              faixaDoDia
+                ? 'Ninguém marcou neste dia ainda.'
+                : 'Este dia está fora da sua grade semanal.'
             }
           />
         ) : (
-          <View className="mt-7 gap-[10px]">
+          <View className="mt-8 gap-3">
             {blocos.map((bloco) =>
-              bloco.tipo === 'atendimento' ? (
-                <View key={bloco.item.id} className="flex-row gap-4">
-                  <Text className="w-11 pt-[14px] font-sans-semibold text-caps-md tracking-tightest text-ink/50">
+              bloco.tipo === 'agora' ? (
+                <View
+                  key="agora"
+                  className="flex-row items-center gap-3"
+                  accessibilityLabel={`Agora, ${bloco.hora}`}
+                >
+                  <Text className="w-14 font-sans-semibold text-ui-sm text-cadeira">
+                    {bloco.hora}
+                  </Text>
+                  <View className="h-2 w-2 rounded-full bg-cadeira" />
+                  <View className="h-px flex-1 bg-cadeira/60" />
+                </View>
+              ) : bloco.tipo === 'atendimento' ? (
+                <View key={bloco.item.id} className="flex-row gap-3">
+                  <Text className="w-14 pt-4 font-sans-semibold text-ui text-texto">
                     {bloco.hora}
                   </Text>
                   <Pressable
                     onPress={() => abrir(bloco.item)}
                     accessibilityRole="button"
+                    accessibilityLabel={`${bloco.hora}, ${bloco.item.clienteNome ?? ''}, ${bloco.item.servicoNome ?? ''}`}
                     className={cn(
-                      'flex-1 flex-row items-center justify-between rounded-token border border-divider bg-surface px-[18px] py-[15px]',
+                      'flex-1 flex-row items-center gap-3 rounded-[3px] border border-borda bg-superficie px-5 py-4',
+                      bloco.item.status === 'AGENDADO' && 'border-l-2 border-l-latao',
                       bloco.item.status !== 'AGENDADO' && 'opacity-60'
                     )}
-                    style={({ pressed }) => (pressed ? { opacity: 0.7 } : null)}
+                    style={({ pressed }) => (pressed ? { opacity: 0.75 } : null)}
                   >
-                    <View className="flex-1 gap-[6px] pr-3">
-                      <Text className="font-sans-medium text-row text-ink" numberOfLines={1}>
+                    <View className="flex-1 gap-1">
+                      <Text className="font-display text-ds-20 text-texto" numberOfLines={1}>
                         {bloco.item.clienteNome}
                       </Text>
-                      <LabelCaps papel="micro" className="text-ink/50" numberOfLines={1}>
-                        {bloco.item.servicoNome ?? ''}
-                      </LabelCaps>
+                      <Text className="font-sans text-ui-sm text-texto-2" numberOfLines={1}>
+                        {bloco.item.servicoNome ?? ''}, {formatDuracao(bloco.item.duracaoMinutos)}
+                      </Text>
                       {bloco.item.primeiraVisita && bloco.item.status === 'AGENDADO' ? (
-                        <LabelCaps papel="micro" className="mt-[6px] tracking-tab text-gold">
-                          Primeira visita
-                        </LabelCaps>
+                        <Selo>Primeira visita</Selo>
                       ) : null}
                       {bloco.item.status && bloco.item.status !== 'AGENDADO' ? (
-                        <LabelCaps papel="micro" className="mt-[6px] tracking-tab text-gold">
-                          {ROTULO_STATUS_CAPS[bloco.item.status]}
-                        </LabelCaps>
+                        <Selo apagado>{ROTULO_STATUS[bloco.item.status]}</Selo>
                       ) : null}
                     </View>
-                    <LabelCaps papel="micro" className="tracking-tab text-text-dim">
-                      {formatDuracaoCaps(bloco.item.duracaoMinutos)}
-                    </LabelCaps>
+                    <Text className="font-sans text-ds-24 text-texto-3">›</Text>
                   </Pressable>
                 </View>
               ) : (
-                <View key={bloco.chave} className="flex-row gap-4">
-                  <Text className="w-11 pt-[9px] font-sans-semibold text-caps-md tracking-tightest text-ink/35">
+                <View key={bloco.chave} className="flex-row gap-3">
+                  <Text className="w-14 pt-[10px] font-sans text-ui-sm text-texto-3">
                     {bloco.hora}
                   </Text>
                   {/* tracejado sem raio: no Android, dashed + border-radius nao renderiza */}
-                  <View className="flex-1 items-center border border-dashed border-field-border p-[10px]">
-                    <LabelCaps papel="micro" className="tracking-button text-ink/32">
-                      Disponível
-                    </LabelCaps>
+                  <View className="flex-1 items-center border border-dashed border-borda p-[10px]">
+                    <Text className="font-sans text-ui-sm text-texto-3">Livre</Text>
                   </View>
                 </View>
               )
@@ -251,13 +281,51 @@ export default function AgendaDoDia() {
         )}
 
         {cancelados.length > 0 ? (
-          <Text className="mt-6 font-sans text-help text-ink/38">
+          <Text className="mt-6 font-sans text-ui-sm text-texto-3">
             {cancelados.length === 1
-              ? '1 agendamento cancelado neste dia.'
-              : `${cancelados.length} agendamentos cancelados neste dia.`}
+              ? '1 horário cancelado neste dia.'
+              : `${cancelados.length} horários cancelados neste dia.`}
           </Text>
         ) : null}
       </View>
     </TelaRolavel>
+  );
+}
+
+function Seta({
+  direcao,
+  aoTocar,
+  rotulo,
+}: {
+  direcao: 1 | -1;
+  aoTocar: () => void;
+  rotulo: string;
+}) {
+  return (
+    <Pressable
+      onPress={aoTocar}
+      hitSlop={6}
+      accessibilityRole="button"
+      accessibilityLabel={rotulo}
+      className="h-11 w-11 items-center justify-center rounded-full border border-borda"
+      style={({ pressed }) => (pressed ? { opacity: 0.6 } : null)}
+    >
+      <Text className="font-sans text-ds-24 text-texto-2">{direcao === 1 ? '›' : '‹'}</Text>
+    </Pressable>
+  );
+}
+
+function Selo({ children, apagado }: { children: string; apagado?: boolean }) {
+  return (
+    <View
+      className={cn(
+        'mt-1 self-start rounded-full px-3 py-[3px]',
+        apagado ? 'bg-borda/60' : 'bg-latao/14'
+      )}
+    >
+      <Text className={cn('font-sans-medium text-ui-xs', apagado ? 'text-texto-3' : 'text-latao')}>
+        {children}
+      </Text>
+    </View>
   );
 }
