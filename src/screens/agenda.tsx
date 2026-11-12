@@ -20,10 +20,8 @@
  * `data` e o dia de calendario LOCAL: comeca em hoje e anda com somaDias.
  *
  * O que a tela mostra de "DISPONÍVEL" e o vao entre dois atendimentos consecutivos —
- * derivado dos proprios instantes da agenda. Nao ha dado para o bloco "INTERVALO" nem
- * para a tag "PRIMEIRA VISITA" do frame:
- *   TODO(API): "PRIMEIRA VISITA" exigiria um `GET /clientes/{id}` por atendimento ou um
- *   campo `primeiraVisita: boolean` no proprio `Agendamento`.
+ * derivado dos proprios instantes da agenda. A tag "PRIMEIRA VISITA" vem da API
+ * (`primeiraVisita` no agendamento da agenda do dia).
  *
  * DESVIO: o design nao deu a equipe nenhuma tab de perfil. A acao CONTA (dados, senha,
  * tema, sair) mora aqui, discreta, no cabecalho.
@@ -219,6 +217,11 @@ export default function AgendaDoDia() {
                       <LabelCaps papel="micro" className="text-ink/50" numberOfLines={1}>
                         {(bloco.item.servicoNome ?? '').toUpperCase()}
                       </LabelCaps>
+                      {bloco.item.primeiraVisita && bloco.item.status === 'AGENDADO' ? (
+                        <LabelCaps papel="micro" className="mt-[6px] tracking-tab text-gold">
+                          PRIMEIRA VISITA
+                        </LabelCaps>
+                      ) : null}
                       {bloco.item.status && bloco.item.status !== 'AGENDADO' ? (
                         <LabelCaps papel="micro" className="mt-[6px] tracking-tab text-gold">
                           {ROTULO_STATUS_CAPS[bloco.item.status]}

@@ -14,9 +14,8 @@
  *
  *   TODO(API): "48 ATIVOS" nao tem de onde vir — nao ha total nem contagem. A tela so
  *   mostra a contagem quando a lista ja chegou ao fim (ai o numero e real).
- *   TODO(API): "ÚLTIMA VISITA · 14 AGO" exigiria a ultima visita no `ClienteResumo`
- *   (ou um `GET /clientes/{id}` por linha). O que o resumo tem e `createdAt`, entao a
- *   linha mostra "CLIENTE DESDE · <data>".
+ * A linha mostra "ÚLTIMA VISITA · <data>" quando o cliente ja veio; para quem nunca veio,
+ * "CLIENTE DESDE · <data>".
  */
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
@@ -70,7 +69,9 @@ function LinhaCliente({
           {cliente.nome}
         </Text>
         <LabelCaps papel="micro" numberOfLines={1}>
-          CLIENTE DESDE · {formatDiaMesCurtoCaps(cliente.createdAt)}
+          {cliente.ultimaVisita
+            ? `ÚLTIMA VISITA · ${formatDiaMesCurtoCaps(cliente.ultimaVisita)}`
+            : `CLIENTE DESDE · ${formatDiaMesCurtoCaps(cliente.createdAt)}`}
         </LabelCaps>
       </View>
       <Text className="font-sans text-row text-ink/30">›</Text>

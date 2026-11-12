@@ -15,9 +15,9 @@
  * `agendamentos[]` vem SEM filtro (todos os status, inclusive futuros): o historico e o
  * "N VISITAS" usam so `status === 'CONCLUIDO'`, senao um cancelado entra como visita paga.
  *
- * Anotacoes sao append-only na API (so POST). "EDITAR" abre o editor com o texto atual e
- * salva como uma anotacao NOVA — para quem le, e editar; para o historico, e versionar.
- *   TODO(API): editar/apagar de verdade exigiria PUT/DELETE /clientes/{id}/anotacoes/{anotacaoId}.
+ * Anotacoes: "EDITAR" corrige a ultima anotacao quando ela e de quem esta logado (ou se
+ * for o admin); quando e de outro profissional, salva uma nova, assinada por quem
+ * escreveu. "APAGAR" aparece so para quem pode apagar.
  * NOVO AGENDAMENTO PARA ESTE CLIENTE abre o fluxo de agendamento com clienteId: a API
  * aceita a equipe marcando em nome do cliente.
  *
@@ -28,7 +28,14 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { Modal, ScrollView, Text, View } from 'react-native';
 
-import { useAnotacoes, useCliente, useCriarAnotacao } from '@/api/hooks';
+import {
+  useAnotacoes,
+  useApagarAnotacao,
+  useCliente,
+  useCriarAnotacao,
+  useEditarAnotacao,
+  useMeuProfissional,
+} from '@/api/hooks';
 import { useAuth } from '@/auth/auth-context';
 import { AcaoLinha, Botao } from '@/components/ui/botao';
 import { CabecalhoVoltar } from '@/components/ui/cabecalho';
@@ -37,6 +44,7 @@ import { Carregando, EstadoErro, EstadoVazio } from '@/components/ui/estados';
 import { AvatarIniciais } from '@/components/ui/imagem';
 import { TelaRolavel } from '@/components/ui/tela';
 import { LabelCaps, Titulo } from '@/components/ui/texto';
+import { confirmar } from '@/lib/confirmar';
 import { formatDiaMesCurtoCaps, formatMesAnoLongoCaps, parseInstant } from '@/lib/datetime';
 import { formatCentavos } from '@/lib/money';
 
@@ -48,7 +56,10 @@ export default function FichaDoCliente() {
   const { role } = useAuth();
   const cliente = useCliente(id ?? '');
   const anotacoes = useAnotacoes(id ?? '');
-  const criar = useCriarAnotacao(id ?? '');
+  const criarNova = useCriarAnotacao(id ?? '');
+  const editar = useEditarAnotacao(id ?? '');
+  const apagar = useApagarAnotacao(id ?? '');
+  const { profissional: minhaFicha } = useMeuProfissional();
 
   const [editor, setEditor] = useState(false);
   const [texto, setTexto] = useState('');
@@ -67,16 +78,40 @@ export default function FichaDoCliente() {
   // Admin com ficha tambem anota; sem ficha a API recusa e a tela mostra o motivo.
   const podeAnotar = role === 'PROFISSIONAL' || role === 'ADMIN';
 
+  // Quem escreveu a ultima anotacao (ou o admin) corrige ela mesma; os outros
+  // acrescentam a deles por cima, assinada.
+  const ehMinha =
+    !!ultimaAnotacao && (role === 'ADMIN' || ultimaAnotacao.profissionalId === minhaFicha?.id);
+  const criar = ehMinha ? editar : criarNova;
+
   function abrirEditor() {
     setTexto(ultimaAnotacao?.texto ?? '');
-    criar.reset();
+    criarNova.reset();
+    editar.reset();
     setEditor(true);
   }
 
   function salvarAnotacao() {
-    const t = texto.trim();
+    const t = texto.trim().slice(0, ANOTACAO_MAX);
     if (!t) return;
-    criar.mutate({ texto: t.slice(0, ANOTACAO_MAX) }, { onSuccess: () => setEditor(false) });
+    if (ehMinha && ultimaAnotacao?.id) {
+      editar.mutate(
+        { anotacaoId: ultimaAnotacao.id, texto: t },
+        { onSuccess: () => setEditor(false) }
+      );
+    } else {
+      criarNova.mutate({ texto: t }, { onSuccess: () => setEditor(false) });
+    }
+  }
+
+  function apagarAnotacao() {
+    const alvo = ultimaAnotacao?.id;
+    if (!alvo) return;
+    confirmar('Apagar esta anotação?', 'Não dá para desfazer.', {
+      textoConfirmar: 'Apagar',
+      destrutivo: true,
+      aoConfirmar: () => apagar.mutate(alvo),
+    });
   }
 
   return (
@@ -141,9 +176,12 @@ export default function FichaDoCliente() {
                   <Text className="mt-2 font-sans text-help text-ink/38">
                     {anotacoes.data!.length - 1}{' '}
                     {anotacoes.data!.length - 1 === 1
-                      ? 'versão anterior guardada.'
-                      : 'versões anteriores guardadas.'}
+                      ? 'anotação anterior guardada.'
+                      : 'anotações anteriores guardadas.'}
                   </Text>
+                ) : null}
+                {ehMinha ? (
+                  <AcaoLinha className="mt-3 self-start" titulo="APAGAR" onPress={apagarAnotacao} />
                 ) : null}
               </>
             )}
