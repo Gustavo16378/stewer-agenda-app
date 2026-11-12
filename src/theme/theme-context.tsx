@@ -23,6 +23,7 @@ import {
   useState,
   type ReactNode,
 } from 'react';
+import { Platform } from 'react-native';
 
 const CHAVE_PREFERENCIA = 'stewer.tema';
 
@@ -79,6 +80,14 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   // `colorScheme` do NativeWind ja e o valor resolvido (inclusive quando e 'system').
   const tema: TemaEfetivo = colorScheme === 'light' ? 'light' : 'dark';
+
+  // No navegador, seguindo o sistema, o NativeWind resolve o esquema mas nao poe a classe
+  // `.dark` no <html>: as cores ficavam claras com o resto do app achando que era escuro
+  // (titulo some sobre a foto). Garante a classe a partir do tema efetivo.
+  useEffect(() => {
+    if (Platform.OS !== 'web' || typeof document === 'undefined') return;
+    document.documentElement.classList.toggle('dark', tema === 'dark');
+  }, [tema]);
 
   const alternarTema = useCallback(() => {
     definirPreferencia(tema === 'dark' ? 'light' : 'dark');
