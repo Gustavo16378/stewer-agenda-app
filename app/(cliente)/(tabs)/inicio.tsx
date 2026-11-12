@@ -354,6 +354,30 @@ export default function InicioCliente() {
 
         {/* O app agenda; quem e o Stewer e o trabalho dele ficam no site. Aqui so o
             convite para conhecer, sem repetir o site. */}
+        {/* as fotos do trabalho que o Stewer sobe na aba Estudio aparecem aqui */}
+        {estudio.fotosEnviadas ? (
+          <>
+            <TituloSecao className="mt-16">O trabalho do Stewer</TituloSecao>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              className="-mx-6 mt-5"
+              contentContainerStyle={{ gap: 10, paddingHorizontal: 24 }}
+            >
+              {estudio.fotos.slice(0, 12).map((f, i) => (
+                <Image
+                  key={i}
+                  source={f.fonte}
+                  accessibilityLabel={f.descricao}
+                  contentFit="cover"
+                  transition={250}
+                  style={{ width: largo ? 180 : 132, height: largo ? 225 : 165, borderRadius: 3 }}
+                />
+              ))}
+            </ScrollView>
+          </>
+        ) : null}
+
         <Pressable
           onPress={() => void Linking.openURL(estudio.site)}
           accessibilityRole="link"
