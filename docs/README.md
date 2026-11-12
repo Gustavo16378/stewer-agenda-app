@@ -1,4 +1,7 @@
-# docs/: achados da API e mapa das telas
+# docs/: achados da API, mapa das telas e testes
+
+O plano e relatório de testes (caixa branca, preta, segurança, Lighthouse) está em
+[`testes.md`](testes.md).
 
 Material produzido em 2026-09-10 ao construir o app do zero. É **retrato daquele momento**:
 quando divergir do código, o código está certo, então atualize aqui.
