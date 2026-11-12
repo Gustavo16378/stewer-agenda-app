@@ -2,7 +2,7 @@ import '@/styles/global.css';
 
 import { QueryClientProvider } from '@tanstack/react-query';
 import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
+import { DarkTheme, DefaultTheme, Stack, ThemeProvider as TemaDaNavegacao } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useMemo } from 'react';
@@ -23,6 +23,12 @@ void SplashScreen.preventAutoHideAsync();
 function Navegacao() {
   const { tema } = useTema();
   const { status } = useAuth();
+  // Os navegadores pintam o fundo de cada cena com o tema deles (cinza claro no padrao).
+  // Transparente: quem pinta e o bg-canvas daqui, nas cores do app, nos dois temas.
+  const temaDaNavegacao = useMemo(() => {
+    const base = tema === 'dark' ? DarkTheme : DefaultTheme;
+    return { ...base, colors: { ...base.colors, background: 'transparent', card: 'transparent' } };
+  }, [tema]);
 
   // Responsivo: em tela larga, menu lateral e conteudo com largura de leitura
   // (ver src/lib/responsivo.ts, Tela e TabBar). A arvore e a mesma em todo lugar.
@@ -31,13 +37,15 @@ function Navegacao() {
       {/* no dark o conteudo da barra do sistema e claro, e vice-versa */}
       <StatusBar style={tema === 'dark' ? 'light' : 'dark'} />
       <View className="flex-1">
-        <Stack
-          screenOptions={{
-            headerShown: false,
-            animation: 'fade',
-            contentStyle: { backgroundColor: 'transparent' },
-          }}
-        />
+        <TemaDaNavegacao value={temaDaNavegacao}>
+          <Stack
+            screenOptions={{
+              headerShown: false,
+              animation: 'fade',
+              contentStyle: { backgroundColor: 'transparent' },
+            }}
+          />
+        </TemaDaNavegacao>
       </View>
       {/* a abertura de marca cobre tudo ate a sessao resolver (e no minimo 1,5 s) */}
       <Abertura pronto={status !== 'carregando'} />
