@@ -42,7 +42,7 @@
  * mostra edicao.
  */
 import { useEffect, useMemo, useState } from 'react';
-import { Alert, Modal, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
+import { Modal, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
 
 import {
   useBloqueios,
@@ -60,6 +60,7 @@ import { Interruptor } from '@/components/ui/interruptor';
 import { TelaRolavel } from '@/components/ui/tela';
 import { LabelCaps, Titulo } from '@/components/ui/texto';
 import { cn } from '@/lib/cn';
+import { confirmar } from '@/lib/confirmar';
 import {
   cobreODiaInteiro,
   comparaWallTime,
@@ -397,10 +398,12 @@ export function TelaDisponibilidade({
 
   function confirmarRemocao(b: Bloqueio) {
     if (!b.id) return;
-    Alert.alert('Liberar este dia?', `${formatDiaMes(b.inicio)} · ${descricaoDoBloqueio(b)}`, [
-      { text: 'Voltar', style: 'cancel' },
-      { text: 'Liberar', style: 'destructive', onPress: () => removerBloqueio.mutate(b.id!) },
-    ]);
+    const id = b.id;
+    confirmar('Liberar este dia?', `${formatDiaMes(b.inicio)} · ${descricaoDoBloqueio(b)}`, {
+      textoConfirmar: 'Liberar',
+      destrutivo: true,
+      aoConfirmar: () => removerBloqueio.mutate(id),
+    });
   }
 
   const carregando = disponibilidade.isLoading || bloqueios.isLoading;

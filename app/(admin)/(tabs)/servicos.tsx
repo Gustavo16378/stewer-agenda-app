@@ -21,7 +21,7 @@
  * DESVIO: o design nao desenhou o formulario; ele e um modal no mesmo vocabulario.
  */
 import { useMemo, useState } from 'react';
-import { Alert, Modal, RefreshControl, ScrollView, Text, View } from 'react-native';
+import { Modal, RefreshControl, ScrollView, Text, View } from 'react-native';
 
 import { useRemoverServico, useSalvarServico, useServicos } from '@/api/hooks';
 import type { Servico } from '@/api/types';
@@ -32,6 +32,7 @@ import { Interruptor } from '@/components/ui/interruptor';
 import { TelaRolavel } from '@/components/ui/tela';
 import { LabelCaps, Titulo } from '@/components/ui/texto';
 import { cn } from '@/lib/cn';
+import { confirmar } from '@/lib/confirmar';
 import { formatCentavos, formatCentavosCurto, formatDuracaoCaps, parseCentavos } from '@/lib/money';
 
 interface Formulario {
@@ -101,17 +102,15 @@ export default function GestaoDeServicos() {
 
   function confirmarRemocao() {
     if (!form?.id) return;
-    Alert.alert(
+    const id = form.id;
+    confirmar(
       'Remover do catálogo?',
-      `"${form.nome}" some do catálogo para sempre — a API não permite trazer de volta. Para só esconder dos clientes, desligue "Visível para clientes".`,
-      [
-        { text: 'Voltar', style: 'cancel' },
-        {
-          text: 'Remover',
-          style: 'destructive',
-          onPress: () => remover.mutate(form.id!, { onSuccess: () => setForm(null) }),
-        },
-      ]
+      `"${form.nome}" some do catálogo para sempre e não dá para trazer de volta. Para só esconder dos clientes, desligue "Visível para clientes".`,
+      {
+        textoConfirmar: 'Remover',
+        destrutivo: true,
+        aoConfirmar: () => remover.mutate(id, { onSuccess: () => setForm(null) }),
+      }
     );
   }
 
