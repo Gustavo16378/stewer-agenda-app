@@ -18,7 +18,9 @@ module.exports = {
     extend: {
       colors: {
         // --- pares dark/light, resolvidos pela variavel CSS ---
-        canvas: 'var(--color-canvas)',
+        // em canais (como `ink`) para `bg-canvas/95` dos paineis de edicao funcionar;
+        // com var() puro o Tailwind descarta a classe e o painel fica transparente
+        canvas: 'rgb(var(--canvas-rgb) / <alpha-value>)',
         surface: 'var(--color-surface)',
         wash: 'var(--color-wash)',
         sunken: 'var(--color-sunken)',

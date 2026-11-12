@@ -192,7 +192,7 @@ export default function FichaDoCliente() {
         animationType="fade"
         onRequestClose={() => setEditor(false)}
       >
-        <View className="bg-canvas/95 flex-1 justify-end">
+        <View className="flex-1 justify-end bg-canvas/95">
           <ScrollView
             keyboardShouldPersistTaps="handled"
             contentContainerClassName="px-screen-x pb-10 pt-8"
