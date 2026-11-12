@@ -17,6 +17,7 @@ import { rotaInicialDoPapel, useAuth } from '@/auth/auth-context';
 import { AvisoLegal } from '@/components/ui/aviso-legal';
 import { Botao } from '@/components/ui/botao';
 import { Campo } from '@/components/ui/campo';
+import { mascaraData, nascimentoValido } from '@/lib/datetime';
 import { mascaraTelefone } from '@/lib/telefone';
 
 import { AbasAcesso } from './_abas';
@@ -32,6 +33,8 @@ export default function CriarConta() {
   const [email, setEmail] = useState('');
   const [telefone, setTelefone] = useState('');
   const [senha, setSenha] = useState('');
+  const [nascimento, setNascimento] = useState('');
+  const [erroNascimento, setErroNascimento] = useState<string | null>(null);
   const [erro, setErro] = useState<ApiError | null>(null);
   const [enviando, setEnviando] = useState(false);
 
@@ -41,9 +44,16 @@ export default function CriarConta() {
 
   async function aoCriar() {
     setErro(null);
+    setErroNascimento(null);
+    const dataNascimento = nascimento.trim() ? nascimentoValido(nascimento) : undefined;
+    if (dataNascimento === null) {
+      setErroNascimento('Confira a data, no formato DD/MM/AAAA.');
+      return;
+    }
     setEnviando(true);
     try {
       const usuario = await registrar({
+        dataNascimento,
         nome: nome.trim(),
         email: email.trim(),
         senha,
@@ -100,6 +110,19 @@ export default function CriarConta() {
         maxLength={30}
         ajuda="Opcional. Só para o Stewer falar com você sobre o horário."
         erro={erro?.violacaoDe('telefone')}
+      />
+
+      <Campo
+        className="mt-5"
+        rotulo="Data de nascimento"
+        value={nascimento}
+        onChangeText={(t) => setNascimento(mascaraData(t))}
+        placeholder="DD/MM/AAAA"
+        keyboardType="number-pad"
+        autoComplete="birthdate-full"
+        maxLength={10}
+        ajuda="Opcional. Para o Stewer lembrar do seu aniversário."
+        erro={erroNascimento ?? erro?.violacaoDe('dataNascimento')}
       />
 
       <Campo

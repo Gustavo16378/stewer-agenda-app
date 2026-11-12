@@ -11,6 +11,7 @@ import { CabecalhoVoltar } from '@/components/ui/cabecalho';
 import { Campo } from '@/components/ui/campo';
 import { TelaRolavel } from '@/components/ui/tela';
 import { LabelCaps, Titulo } from '@/components/ui/texto';
+import { formatDataBr, mascaraData, nascimentoValido } from '@/lib/datetime';
 import { mascaraTelefone } from '@/lib/telefone';
 
 function EditarDados() {
@@ -19,6 +20,11 @@ function EditarDados() {
   const [nome, setNome] = useState(usuario?.nome ?? '');
   const [email, setEmail] = useState(usuario?.email ?? '');
   const [telefone, setTelefone] = useState(mascaraTelefone(usuario?.telefone ?? ''));
+  const [nascimento, setNascimento] = useState(
+    usuario?.dataNascimento ? formatDataBr(usuario.dataNascimento) : ''
+  );
+  const [erroNascimento, setErroNascimento] = useState<string | null>(null);
+  const ehCliente = usuario?.role === 'CLIENTE';
   const [erro, setErro] = useState<ApiError | null>(null);
   const [enviando, setEnviando] = useState(false);
 
@@ -31,15 +37,23 @@ function EditarDados() {
     setNome(usuario.nome ?? '');
     setEmail(usuario.email ?? '');
     setTelefone(mascaraTelefone(usuario.telefone ?? ''));
+    setNascimento(usuario.dataNascimento ? formatDataBr(usuario.dataNascimento) : '');
   }, [usuario]);
 
   const podeSalvar = nome.trim().length > 0 && email.trim().length > 0 && !enviando;
 
   async function aoSalvar() {
     setErro(null);
+    setErroNascimento(null);
+    const dataNascimento = nascimento.trim() ? nascimentoValido(nascimento) : undefined;
+    if (dataNascimento === null) {
+      setErroNascimento('Confira a data, no formato DD/MM/AAAA.');
+      return;
+    }
     setEnviando(true);
     try {
       await atualizarPerfil({
+        dataNascimento,
         nome: nome.trim(),
         email: email.trim(),
         telefone: telefone.trim() || undefined,
@@ -94,6 +108,21 @@ function EditarDados() {
         ajuda="Opcional."
         erro={erro?.violacaoDe('telefone')}
       />
+      {/* so cliente tem ficha; para a equipe o campo nao serve para nada */}
+      {ehCliente ? (
+        <Campo
+          className="mt-[22px]"
+          rotulo="Data de nascimento"
+          value={nascimento}
+          onChangeText={(t) => setNascimento(mascaraData(t))}
+          placeholder="DD/MM/AAAA"
+          keyboardType="number-pad"
+          autoComplete="birthdate-full"
+          maxLength={10}
+          ajuda="Opcional. Para o Stewer lembrar do seu aniversário."
+          erro={erroNascimento ?? erro?.violacaoDe('dataNascimento')}
+        />
+      ) : null}
 
       {erro && !erro.temViolacoes ? (
         <Text className="mt-4 font-sans text-help text-red-500">

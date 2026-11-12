@@ -56,6 +56,8 @@ interface AuthContextValue {
     email: string;
     senha: string;
     telefone?: string;
+    /** AAAA-MM-DD, opcional */
+    dataNascimento?: string;
   }) => Promise<Usuario>;
   /** Troca a senha com o codigo do e-mail; a API ja devolve a sessao aberta. */
   redefinirSenha: (dados: { email: string; codigo: string; novaSenha: string }) => Promise<Usuario>;
@@ -64,7 +66,12 @@ interface AuthContextValue {
   /** Troca a foto de perfil (JPEG em base64, ja reduzido) ou tira, com `null`. */
   trocarFoto: (foto: { tipoConteudo: string; conteudoBase64: string } | null) => Promise<Usuario>;
   /** Corrige nome, e-mail e telefone; a API devolve token novo, que substitui o atual. */
-  atualizarPerfil: (dados: { nome: string; email: string; telefone?: string }) => Promise<Usuario>;
+  atualizarPerfil: (dados: {
+    nome: string;
+    email: string;
+    telefone?: string;
+    dataNascimento?: string;
+  }) => Promise<Usuario>;
   sair: () => Promise<void>;
 }
 
@@ -227,7 +234,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const registrar = useCallback(
-    async (dados: { nome: string; email: string; senha: string; telefone?: string }) => {
+    async (dados: {
+      nome: string;
+      email: string;
+      senha: string;
+      telefone?: string;
+      dataNascimento?: string;
+    }) => {
       // 201 sem schema na spec; a API devolve TokenResponse (confirmado por curl)
       const resposta = await desembrulhaCriado<TokenResponse>(
         api.POST('/auth/registrar', {
@@ -236,6 +249,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             email: dados.email,
             senha: dados.senha,
             ...(dados.telefone ? { telefone: dados.telefone } : {}),
+            ...(dados.dataNascimento ? { dataNascimento: dados.dataNascimento } : {}),
             ...(TENANT_SLUG ? { tenantSlug: TENANT_SLUG } : {}),
           },
         })
@@ -246,10 +260,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const atualizarPerfil = useCallback(
-    async (dados: { nome: string; email: string; telefone?: string }) => {
+    async (dados: { nome: string; email: string; telefone?: string; dataNascimento?: string }) => {
       const resposta = await desembrulha(
         api.PUT('/auth/eu', {
-          body: { nome: dados.nome, email: dados.email, telefone: dados.telefone || undefined },
+          body: {
+            nome: dados.nome,
+            email: dados.email,
+            telefone: dados.telefone || undefined,
+            dataNascimento: dados.dataNascimento || undefined,
+          },
         })
       );
       return guardarToken(resposta, true);

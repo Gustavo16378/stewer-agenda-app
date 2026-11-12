@@ -552,6 +552,24 @@ export function parseDataBr(texto: string | null | undefined): CalendarDate | nu
   return parseCalendarDate(candidato) ? candidato : null;
 }
 
+/** Enquanto digita: "20111994" vira "20/11/1994". So numeros entram. */
+export function mascaraData(digitado: string): string {
+  const d = digitado.replace(/\D/g, '').slice(0, 8);
+  if (d.length <= 2) return d;
+  if (d.length <= 4) return `${d.slice(0, 2)}/${d.slice(2)}`;
+  return `${d.slice(0, 2)}/${d.slice(2, 4)}/${d.slice(4)}`;
+}
+
+/** Data de nascimento digitada: valida, no passado e com ano a partir de 1900. */
+export function nascimentoValido(texto: string): CalendarDate | null {
+  const d = parseDataBr(texto);
+  if (!d) return null;
+  const ano = Number(d.slice(0, 4));
+  const hoje = new Date();
+  const hojeIso = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}-${String(hoje.getDate()).padStart(2, '0')}`;
+  return ano >= 1900 && d < hojeIso ? d : null;
+}
+
 /** "12/09/2026" — a partir de um dia de calendario, para preencher formulario. */
 export function formatDataBr(value: CalendarDate): string {
   const d = parseCalendarDate(value);
