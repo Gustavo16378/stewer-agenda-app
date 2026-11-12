@@ -119,7 +119,7 @@ export const CORES = {
     canvas: '#F2EDE5',
     surface: '#E9E2D6',
     ink: '#14110E',
-    gold: '#8C6C34',
+    gold: '#7A5C28',
     goldBorder: '#C9A96A',
     divider: 'rgba(10,10,10,0.12)',
     fieldBorder: 'rgba(10,10,10,0.18)',

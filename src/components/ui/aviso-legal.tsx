@@ -6,11 +6,11 @@ import { abrirPaginaDoSite } from '@/lib/site';
 export function AvisoLegal({ className }: { className?: string }) {
   return (
     <Text
-      className={className ?? 'mt-10 text-center font-sans text-help leading-[18.7px] text-ink/38'}
+      className={className ?? 'mt-10 text-center font-sans text-ui-sm text-texto-3'}
     >
       Ao continuar, você aceita os{' '}
       <Text
-        className="text-ink/60 underline"
+        className="text-texto-2 underline"
         accessibilityRole="link"
         onPress={() => abrirPaginaDoSite('/termos')}
       >
@@ -18,7 +18,7 @@ export function AvisoLegal({ className }: { className?: string }) {
       </Text>{' '}
       e a{' '}
       <Text
-        className="text-ink/60 underline"
+        className="text-texto-2 underline"
         accessibilityRole="link"
         onPress={() => abrirPaginaDoSite('/privacidade')}
       >

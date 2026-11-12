@@ -27,43 +27,43 @@
   --c-borda: 214 205 191;
   --c-texto: 20 17 14;
   --c-texto-2: 61 55 49;
-  --c-texto-3: 112 103 92;
-  --c-latao: 140 108 52;
+  --c-texto-3: 102 93 82;
+  --c-latao: 122 92 40;
   --c-cadeira: 155 44 34;
 
   /* canais crus: habilitam as utilidades de alfa (text-ink/45, border-ink/18, ...) */
-  --ink-rgb: 10 10 10; /* #0A0A0A */
+  --ink-rgb: 20 17 14; /* redesenho: tinta */
   --canvas-rgb: 242 237 229; /* redesenho: papel */
 
   --color-canvas: #f2ede5; /* fundo de tela */
   --color-ink-inverse: #f1ebe0; /* texto sobre botao primario */
   --color-surface: #e9e2d6; /* redesenho: couro claro */
-  --color-wash: rgba(255, 255, 255, 0.35); /* preenchimento do card em destaque */
-  --color-sunken: rgba(10, 10, 10, 0.04); /* (extrapolado) */
-  --color-gold: #8c6c34; /* dourado como TEXTO/icone (redesenho: mais contraste) */
+  --color-wash: rgb(233 226 214); /* redesenho: couro claro */ /* preenchimento do card em destaque */
+  --color-sunken: rgba(20, 17, 14, 0.04); /* (extrapolado) */
+  --color-gold: #7a5c28; /* dourado como TEXTO/icone (redesenho: mais contraste) */
   --color-gold-border: #c9a96a; /* dourado como BORDA — igual nos 2 temas */
 
-  --color-divider: rgba(10, 10, 10, 0.12);
-  --color-divider-card: rgba(10, 10, 10, 0.12);
-  --color-card-border: rgba(10, 10, 10, 0.16); /* (extrapolado) */
-  --color-field-border: rgba(10, 10, 10, 0.18);
-  --color-ghost-border: rgba(10, 10, 10, 0.25); /* (extrapolado) */
-  --color-indicator: rgba(10, 10, 10, 0.22);
+  --color-divider: rgba(20, 17, 14, 0.12);
+  --color-divider-card: rgba(20, 17, 14, 0.12);
+  --color-card-border: rgba(20, 17, 14, 0.16); /* (extrapolado) */
+  --color-field-border: rgba(20, 17, 14, 0.18);
+  --color-ghost-border: rgba(20, 17, 14, 0.25); /* (extrapolado) */
+  --color-indicator: rgba(20, 17, 14, 0.22);
 
-  --color-text-strong: rgba(10, 10, 10, 0.85); /* (extrapolado) */
-  --color-text-body: rgba(10, 10, 10, 0.8);
-  --color-text-meta: rgba(10, 10, 10, 0.6);
-  --color-text-label: rgba(10, 10, 10, 0.5); /* eyebrow */
-  --color-text-muted: rgba(10, 10, 10, 0.45); /* metadado em caps */
-  --color-text-dim: rgba(10, 10, 10, 0.45); /* tab bar inativa */
-  --color-text-faint: rgba(10, 10, 10, 0.38); /* placeholder (extrapolado) */
-  --color-text-disabled: rgba(10, 10, 10, 0.25);
-  --color-day: rgba(10, 10, 10, 0.75); /* dia de calendario disponivel */
-  --color-nav-arrow: rgba(10, 10, 10, 0.7);
-  --color-accent-line: rgba(10, 10, 10, 0.65); /* "SEX, 11 SET" 10.5px/500/.16em */
-  --color-status-dim: rgba(10, 10, 10, 0.3);
-  --color-battery: rgba(10, 10, 10, 0.4);
-  --color-slot-off: rgba(10, 10, 10, 0.25);
+  --color-text-strong: rgba(20, 17, 14, 0.85); /* (extrapolado) */
+  --color-text-body: rgba(20, 17, 14, 0.8);
+  --color-text-meta: rgba(20, 17, 14, 0.6);
+  --color-text-label: rgba(20, 17, 14, 0.5); /* eyebrow */
+  --color-text-muted: rgba(20, 17, 14, 0.45); /* metadado em caps */
+  --color-text-dim: rgba(20, 17, 14, 0.45); /* tab bar inativa */
+  --color-text-faint: rgba(20, 17, 14, 0.38); /* placeholder (extrapolado) */
+  --color-text-disabled: rgba(20, 17, 14, 0.25);
+  --color-day: rgba(20, 17, 14, 0.75); /* dia de calendario disponivel */
+  --color-nav-arrow: rgba(20, 17, 14, 0.7);
+  --color-accent-line: rgba(20, 17, 14, 0.65); /* "SEX, 11 SET" 10.5px/500/.16em */
+  --color-status-dim: rgba(20, 17, 14, 0.3);
+  --color-battery: rgba(20, 17, 14, 0.4);
+  --color-slot-off: rgba(20, 17, 14, 0.25);
 }
 
 /* ---------- DARK (frames 01-17) ---------- */
@@ -76,38 +76,38 @@
   --c-texto-2: 200 195 188;
   --c-texto-3: 138 129 120;
   --c-latao: 201 169 106;
-  --c-cadeira: 196 72 58;
+  --c-cadeira: 214 96 80;
 
-  --ink-rgb: 241 235 224; /* #F1EBE0 */
+  --ink-rgb: 240 235 228; /* redesenho: marfim */
   --canvas-rgb: 12 12 12; /* redesenho: carvao */
 
   --color-canvas: #0c0c0c;
   --color-ink-inverse: #0a0a0a;
   --color-surface: #171310; /* redesenho: couro */
-  --color-wash: transparent; /* o card em destaque do dark NAO tem preenchimento */
+  --color-wash: rgb(23 19 16); /* redesenho: couro */
   --color-sunken: #0e0e0d; /* bloco INTERVALO */
   --color-gold: #c9a96a;
   --color-gold-border: #c9a96a;
 
-  --color-divider: rgba(241, 235, 224, 0.1);
-  --color-divider-card: rgba(241, 235, 224, 0.12);
-  --color-card-border: rgba(241, 235, 224, 0.14);
-  --color-field-border: rgba(241, 235, 224, 0.16);
-  --color-ghost-border: rgba(241, 235, 224, 0.22);
-  --color-indicator: rgba(241, 235, 224, 0.2);
+  --color-divider: rgba(240, 235, 228, 0.1);
+  --color-divider-card: rgba(240, 235, 228, 0.12);
+  --color-card-border: rgba(240, 235, 228, 0.14);
+  --color-field-border: rgba(240, 235, 228, 0.16);
+  --color-ghost-border: rgba(240, 235, 228, 0.22);
+  --color-indicator: rgba(240, 235, 228, 0.2);
 
-  --color-text-strong: rgba(241, 235, 224, 0.88);
-  --color-text-body: rgba(241, 235, 224, 0.85);
-  --color-text-meta: rgba(241, 235, 224, 0.62);
-  --color-text-label: rgba(241, 235, 224, 0.48);
-  --color-text-muted: rgba(241, 235, 224, 0.45);
-  --color-text-dim: rgba(241, 235, 224, 0.4);
-  --color-text-faint: rgba(241, 235, 224, 0.35);
-  --color-text-disabled: rgba(241, 235, 224, 0.25);
-  --color-day: rgba(241, 235, 224, 0.8);
-  --color-nav-arrow: rgba(241, 235, 224, 0.75);
-  --color-accent-line: rgba(241, 235, 224, 0.72);
-  --color-status-dim: rgba(241, 235, 224, 0.35);
-  --color-battery: rgba(241, 235, 224, 0.45);
-  --color-slot-off: rgba(241, 235, 224, 0.22);
+  --color-text-strong: rgba(240, 235, 228, 0.88);
+  --color-text-body: rgba(240, 235, 228, 0.85);
+  --color-text-meta: rgba(240, 235, 228, 0.62);
+  --color-text-label: rgba(240, 235, 228, 0.48);
+  --color-text-muted: rgba(240, 235, 228, 0.45);
+  --color-text-dim: rgba(240, 235, 228, 0.4);
+  --color-text-faint: rgba(240, 235, 228, 0.35);
+  --color-text-disabled: rgba(240, 235, 228, 0.25);
+  --color-day: rgba(240, 235, 228, 0.8);
+  --color-nav-arrow: rgba(240, 235, 228, 0.75);
+  --color-accent-line: rgba(240, 235, 228, 0.72);
+  --color-status-dim: rgba(240, 235, 228, 0.35);
+  --color-battery: rgba(240, 235, 228, 0.45);
+  --color-slot-off: rgba(240, 235, 228, 0.22);
 }

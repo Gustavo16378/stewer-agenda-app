@@ -192,7 +192,7 @@ function CardProfissional({
         />
         <View className="absolute bottom-0 left-0 right-0 gap-1 p-6">
           {profissional.especialidade ? (
-            <Text className="font-sans-medium text-ui-sm text-latao">
+            <Text className="font-sans-medium text-ui-sm text-[#C9A96A]">
               {profissional.especialidade}
             </Text>
           ) : null}

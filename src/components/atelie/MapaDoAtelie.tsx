@@ -87,7 +87,7 @@ export function MapaDoAtelie() {
             style={StyleSheet.absoluteFill}
             contentFit="cover"
             transition={250}
-            accessibilityIgnoresInvertColors
+            accessibilityLabel="Mapa das ruas em volta da Boss House, no Plano Diretor Norte"
           />
           {/* escurece as bordas para o mapa assentar no fundo da tela */}
           <LinearGradient

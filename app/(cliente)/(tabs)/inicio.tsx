@@ -97,7 +97,8 @@ function Heroi({ nome }: { nome: string }) {
           {marca}
           <View className="mb-6 h-px w-8 bg-latao" />
           {saudacaoENome}
-          <Text className="mt-4 font-display-italic text-ds-20 text-latao">{LEMA}</Text>
+          {/* latao claro fixo: o fundo do heroi e carvao nos dois temas */}
+          <Text className="mt-4 font-display-italic text-ds-20 text-[#C9A96A]">{LEMA}</Text>
         </View>
         <View style={{ width: lado, height: lado }}>
           <Image
