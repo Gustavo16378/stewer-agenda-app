@@ -21,6 +21,7 @@ import { hojeCalendarDate, parseCalendarDate, type CalendarDate } from '@/lib/da
 import { formatCentavos } from '@/lib/money';
 import { andarPeriodo, periodoDe, variacao, type TipoPeriodo } from '@/lib/periodo';
 import { useLayoutLargo } from '@/lib/responsivo';
+import { useTema } from '@/theme/theme-context';
 
 const TIPOS: { chave: TipoPeriodo; rotulo: string }[] = [
   { chave: 'dia', rotulo: 'Dia' },
@@ -78,22 +79,37 @@ function Numero({
   detalhe,
   destaque,
   largura,
+  miudo,
 }: {
   valor: string;
   legenda: string;
   detalhe?: React.ReactNode;
   destaque?: boolean;
   largura: string;
+  /** meio cartao no celular: numero menor para "R$ 12.345,00" caber inteiro */
+  miudo?: boolean;
 }) {
+  const { tema } = useTema();
   return (
     <View className="p-1" style={{ width: largura as `${number}%` }}>
-      <View className={cn('h-full rounded-[3px] p-5', destaque ? 'bg-[#0c0c0c]' : 'bg-superficie')}>
+      <View
+        className={cn(
+          'h-full rounded-[3px]',
+          miudo ? 'p-4' : 'p-5',
+          // no escuro o preto some no fundo: vira couro com fio de latao
+          destaque
+            ? tema === 'dark'
+              ? 'border border-latao bg-superficie'
+              : 'bg-[#0c0c0c]'
+            : 'bg-superficie'
+        )}
+      >
         <Text
           className={cn(
-            'font-display text-[30px] leading-[36px]',
+            'font-display',
+            miudo ? 'text-[22px] leading-[28px]' : 'text-[30px] leading-[36px]',
             destaque ? 'text-marfim' : 'text-texto'
           )}
-          numberOfLines={1}
         >
           {valor}
         </Text>
@@ -128,27 +144,29 @@ function Fatias({
         </Text>
       ) : (
         <View className="mt-4 gap-4">
-          {fatias.map((f) => (
-            <View key={f.nome}>
-              <View className="flex-row items-baseline justify-between gap-3">
-                <Text className="flex-1 font-sans-medium text-ui text-texto" numberOfLines={1}>
-                  {rotulo ? rotulo(f.nome ?? '') : f.nome}
-                </Text>
-                <Text className="font-sans text-ui-sm text-texto-3">
-                  {f.atendimentos} {f.atendimentos === 1 ? 'atendimento' : 'atendimentos'}
-                </Text>
-                <Text className="w-24 text-right font-sans-semibold text-ui text-texto">
-                  {formatCentavos(f.faturadoCentavos)}
-                </Text>
+          {[...comAlgo]
+            .sort((x, y) => (y.faturadoCentavos ?? 0) - (x.faturadoCentavos ?? 0))
+            .map((f) => (
+              <View key={f.nome}>
+                <View className="flex-row items-baseline justify-between gap-3">
+                  <Text className="flex-1 font-sans-medium text-ui text-texto" numberOfLines={1}>
+                    {rotulo ? rotulo(f.nome ?? '') : f.nome}
+                  </Text>
+                  <Text className="font-sans text-ui-sm text-texto-3">
+                    {f.atendimentos} {f.atendimentos === 1 ? 'atendimento' : 'atendimentos'}
+                  </Text>
+                  <Text className="w-24 text-right font-sans-semibold text-ui text-texto">
+                    {formatCentavos(f.faturadoCentavos)}
+                  </Text>
+                </View>
+                <View className="mt-2 h-[6px] rounded-full bg-borda">
+                  <View
+                    className="h-full rounded-full bg-latao"
+                    style={{ width: `${((f.faturadoCentavos ?? 0) / maximo) * 100}%` }}
+                  />
+                </View>
               </View>
-              <View className="mt-2 h-[6px] rounded-full bg-borda">
-                <View
-                  className="h-full rounded-full bg-latao"
-                  style={{ width: `${((f.faturadoCentavos ?? 0) / maximo) * 100}%` }}
-                />
-              </View>
-            </View>
-          ))}
+            ))}
         </View>
       )}
     </View>
@@ -168,7 +186,9 @@ export default function Financeiro() {
   const a: TotaisFinanceiros = r?.anterior ?? {};
   const hoje = hojeCalendarDate();
   const atual = periodo.de <= hoje && hoje <= periodo.ate;
+  // no celular o faturado ocupa a linha toda (e o numero que importa); o resto vai em pares
   const largura = largo ? '33.333%' : '50%';
+  const miudo = !largo;
 
   return (
     <TelaRolavel>
@@ -183,7 +203,7 @@ export default function Financeiro() {
         Tudo sai da agenda: o que teve baixa como Atendido conta como faturado.
       </Text>
 
-      <View className="mt-7 flex-row flex-wrap gap-2" accessibilityRole="radiogroup">
+      <View className="mt-7 flex-row gap-[6px]" accessibilityRole="radiogroup">
         {TIPOS.map((p) => {
           const on = tipo === p.chave;
           return (
@@ -193,12 +213,17 @@ export default function Financeiro() {
               accessibilityRole="radio"
               accessibilityState={{ checked: on }}
               className={cn(
-                'rounded-full border px-5 py-[10px]',
+                'flex-1 items-center rounded-full border py-[10px]',
                 on ? 'border-latao bg-latao' : 'border-borda'
               )}
             >
               <Text
-                className={cn('font-sans-semibold text-ui-sm', on ? 'text-fundo' : 'text-texto-2')}
+                className={cn(
+                  'font-sans-semibold',
+                  // cinco botoes numa linha so: no celular a letra desce um ponto para "Semestre" caber
+                  largo ? 'text-ui-sm' : 'text-[12px]',
+                  on ? 'text-fundo' : 'text-texto-2'
+                )}
               >
                 {p.rotulo}
               </Text>
@@ -250,7 +275,7 @@ export default function Financeiro() {
         <View style={relatorio.isFetching ? { opacity: 0.6 } : null}>
           <View className="mt-6 flex-row flex-wrap" style={{ marginHorizontal: -4 }}>
             <Numero
-              largura={largura}
+              largura={largo ? largura : '100%'}
               destaque
               valor={formatCentavos(t.faturadoCentavos ?? 0)}
               legenda="faturado"
@@ -260,27 +285,32 @@ export default function Financeiro() {
             />
             <Numero
               largura={largura}
+              miudo={miudo}
               valor={formatCentavos(t.aReceberCentavos ?? 0)}
               legenda={`a receber, ${t.agendados ?? 0} ${t.agendados === 1 ? 'horário marcado' : 'horários marcados'}`}
             />
             <Numero
               largura={largura}
+              miudo={miudo}
               valor={String(t.atendimentos ?? 0)}
               legenda="atendimentos com baixa"
               detalhe={<Comparacao atual={t.atendimentos ?? 0} anterior={a.atendimentos ?? 0} />}
             />
             <Numero
               largura={largura}
+              miudo={miudo}
               valor={formatCentavos(t.ticketMedioCentavos ?? 0)}
               legenda="por atendimento, em média"
             />
             <Numero
               largura={largura}
+              miudo={miudo}
               valor={String(t.clientesNovos ?? 0)}
               legenda={`clientes novos, de ${t.clientesAtendidos ?? 0} atendidos`}
             />
             <Numero
               largura={largura}
+              miudo={miudo}
               valor={`${t.faltas ?? 0}`}
               legenda={`faltas (${t.taxaDeFaltas ?? 0}%), ${t.cancelados ?? 0} ${t.cancelados === 1 ? 'cancelado' : 'cancelados'}`}
             />
