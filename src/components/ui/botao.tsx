@@ -31,18 +31,20 @@ export interface BotaoProps extends Omit<PressableProps, 'children' | 'style'> {
   alinhamento?: 'centro' | 'esquerda';
 }
 
+// Redesenho (nov/2026): primario em latao, secundario com contorno de latao, rotulo em
+// frase e legivel. Mesma API, para todas as telas mudarem juntas.
 const CAIXA: Record<Variante, string> = {
-  primario: 'bg-ink rounded-token py-[18px] px-4',
-  fantasma: 'border-ghost-border rounded-token border py-[15px] px-4',
-  fantasmaCompacto: 'border-ghost-border rounded-token border py-[10px] px-4',
+  primario: 'bg-latao rounded-[3px] py-[17px] px-5',
+  fantasma: 'border border-latao/50 rounded-[3px] py-[15px] px-5',
+  fantasmaCompacto: 'border border-latao/50 rounded-[3px] py-[10px] px-4',
   texto: '',
 };
 
 const LABEL: Record<Variante, string> = {
-  primario: 'text-ink-inverse',
-  fantasma: 'text-caps-md text-ink/75',
-  fantasmaCompacto: 'text-caps tracking-row text-ink/80',
-  texto: 'text-gold',
+  primario: 'text-fundo',
+  fantasma: 'text-latao font-sans-medium',
+  fantasmaCompacto: 'text-latao font-sans-medium text-ui-sm',
+  texto: 'text-latao font-sans-medium',
 };
 
 export function Botao({
@@ -64,7 +66,7 @@ export function Botao({
       className={cn(
         CAIXA[variante],
         alinhamento === 'centro' ? 'items-center justify-center' : 'items-start',
-        inativo && 'opacity-40',
+        inativo && 'opacity-45',
         className
       )}
       // o design usa opacity:.92 no hover; no toque o equivalente e o press feedback
@@ -120,7 +122,7 @@ export function AcaoLinha({
     >
       <LabelCaps
         papel="meta"
-        className={cn('tracking-row', destaque ? 'text-gold' : 'text-ink/50')}
+        className={cn('font-sans-medium', destaque ? 'text-latao' : 'text-texto-3')}
       >
         {titulo}
       </LabelCaps>

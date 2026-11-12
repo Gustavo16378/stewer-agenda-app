@@ -7,7 +7,14 @@
  * fontes davam 404 e o app caia na Times New Roman. Aqui a pasta vira `vendor` e as
  * referencias no JS e no HTML sao reescritas.
  */
-import { existsSync, readdirSync, readFileSync, renameSync, statSync, writeFileSync } from 'node:fs';
+import {
+  existsSync,
+  readdirSync,
+  readFileSync,
+  renameSync,
+  statSync,
+  writeFileSync,
+} from 'node:fs';
 import { join } from 'node:path';
 
 const DIST = process.argv[2] ?? 'dist';

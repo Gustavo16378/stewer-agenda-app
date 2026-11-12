@@ -50,6 +50,19 @@ module.exports = {
         battery: 'var(--color-battery)',
         'slot-off': 'var(--color-slot-off)',
 
+        // --- redesenho (nov/2026): paleta tirada das fotos do atelie ---
+        // carvao (fundo), couro (superficie), latao (a marca), marfim/areia (texto) e o
+        // vermelho das cadeiras da Boss House, so para o que e destrutivo.
+        fundo: 'rgb(var(--c-fundo) / <alpha-value>)',
+        superficie: 'rgb(var(--c-superficie) / <alpha-value>)',
+        borda: 'rgb(var(--c-borda) / <alpha-value>)',
+        texto: 'rgb(var(--c-texto) / <alpha-value>)',
+        'texto-2': 'rgb(var(--c-texto-2) / <alpha-value>)',
+        'texto-3': 'rgb(var(--c-texto-3) / <alpha-value>)',
+        latao: 'rgb(var(--c-latao) / <alpha-value>)',
+        cadeira: 'rgb(var(--c-cadeira) / <alpha-value>)',
+        marfim: '#F0EBE4',
+
         // --- canais crus: habilitam text-ink/48, border-ink/16, bg-ink/20 ---
         ink: 'rgb(var(--ink-rgb) / <alpha-value>)',
         'on-ink': 'rgb(var(--canvas-rgb) / <alpha-value>)',
@@ -132,6 +145,17 @@ module.exports = {
         'icon-sm': '15px',
         icon: '16px',
         'icon-lg': '19px', // seta de voltar
+
+        // --- redesenho: escala legivel (Inter) e de presenca (Playfair) ---
+        'ui-xs': ['12px', { lineHeight: '16px' }],
+        'ui-sm': ['13.5px', { lineHeight: '19px' }],
+        ui: ['15px', { lineHeight: '22px' }],
+        'ui-lg': ['17px', { lineHeight: '25px' }],
+        'ds-20': ['20px', { lineHeight: '26px' }],
+        'ds-24': ['24px', { lineHeight: '30px' }],
+        'ds-30': ['30px', { lineHeight: '36px' }],
+        'ds-38': ['38px', { lineHeight: '44px' }],
+        'ds-48': ['48px', { lineHeight: '52px' }],
 
         // --- escala Playfair (display) ---
         'd-xs': '13px',

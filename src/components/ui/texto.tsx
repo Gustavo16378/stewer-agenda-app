@@ -25,6 +25,7 @@
 import { Text, type TextProps } from 'react-native';
 
 import { cn } from '@/lib/cn';
+import { emFrase } from '@/lib/frase';
 
 // ---------------------------------------------------------------------------
 
@@ -46,39 +47,38 @@ type PapelCaps =
   /** Label de botao primario: 10.5px .22em sobre o fundo invertido (8x). */
   | 'botao';
 
+// Redesenho (nov/2026): os papeis continuam os mesmos, mas o texto deixou de ser caixa
+// alta espacada de 9px. Agora e frase, em Inter legivel (ver src/lib/frase.ts).
 const CAPS: Record<PapelCaps, string> = {
-  secao: 'font-sans-semibold text-caps tracking-section text-text-label',
-  tela: 'font-sans-semibold text-caps tracking-screen text-text-label',
-  meta: 'font-sans-semibold text-caps tracking-wide text-text-muted',
-  micro: 'font-sans-semibold text-caps-xs tracking-row text-ink/42',
-  campo: 'font-sans-semibold text-caps-xs tracking-section text-text-muted',
-  tab: 'font-sans-semibold text-caps tracking-tab text-text-dim',
-  tabAtiva: 'font-sans-semibold text-caps tracking-tab text-gold',
-  botao: 'font-sans-semibold text-caps-lg tracking-button',
+  secao: 'font-sans-medium text-ui-sm text-texto-3',
+  tela: 'font-sans-medium text-ui-sm text-texto-3',
+  meta: 'font-sans text-ui-sm text-texto-3',
+  micro: 'font-sans-medium text-ui-xs text-texto-3',
+  campo: 'font-sans-medium text-ui-xs text-texto-3',
+  tab: 'font-sans-medium text-ui-xs text-texto-3',
+  tabAtiva: 'font-sans-semibold text-ui-xs text-latao',
+  botao: 'font-sans-semibold text-ui',
 };
 
-/** Quanto de tracking cada papel usa, em `em` — para compensar o espaco final. */
-const TRACKING_EM: Record<PapelCaps, number> = {
-  secao: 0.24,
-  tela: 0.26,
-  meta: 0.2,
-  micro: 0.18,
-  campo: 0.24,
-  tab: 0.14,
-  tabAtiva: 0.14,
-  botao: 0.22,
-};
+/** Classes de caixa alta herdadas das telas antigas que nao fazem mais sentido. */
+function semCaixaAlta(className: string | undefined): string | undefined {
+  return className
+    ?.split(/\s+/)
+    .filter((c) => !/^tracking-/.test(c) && !/^text-(caps|2xs|micro)/.test(c))
+    .join(' ');
+}
 
-const CORPO_PX: Record<PapelCaps, number> = {
-  secao: 9,
-  tela: 9,
-  meta: 9,
-  micro: 8.5,
-  campo: 8.5,
-  tab: 9,
-  tabAtiva: 9,
-  botao: 10.5,
-};
+/** Junta os pedacos de texto de um children e passa para frase. */
+function paraFrase(children: React.ReactNode): React.ReactNode {
+  if (typeof children === 'string') return emFrase(children);
+  if (
+    Array.isArray(children) &&
+    children.every((c) => typeof c === 'string' || typeof c === 'number')
+  ) {
+    return emFrase(children.join(''));
+  }
+  return children;
+}
 
 export interface LabelCapsProps extends TextProps {
   papel?: PapelCaps;
@@ -94,25 +94,22 @@ export interface LabelCapsProps extends TextProps {
 export function LabelCaps({
   papel = 'secao',
   className,
-  compensarTracking = false,
+  compensarTracking: _semUso = false,
   style,
+  children,
   ...props
 }: LabelCapsProps) {
   return (
     <Text
-      className={cn(CAPS[papel], className)}
-      style={[
-        // O Android acrescenta padding de fonte e desalinha os pares label/valor
-        // em corpos pequenos. Todos os caps daqui tem <= 10.5px.
-        { includeFontPadding: false },
-        compensarTracking ? { paddingLeft: CORPO_PX[papel] * TRACKING_EM[papel] } : null,
-        style,
-      ]}
+      className={cn(CAPS[papel], semCaixaAlta(className))}
+      style={[{ includeFontPadding: false }, style]}
       // Com a fonte do sistema em "grande", labels como DISPONIBILIDADE (tab bar)
       // estouram a largura. Limita o crescimento sem travar a acessibilidade em 1x.
-      maxFontSizeMultiplier={1.15}
+      maxFontSizeMultiplier={1.4}
       {...props}
-    />
+    >
+      {paraFrase(children)}
+    </Text>
   );
 }
 
@@ -124,10 +121,10 @@ export interface TituloProps extends TextProps {
 
 /** Titulo em Playfair Display. O tamanho vem por className (`text-d-31`, `text-d-23`...). */
 export function Titulo({ className, ...props }: TituloProps) {
-  return <Text className={cn('font-display text-ink', className)} {...props} />;
+  return <Text className={cn('font-display text-texto', className)} {...props} />;
 }
 
 /** Corpo de texto em Inter. */
 export function Corpo({ className, ...props }: TituloProps) {
-  return <Text className={cn('font-sans text-text-body', className)} {...props} />;
+  return <Text className={cn('font-sans text-ui text-texto-2', className)} {...props} />;
 }

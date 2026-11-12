@@ -8,10 +8,11 @@
  * A mensagem de erro abaixo do campo e o destino das `violacoes` que a API manda
  * em 400/422 (`{campo, mensagem}`) — ver src/api/errors.ts.
  */
-import { forwardRef } from 'react';
+import { forwardRef, useState } from 'react';
 import { Text, TextInput, View, type TextInputProps } from 'react-native';
 
 import { cn } from '@/lib/cn';
+import { emFrase } from '@/lib/frase';
 import { useCores } from '@/theme/theme-context';
 
 import { LabelCaps } from './texto';
@@ -30,28 +31,38 @@ export const Campo = forwardRef<TextInput, CampoProps>(function Campo(
   ref
 ) {
   const cores = useCores();
+  const [focado, setFocado] = useState(false);
 
+  // Redesenho: campo sobre a superficie de couro, texto de 17px, borda em latao no foco.
   return (
     <View className={cn('gap-2', className)}>
-      <LabelCaps papel="secao" className="tracking-button">
+      <LabelCaps papel="secao" className="text-texto-2">
         {rotulo}
       </LabelCaps>
 
       <TextInput
         ref={ref}
-        accessibilityLabel={rotulo}
+        accessibilityLabel={emFrase(rotulo)}
         placeholderTextColor={cores.placeholder}
         className={cn(
-          'rounded-token border p-4 font-sans text-row text-ink',
-          erro ? 'border-red-500/60' : 'border-field-border'
+          'rounded-[3px] border bg-superficie px-4 py-[15px] font-sans text-ui-lg text-texto',
+          erro ? 'border-cadeira/70' : focado ? 'border-latao' : 'border-borda'
         )}
         {...props}
+        onFocus={(e) => {
+          setFocado(true);
+          props.onFocus?.(e);
+        }}
+        onBlur={(e) => {
+          setFocado(false);
+          props.onBlur?.(e);
+        }}
       />
 
       {erro ? (
-        <Text className="font-sans text-help text-red-500">{erro}</Text>
+        <Text className="font-sans text-ui-sm text-cadeira">{erro}</Text>
       ) : ajuda ? (
-        <Text className="font-sans text-help text-ink/42">{ajuda}</Text>
+        <Text className="font-sans text-ui-sm text-texto-3">{ajuda}</Text>
       ) : null}
     </View>
   );

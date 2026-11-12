@@ -48,6 +48,10 @@ jest.mock('expo-splash-screen', () => ({
   setOptions: jest.fn(),
 }));
 
+// Reanimated 4 roda sobre o react-native-worklets, que tenta falar com o modulo nativo
+// ja no import; em teste usamos o mock que a propria biblioteca publica.
+jest.mock('react-native-worklets', () => require('react-native-worklets/src/mock'));
+
 // Silencia o aviso de act() do Reanimated em teste de componente.
 jest.mock('react-native-reanimated', () => {
   const Reanimated = require('react-native-reanimated/mock');

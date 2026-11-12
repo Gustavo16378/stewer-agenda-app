@@ -21,16 +21,26 @@
 
 /* ---------- LIGHT (frames 18-19) ---------- */
 :root {
+  /* redesenho: paleta clara (papel, couro claro, latao escurecido para contraste) */
+  --c-fundo: 242 237 229;
+  --c-superficie: 233 226 214;
+  --c-borda: 214 205 191;
+  --c-texto: 20 17 14;
+  --c-texto-2: 61 55 49;
+  --c-texto-3: 112 103 92;
+  --c-latao: 140 108 52;
+  --c-cadeira: 155 44 34;
+
   /* canais crus: habilitam as utilidades de alfa (text-ink/45, border-ink/18, ...) */
   --ink-rgb: 10 10 10; /* #0A0A0A */
-  --canvas-rgb: 241 235 224; /* #F1EBE0 */
+  --canvas-rgb: 242 237 229; /* redesenho: papel */
 
-  --color-canvas: #f1ebe0; /* fundo de tela */
+  --color-canvas: #f2ede5; /* fundo de tela */
   --color-ink-inverse: #f1ebe0; /* texto sobre botao primario */
-  --color-surface: rgba(10, 10, 10, 0.04); /* superficie elevada (extrapolado) */
+  --color-surface: #e9e2d6; /* redesenho: couro claro */
   --color-wash: rgba(255, 255, 255, 0.35); /* preenchimento do card em destaque */
   --color-sunken: rgba(10, 10, 10, 0.04); /* (extrapolado) */
-  --color-gold: #a8894f; /* dourado como TEXTO/icone */
+  --color-gold: #8c6c34; /* dourado como TEXTO/icone (redesenho: mais contraste) */
   --color-gold-border: #c9a96a; /* dourado como BORDA — igual nos 2 temas */
 
   --color-divider: rgba(10, 10, 10, 0.12);
@@ -58,12 +68,22 @@
 
 /* ---------- DARK (frames 01-17) ---------- */
 .dark:root {
-  --ink-rgb: 241 235 224; /* #F1EBE0 */
-  --canvas-rgb: 10 10 10; /* #0A0A0A */
+  /* redesenho: carvao, couro, latao, marfim, areia */
+  --c-fundo: 12 12 12;
+  --c-superficie: 23 19 16;
+  --c-borda: 44 38 33;
+  --c-texto: 240 235 228;
+  --c-texto-2: 200 195 188;
+  --c-texto-3: 138 129 120;
+  --c-latao: 201 169 106;
+  --c-cadeira: 196 72 58;
 
-  --color-canvas: #0a0a0a;
+  --ink-rgb: 241 235 224; /* #F1EBE0 */
+  --canvas-rgb: 12 12 12; /* redesenho: carvao */
+
+  --color-canvas: #0c0c0c;
   --color-ink-inverse: #0a0a0a;
-  --color-surface: #121110; /* superficie elevada (agenda, anotacoes) */
+  --color-surface: #171310; /* redesenho: couro */
   --color-wash: transparent; /* o card em destaque do dark NAO tem preenchimento */
   --color-sunken: #0e0e0d; /* bloco INTERVALO */
   --color-gold: #c9a96a;

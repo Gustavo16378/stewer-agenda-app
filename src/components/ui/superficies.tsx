@@ -28,8 +28,9 @@ export function Card({
   return (
     <View
       className={cn(
-        'rounded-token border px-6 py-[26px]',
-        destaque ? 'border-gold-border bg-wash' : 'border-card-border',
+        // redesenho: couro com borda fina; o destaque ganha a faixa de latao a esquerda
+        'rounded-[3px] border border-borda bg-superficie px-6 py-6',
+        destaque && 'border-l-2 border-l-latao',
         className
       )}
       {...props}
@@ -41,12 +42,12 @@ export function Card({
 
 /** Linha de 1px dentro de um card. */
 export function DivisorCard({ className }: { className?: string }) {
-  return <View className={cn('h-px bg-divider-card', className)} />;
+  return <View className={cn('h-px bg-borda', className)} />;
 }
 
 /** Linha de 1px entre itens de lista. */
 export function Divisor({ className }: { className?: string }) {
-  return <View className={cn('h-px bg-divider', className)} />;
+  return <View className={cn('h-px bg-borda/70', className)} />;
 }
 
 /**
@@ -67,7 +68,7 @@ export function LinhaLista({
     <View
       className={cn(
         'flex-row items-center justify-between pb-[18px]',
-        !ultima && 'border-b border-divider',
+        !ultima && 'border-b border-borda/70',
         className
       )}
     >

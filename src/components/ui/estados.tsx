@@ -37,7 +37,7 @@ export function Carregando({ className }: { className?: string }) {
     <View className={cn('flex-1 items-center justify-center gap-4 py-16', className)}>
       <ActivityIndicator color={cores.gold} />
       {acordando ? (
-        <Corpo className="max-w-[260px] text-center text-meta text-text-meta">
+        <Corpo className="max-w-[280px] text-center text-ui-sm text-texto-3">
           Conectando ao servidor. Na primeira vez do dia isso leva alguns segundos.
         </Corpo>
       ) : null}
@@ -60,22 +60,15 @@ export function EstadoVazio({
 }) {
   return (
     <View className={cn('items-center justify-center gap-3 py-16', className)}>
-      {eyebrow ? (
-        <LabelCaps papel="secao" compensarTracking>
-          {eyebrow}
-        </LabelCaps>
-      ) : null}
-      <Titulo className="text-center text-d-23">{titulo}</Titulo>
+      {/* redesenho: sem rotulo em caixa alta; o losango da marca, o titulo e a direcao */}
+      <View className="mb-2 h-3 w-3 rotate-45 border border-latao" />
+      {eyebrow ? <LabelCaps papel="secao">{eyebrow}</LabelCaps> : null}
+      <Titulo className="text-center text-ds-24">{titulo}</Titulo>
       {descricao ? (
-        <Corpo className="max-w-[280px] text-center text-meta text-text-meta">{descricao}</Corpo>
+        <Corpo className="max-w-[300px] text-center text-ui text-texto-2">{descricao}</Corpo>
       ) : null}
       {acao ? (
-        <Botao
-          titulo={acao.titulo}
-          variante="fantasma"
-          onPress={acao.aoTocar}
-          className="mt-4 self-stretch"
-        />
+        <Botao titulo={acao.titulo} onPress={acao.aoTocar} className="mt-4 self-stretch" />
       ) : null}
     </View>
   );
@@ -100,10 +93,10 @@ export function EstadoErro({
 
   const eyebrow =
     apiErro?.kind === 'rede'
-      ? 'SEM CONEXÃO'
+      ? 'Sem conexão'
       : apiErro?.kind === 'permissao'
-        ? 'SEM PERMISSÃO'
-        : 'ALGO DEU ERRADO';
+        ? 'Sem permissão'
+        : 'Algo deu errado';
 
   // 502/503/504 depois das tentativas significa que o servidor ainda nao
   // acordou. Dizer "algo deu errado" seria mentira: nada deu errado, e tentar
@@ -113,22 +106,23 @@ export function EstadoErro({
 
   return (
     <View className={cn('items-center justify-center gap-3 py-16', className)}>
-      <LabelCaps papel="secao" compensarTracking className="text-gold">
-        {aindaAcordando ? 'SERVIDOR ACORDANDO' : eyebrow}
-      </LabelCaps>
-      <Corpo className="max-w-[300px] text-center text-meta text-text-meta">
+      <View className="mb-2 h-3 w-3 rotate-45 border border-cadeira" />
+      <Titulo className="text-center text-ds-24">
+        {aindaAcordando ? 'Servidor acordando' : eyebrow}
+      </Titulo>
+      <Corpo className="max-w-[300px] text-center text-ui text-texto-2">
         {aindaAcordando
           ? 'O servidor estava dormindo e ainda está voltando. Tente de novo em alguns segundos.'
           : mensagem}
       </Corpo>
       {apiErro?.codigo ? (
-        <LabelCaps papel="micro" className="text-ink/25">
+        <LabelCaps papel="micro" className="text-texto-3/60">
           {apiErro.codigo}
         </LabelCaps>
       ) : null}
       {aoTentarDeNovo ? (
         <Botao
-          titulo="TENTAR DE NOVO"
+          titulo="Tentar de novo"
           variante="fantasma"
           onPress={aoTentarDeNovo}
           className="mt-4 self-stretch"

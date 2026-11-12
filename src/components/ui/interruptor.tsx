@@ -1,15 +1,17 @@
 /**
- * O toggle do design (frame 09): retangular, NAO pilula.
- *   caixa: `width:34px; height:18px; border:1px solid; border-radius:2px`
- *   knob:  `width:12px; top/bottom:2px` — a direita quando ligado, a esquerda quando desligado
- *   ligado:    borda e knob dourados
- *   desligado: borda ink@.25, knob ink@.3
- *
- * 34x18 e menor que o alvo minimo de toque; o hitSlop compensa.
+ * Interruptor (redesenho, nov/2026): trilho em pilula, bolinha que desliza com mola.
+ * Ligado = latao; desligado = borda neutra. O alvo de toque e maior que o desenho
+ * (hitSlop), para bater os 44px recomendados.
  */
+import { useEffect } from 'react';
 import { Pressable, View } from 'react-native';
+import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 
 import { cn } from '@/lib/cn';
+
+const LARGURA = 44;
+const ALTURA = 26;
+const BOLA = 20;
 
 export function Interruptor({
   ligado,
@@ -22,26 +24,39 @@ export function Interruptor({
   disabled?: boolean;
   rotulo: string;
 }) {
+  const x = useSharedValue(ligado ? 1 : 0);
+  useEffect(() => {
+    x.value = withSpring(ligado ? 1 : 0, { damping: 18, stiffness: 260 });
+  }, [ligado, x]);
+  const estilo = useAnimatedStyle(() => ({
+    transform: [{ translateX: x.value * (LARGURA - BOLA - 6) }],
+  }));
+
   return (
     <Pressable
       accessibilityRole="switch"
       accessibilityLabel={rotulo}
       accessibilityState={{ checked: ligado, disabled }}
       disabled={disabled}
-      hitSlop={14}
+      hitSlop={10}
       onPress={() => aoMudar?.(!ligado)}
-      className={cn(
-        'h-[18px] w-[34px] rounded-token border',
-        ligado ? 'border-gold-border' : 'border-ink/25',
-        disabled && 'opacity-40'
-      )}
+      className={cn(disabled && 'opacity-40')}
     >
       <View
         className={cn(
-          'absolute bottom-[2px] top-[2px] w-3',
-          ligado ? 'right-[2px] bg-gold' : 'left-[2px] bg-ink/30'
+          'justify-center rounded-full border px-[2px]',
+          ligado ? 'border-latao bg-latao' : 'border-borda bg-superficie'
         )}
-      />
+        style={{ width: LARGURA, height: ALTURA }}
+      >
+        <Animated.View
+          style={[
+            { width: BOLA, height: BOLA, borderRadius: BOLA },
+            { backgroundColor: ligado ? '#F0EBE4' : '#8A8178' },
+            estilo,
+          ]}
+        />
+      </View>
     </Pressable>
   );
 }

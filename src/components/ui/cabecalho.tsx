@@ -9,8 +9,10 @@
  */
 import { useRouter } from 'expo-router';
 import { Pressable, Text, View } from 'react-native';
+import Svg, { Path } from 'react-native-svg';
 
 import { cn } from '@/lib/cn';
+import { useCores } from '@/theme/theme-context';
 
 import { LabelCaps } from './texto';
 
@@ -28,6 +30,7 @@ export function CabecalhoVoltar({
   className?: string;
 }) {
   const router = useRouter();
+  const cores = useCores();
 
   const voltar = () => {
     if (aoVoltar) return aoVoltar();
@@ -43,7 +46,13 @@ export function CabecalhoVoltar({
         hitSlop={16}
         style={({ pressed }) => (pressed ? { opacity: 0.6 } : null)}
       >
-        <Text className="font-sans text-icon-lg text-nav-arrow">←</Text>
+        {/* redesenho: chevron desenhado + a palavra, alvo de toque maior */}
+        <View className="flex-row items-center gap-2 py-1 pr-2">
+          <Svg width={9} height={16} viewBox="0 0 9 16">
+            <Path d="M8 1L1 8l7 7" stroke={cores.gold} strokeWidth={1.6} fill="none" />
+          </Svg>
+          <Text className="font-sans-medium text-ui text-texto-2">Voltar</Text>
+        </View>
       </Pressable>
 
       {acaoDireita ?? (passo ? <LabelCaps papel="meta">{passo}</LabelCaps> : <View />)}

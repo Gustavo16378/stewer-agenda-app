@@ -34,12 +34,12 @@ export function Losango({
   return (
     <View className="items-center justify-center" style={{ width: caixa, height: caixa }}>
       <View
-        className="items-center justify-center border border-gold-border"
+        className="items-center justify-center border border-latao"
         style={{ width: tamanho, height: tamanho, transform: [{ rotate: '45deg' }] }}
       >
         {sigla ? (
           <Text
-            className="font-display text-ink"
+            className="font-display text-texto"
             style={{
               transform: [{ rotate: '-45deg' }],
               fontSize: corpo,
