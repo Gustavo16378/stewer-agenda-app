@@ -920,6 +920,79 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/clientes/{id}/anotacoes/{anotacaoId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Corrige o texto de uma anotacao (so quem escreveu, ou o ADMIN) */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    anotacaoId: components["schemas"]["UUID"];
+                    id: components["schemas"]["UUID"];
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["AnotacaoRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Anotacao"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        post?: never;
+        /** Apaga uma anotacao (so quem escreveu, ou o ADMIN) */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    anotacaoId: components["schemas"]["UUID"];
+                    id: components["schemas"]["UUID"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": unknown;
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/ping": {
         parameters: {
             query?: never;
@@ -1746,6 +1819,8 @@ export interface components {
             status?: components["schemas"]["StatusAgendamento"];
             observacao?: string;
             createdAt?: components["schemas"]["OffsetDateTime"];
+            /** @description Na agenda do dia: o cliente ainda nao teve nenhum atendimento concluido antes deste. Nulo fora da agenda. */
+            primeiraVisita?: boolean;
         };
         /** @description Dados para reservar um horario */
         AgendamentoRequest: {
@@ -1824,6 +1899,16 @@ export interface components {
             email?: string;
             telefone?: string;
             createdAt?: components["schemas"]["OffsetDateTime"];
+            /**
+             * Format: int64
+             * @description Atendimentos concluidos
+             */
+            visitas?: number;
+            /**
+             * @description Inicio do ultimo atendimento concluido; nulo se nunca veio
+             * @example 2022-03-10T12:15:50-04:00
+             */
+            ultimaVisita?: components["schemas"]["OffsetDateTime"];
         };
         /** @description Faixa de atendimento recorrente */
         Disponibilidade: {

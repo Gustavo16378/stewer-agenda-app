@@ -344,6 +344,27 @@ export function useAnotacoes(clienteId: string) {
 }
 
 /** So PROFISSIONAL anota: a API responde 422 para admin sem ficha de profissional. */
+/** Corrige a anotacao existente (autor ou admin) em vez de criar uma versao nova. */
+export function useEditarAnotacao(clienteId: string) {
+  const qc = useQueryClient();
+  return useMutation<Anotacao, ApiError, { anotacaoId: string; texto: string }>({
+    mutationFn: ({ anotacaoId, texto }) => q.editarAnotacao(clienteId, anotacaoId, { texto }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: chaves.anotacoes(clienteId) });
+    },
+  });
+}
+
+export function useApagarAnotacao(clienteId: string) {
+  const qc = useQueryClient();
+  return useMutation<void, ApiError, string>({
+    mutationFn: (anotacaoId) => q.apagarAnotacao(clienteId, anotacaoId),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: chaves.anotacoes(clienteId) });
+    },
+  });
+}
+
 export function useCriarAnotacao(clienteId: string) {
   const qc = useQueryClient();
   return useMutation<Anotacao, ApiError, AnotacaoRequest>({

@@ -220,6 +220,27 @@ export function buscarAnotacoes(clienteId: string): Promise<Anotacao[]> {
   return desembrulha(api.GET('/clientes/{id}/anotacoes', { params: { path: { id: clienteId } } }));
 }
 
+export function editarAnotacao(
+  clienteId: string,
+  anotacaoId: string,
+  body: AnotacaoRequest
+): Promise<Anotacao> {
+  return desembrulha(
+    api.PUT('/clientes/{id}/anotacoes/{anotacaoId}', {
+      params: { path: { id: clienteId, anotacaoId } },
+      body,
+    })
+  );
+}
+
+export function apagarAnotacao(clienteId: string, anotacaoId: string): Promise<void> {
+  return desembrulha(
+    api.DELETE('/clientes/{id}/anotacoes/{anotacaoId}', {
+      params: { path: { id: clienteId, anotacaoId } },
+    })
+  ) as Promise<void>;
+}
+
 export function criarAnotacao(clienteId: string, body: AnotacaoRequest): Promise<Anotacao> {
   return desembrulhaCriado<Anotacao>(
     api.POST('/clientes/{id}/anotacoes', { params: { path: { id: clienteId } }, body })

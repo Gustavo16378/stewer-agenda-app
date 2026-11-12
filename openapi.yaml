@@ -35,6 +35,10 @@ components:
           type: string
         createdAt:
           $ref: "#/components/schemas/OffsetDateTime"
+        primeiraVisita:
+          type: boolean
+          description: "Na agenda do dia: o cliente ainda nao teve nenhum atendimento\
+            \ concluido antes deste. Nulo fora da agenda."
     AgendamentoRequest:
       type: object
       required:
@@ -197,6 +201,16 @@ components:
           type: string
         createdAt:
           $ref: "#/components/schemas/OffsetDateTime"
+        visitas:
+          type: integer
+          format: int64
+          description: Atendimentos concluidos
+        ultimaVisita:
+          $ref: "#/components/schemas/OffsetDateTime"
+          type: string
+          examples:
+          - 2022-03-10T12:15:50-04:00
+          description: Inicio do ultimo atendimento concluido; nulo se nunca veio
     Disponibilidade:
       type: object
       description: Faixa de atendimento recorrente
@@ -1120,6 +1134,62 @@ paths:
           description: Autor sem ficha de profissional ou agendamento invalido
         "400":
           description: Bad Request
+      security:
+      - bearerAuth: []
+  /clientes/{id}/anotacoes/{anotacaoId}:
+    put:
+      summary: "Corrige o texto de uma anotacao (so quem escreveu, ou o ADMIN)"
+      tags:
+      - Clientes
+      parameters:
+      - name: anotacaoId
+        in: path
+        required: true
+        schema:
+          $ref: "#/components/schemas/UUID"
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: "#/components/schemas/UUID"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AnotacaoRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Anotacao"
+        "400":
+          description: Bad Request
+      security:
+      - bearerAuth: []
+    delete:
+      summary: "Apaga uma anotacao (so quem escreveu, ou o ADMIN)"
+      tags:
+      - Clientes
+      parameters:
+      - name: anotacaoId
+        in: path
+        required: true
+        schema:
+          $ref: "#/components/schemas/UUID"
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: "#/components/schemas/UUID"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: {}
       security:
       - bearerAuth: []
   /ping:
