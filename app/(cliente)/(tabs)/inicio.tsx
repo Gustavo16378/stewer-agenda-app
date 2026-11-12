@@ -9,7 +9,7 @@
  *   proximo  <- GET /agendamentos/meus?periodo=futuros   (o mais proximo)
  *   ultima   <- GET /agendamentos/meus?periodo=historico (a mais recente concluida)
  *
- * REAGENDAR e REPETIR: ver os TODO abaixo — a API nao tem remarcacao.
+ * REAGENDAR abre data e horario ja com servico e profissional, em modo remarcar.
  */
 import { useRouter } from 'expo-router';
 import { useMemo } from 'react';
@@ -134,11 +134,19 @@ export default function InicioCliente() {
                     {proximo.profissionalNome}
                   </Text>
                   <View className="flex-row gap-5">
-                    {/* TODO(API): nao existe endpoint de remarcacao. Remarcar hoje seria
-                        PATCH /agendamentos/{id}/status CANCELADO + POST /agendamentos —
-                        dois passos, com risco de o horario novo ser tomado no meio.
-                        Falta algo como PATCH /agendamentos/{id} { inicio }. */}
-                    <AcaoLinha titulo="REAGENDAR" disabled accessibilityHint="Indisponível" />
+                    <AcaoLinha
+                      titulo="REAGENDAR"
+                      onPress={() =>
+                        router.push({
+                          pathname: '/novo-agendamento/horario',
+                          params: {
+                            servicoId: proximo.servicoId ?? '',
+                            profissionalId: proximo.profissionalId ?? '',
+                            agendamentoId: proximo.id ?? '',
+                          },
+                        } as never)
+                      }
+                    />
                     <AcaoLinha titulo="DETALHES" destaque onPress={() => abrirDetalhe(proximo)} />
                   </View>
                 </View>
@@ -156,7 +164,7 @@ export default function InicioCliente() {
             <Botao
               className="mt-7"
               titulo="NOVO AGENDAMENTO"
-              onPress={() => router.push('/(cliente)/novo-agendamento/servico' as never)}
+              onPress={() => router.push('/novo-agendamento/servico' as never)}
             />
 
             {ultima ? (
@@ -174,7 +182,7 @@ export default function InicioCliente() {
                     destaque
                     onPress={() =>
                       router.push({
-                        pathname: '/(cliente)/novo-agendamento/profissional',
+                        pathname: '/novo-agendamento/profissional',
                         params: { servicoId: ultima.servicoId ?? '' },
                       } as never)
                     }

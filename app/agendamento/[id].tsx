@@ -18,16 +18,15 @@
  *   escrita que tem e CANCELAR (a API recusa os outros status para CLIENTE).
  *   Status final (CONCLUIDO/CANCELADO/NAO_COMPARECEU) nao muda mais: a API responde 409.
  *
- *   TODO(API): REMARCAR nao tem endpoint. Hoje seria cancelar + criar de novo, em dois
- *   passos e com o horario novo podendo ser tomado no meio. Faltaria
- *   `PATCH /agendamentos/{id} { inicio }` (ou `POST /agendamentos/{id}/remarcar`).
+ * REMARCAR abre a data e horario do fluxo de agendamento ja com servico e profissional
+ * escolhidos; a confirmacao chama PATCH /agendamentos/{id}/horario, numa transacao so.
  *
  * DESVIO: a acao "NÃO COMPARECEU" nao esta no frame, mas e um status real da API e a
  * unica forma de o profissional registrar falta; entrou como acao secundaria em texto.
  */
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMemo } from 'react';
-import { Alert, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 
 import { useAgendamento, useAnotacoes, useAtualizarStatus, useCliente } from '@/api/hooks';
 import {
@@ -43,6 +42,7 @@ import { Carregando, EstadoErro } from '@/components/ui/estados';
 import { Card } from '@/components/ui/superficies';
 import { TelaRolavel } from '@/components/ui/tela';
 import { LabelCaps, Titulo } from '@/components/ui/texto';
+import { confirmar } from '@/lib/confirmar';
 import {
   calendarDateDoInstante,
   formatDiaCurtoCaps,
@@ -160,21 +160,27 @@ export default function DetalheAgendamento() {
   const atualizar = useAtualizarStatus();
   const item = consulta.data;
 
-  const profissional = role === 'PROFISSIONAL';
+  // Admin que atende tem as mesmas acoes do profissional sobre o atendimento.
+  const profissional = role === 'PROFISSIONAL' || role === 'ADMIN';
+
+  function remarcar(a: NonNullable<typeof item>) {
+    if (!a.id || !a.servicoId || !a.profissionalId) return;
+    router.push({
+      pathname: '/novo-agendamento/horario',
+      params: { servicoId: a.servicoId, profissionalId: a.profissionalId, agendamentoId: a.id },
+    } as never);
+  }
   const final = isStatusFinal(item?.status);
   const diaDoItem = calendarDateDoInstante(item?.inicio);
   const ehHoje = !!diaDoItem && diaDoItem === hojeCalendarDate();
 
   function mudarStatus(status: StatusAgendamento, pergunta: string) {
     if (!item?.id) return;
-    Alert.alert('Confirmar', pergunta, [
-      { text: 'Voltar', style: 'cancel' },
-      {
-        text: 'Confirmar',
-        style: status === 'CANCELADO' ? 'destructive' : 'default',
-        onPress: () => atualizar.mutate({ id: item.id!, status }),
-      },
-    ]);
+    const id = item.id;
+    confirmar(pergunta, '', {
+      destrutivo: status === 'CANCELADO',
+      aoConfirmar: () => atualizar.mutate({ id, status }),
+    });
   }
 
   const rotuloDireita =
@@ -252,10 +258,13 @@ export default function DetalheAgendamento() {
           ) : null}
 
           <View className={profissional ? 'mt-3 flex-row gap-3' : 'mt-[34px] flex-row gap-3'}>
-            {profissional ? (
-              // TODO(API): sem endpoint de remarcacao (ver cabecalho do arquivo)
-              <Botao className="flex-1" variante="fantasma" titulo="REMARCAR" disabled />
-            ) : null}
+            <Botao
+              className="flex-1"
+              variante="fantasma"
+              titulo="REMARCAR"
+              disabled={final}
+              onPress={() => remarcar(item)}
+            />
             <Botao
               className="flex-1"
               variante="fantasma"

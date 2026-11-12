@@ -26,7 +26,8 @@ import { useMemo, useState } from 'react';
 import { Text, View } from 'react-native';
 
 import { ApiError } from '@/api/errors';
-import { useCriarAgendamento, useProfissionais, useServicos } from '@/api/hooks';
+import { useCriarAgendamento, useProfissionais, useRemarcar, useServicos } from '@/api/hooks';
+import { useAuth } from '@/auth/auth-context';
 import { AcaoLinha, Botao } from '@/components/ui/botao';
 import { CabecalhoVoltar } from '@/components/ui/cabecalho';
 import { Campo } from '@/components/ui/campo';
@@ -34,13 +35,31 @@ import { Carregando, EstadoErro } from '@/components/ui/estados';
 import { Card, DivisorCard } from '@/components/ui/superficies';
 import { TelaRolavel } from '@/components/ui/tela';
 import { LabelCaps, Titulo } from '@/components/ui/texto';
-import { formatDiaSemanaDiaMes, formatFaixaHoras, formatFaixaPorDuracao } from '@/lib/datetime';
+import {
+  calendarDateDoInstante,
+  formatDiaSemanaDiaMes,
+  formatFaixaHoras,
+  formatFaixaPorDuracao,
+} from '@/lib/datetime';
+import { useFluxoDeAgendamento } from '@/lib/fluxo-agendamento';
 import { formatCentavos } from '@/lib/money';
 
 const OBSERVACAO_MAX = 2000;
 
 /** Mensagens proprias para os codigos que a API devolve neste POST. */
 function mensagemDoErro(erro: ApiError): string {
+  switch (erro.codigo) {
+    case 'LIMITE_DE_AGENDAMENTOS':
+      return 'Você já tem o máximo de horários marcados. Cancele um ou espere um deles passar para marcar outro.';
+    case 'ANTECEDENCIA_MAXIMA':
+      return 'Esse dia ainda está longe demais. Dá para marcar com até 60 dias de antecedência.';
+    case 'HORARIO_NO_PASSADO':
+      return 'Esse horário já passou. Escolha outro.';
+    case 'FORA_DA_DISPONIBILIDADE':
+      return 'O profissional não atende nesse horário. Escolha outro.';
+    case 'STATUS_FINAL':
+      return 'Esse agendamento já foi encerrado e não pode ser remarcado.';
+  }
   if (erro.status === 409) return 'Esse horário acabou de ser ocupado ou bloqueado. Escolha outro.';
   if (erro.status === 422 && !erro.temViolacoes) {
     return erro.message || 'Esse horário já passou ou está fora da agenda do profissional.';
@@ -58,9 +77,13 @@ export default function Confirmacao() {
     fim?: string;
   }>();
 
+  const { role } = useAuth();
+  const { clienteId, clienteNome, agendamentoId, remarcando, eyebrow } = useFluxoDeAgendamento();
   const servicos = useServicos(false);
   const profissionais = useProfissionais(false);
   const criar = useCriarAgendamento();
+  const remarcar = useRemarcar();
+  const enviando = criar.isPending || remarcar.isPending;
 
   const [observacao, setObservacao] = useState('');
 
@@ -75,7 +98,7 @@ export default function Confirmacao() {
 
   const carregando = servicos.isLoading || profissionais.isLoading;
   const erroCarga = servicos.error ?? profissionais.error;
-  const erroEnvio = criar.error;
+  const erroEnvio = remarcando ? remarcar.error : criar.error;
 
   const faltaParametro = !servicoId || !profissionalId || !inicio;
 
@@ -84,29 +107,50 @@ export default function Confirmacao() {
     ? formatFaixaHoras(inicio, fim)
     : formatFaixaPorDuracao(inicio, servico?.duracaoMinutos);
 
+  /** Para onde voltar depois: o cliente ve os horarios dele; a equipe, o detalhe criado. */
+  function aoTerminar(id: string | undefined, inicioFinal?: string) {
+    if (role === 'CLIENTE') {
+      router.dismissAll?.();
+      router.replace('/(cliente)/(tabs)/meus-horarios' as never);
+      return;
+    }
+    router.dismissAll?.();
+    const data = calendarDateDoInstante(inicioFinal);
+    if (id && data) {
+      router.push({
+        pathname: '/agendamento/[id]',
+        params: { id, origem: 'agenda', data },
+      } as never);
+    }
+  }
+
   function confirmar() {
     if (faltaParametro) return;
+    if (remarcando && agendamentoId) {
+      remarcar.mutate(
+        { id: agendamentoId, inicio, profissionalId },
+        { onSuccess: (a) => aoTerminar(a.id, a.inicio) }
+      );
+      return;
+    }
     criar.mutate(
       {
         profissionalId,
         servicoId,
         inicio,
+        ...(clienteId ? { clienteId } : {}),
         ...(observacao.trim() ? { observacao: observacao.trim() } : {}),
       },
-      {
-        onSuccess: () => {
-          router.replace('/(cliente)/(tabs)/meus-horarios' as never);
-        },
-      }
+      { onSuccess: (a) => aoTerminar(a.id, a.inicio) }
     );
   }
 
   return (
     <TelaRolavel>
-      <CabecalhoVoltar passo="PASSO 04 DE 04" />
+      <CabecalhoVoltar passo={remarcando ? 'REMARCAR' : 'PASSO 04 DE 04'} />
 
       <View className="pt-[34px]">
-        <LabelCaps papel="tela">NOVO AGENDAMENTO</LabelCaps>
+        <LabelCaps papel="tela">{eyebrow}</LabelCaps>
         <Titulo className="mt-3 text-d-29">Confirme os detalhes</Titulo>
 
         {carregando ? (
@@ -130,11 +174,18 @@ export default function Confirmacao() {
                 kind: 'desconhecido',
               })
             }
-            aoTentarDeNovo={() => router.replace('/(cliente)/novo-agendamento/servico' as never)}
+            aoTentarDeNovo={() => router.replace('/novo-agendamento/servico' as never)}
           />
         ) : (
           <>
             <Card className="mt-8 gap-[22px] px-[26px] py-7">
+              {clienteNome ? (
+                <View className="gap-2">
+                  <LabelCaps papel="campo">CLIENTE</LabelCaps>
+                  <Text className="font-sans text-row-lg text-text-strong">{clienteNome}</Text>
+                </View>
+              ) : null}
+
               <View className="gap-2">
                 <LabelCaps papel="campo">SERVIÇO</LabelCaps>
                 <Titulo className="text-d-21">{servico?.nome ?? '—'}</Titulo>
@@ -147,8 +198,8 @@ export default function Confirmacao() {
                 </Text>
               </View>
 
-              <View className="flex-row gap-14">
-                <View className="gap-2">
+              <View className="flex-row gap-6">
+                <View className="flex-1 gap-2">
                   <LabelCaps papel="campo">DATA</LabelCaps>
                   <Text className="font-sans text-row-lg text-text-strong">
                     {formatDiaSemanaDiaMes(inicio)}
@@ -168,21 +219,25 @@ export default function Confirmacao() {
               </View>
             </Card>
 
-            <Campo
-              className="mt-6"
-              rotulo="OBSERVAÇÃO"
-              value={observacao}
-              onChangeText={setObservacao}
-              placeholder="Um recado para o profissional (opcional)"
-              multiline
-              numberOfLines={3}
-              maxLength={OBSERVACAO_MAX}
-              textAlignVertical="top"
-              erro={erroEnvio?.violacaoDe('observacao')}
-            />
+            {remarcando ? null : (
+              <Campo
+                className="mt-6"
+                rotulo="OBSERVAÇÃO"
+                value={observacao}
+                onChangeText={setObservacao}
+                placeholder="Um recado para o profissional (opcional)"
+                multiline
+                numberOfLines={3}
+                maxLength={OBSERVACAO_MAX}
+                textAlignVertical="top"
+                erro={erroEnvio?.violacaoDe('observacao')}
+              />
+            )}
 
             <Text className="mt-5 font-sans text-help-lg leading-[19.55px] text-ink/42">
-              Cancelamento sem custo até 24 horas antes do horário marcado.
+              {remarcando
+                ? 'O horário antigo fica livre para outra pessoa assim que você confirmar.'
+                : 'Se não puder vir, cancele ou remarque pelo app para liberar o horário.'}
             </Text>
 
             {erroEnvio && !erroEnvio.temViolacoes ? (
@@ -193,8 +248,8 @@ export default function Confirmacao() {
 
             <Botao
               className="mt-[30px]"
-              titulo="CONFIRMAR AGENDAMENTO"
-              carregando={criar.isPending}
+              titulo={remarcando ? 'CONFIRMAR NOVO HORÁRIO' : 'CONFIRMAR AGENDAMENTO'}
+              carregando={enviando}
               onPress={confirmar}
             />
 

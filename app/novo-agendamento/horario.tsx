@@ -47,6 +47,7 @@ import {
   parseCalendarDate,
   type CalendarDate,
 } from '@/lib/datetime';
+import { useFluxoDeAgendamento } from '@/lib/fluxo-agendamento';
 
 /** Largura de 1/7 para a grade: RN nao tem `display:grid`. */
 const COLUNA = { flexBasis: '14.2857%' as const, maxWidth: '14.2857%' as const };
@@ -57,6 +58,7 @@ export default function DataEHorario() {
     servicoId?: string;
     profissionalId?: string;
   }>();
+  const { extras, agendamentoId, remarcando } = useFluxoDeAgendamento();
 
   const hoje = hojeCalendarDate();
   const hojeDate = parseCalendarDate(hoje) ?? new Date();
@@ -67,7 +69,13 @@ export default function DataEHorario() {
   const [slot, setSlot] = useState<HorarioLivre | null>(null);
 
   const grade = useDisponibilidade(profissionalId);
-  const horarios = useHorariosLivres(profissionalId, diaSelecionado ?? undefined, servicoId);
+  // Remarcando, o horario atual conta como livre: da para mover meia hora para frente.
+  const horarios = useHorariosLivres(
+    profissionalId,
+    diaSelecionado ?? undefined,
+    servicoId,
+    agendamentoId
+  );
 
   // dias da semana em que o profissional atende, segundo a grade
   const diasAtendidos = useMemo(() => {
@@ -106,12 +114,13 @@ export default function DataEHorario() {
   function continuar() {
     if (!slot?.inicio) return;
     router.push({
-      pathname: '/(cliente)/novo-agendamento/confirmar',
+      pathname: '/novo-agendamento/confirmar',
       params: {
         servicoId: servicoId ?? '',
         profissionalId: profissionalId ?? '',
         inicio: slot.inicio,
         fim: slot.fim ?? '',
+        ...extras,
       },
     } as never);
   }
@@ -120,7 +129,7 @@ export default function DataEHorario() {
 
   return (
     <TelaRolavel>
-      <CabecalhoVoltar passo="PASSO 03 DE 04" />
+      <CabecalhoVoltar passo={remarcando ? 'REMARCAR' : 'PASSO 03 DE 04'} />
 
       <View className="pt-[30px]">
         <Titulo className="text-d-29">Data e horário</Titulo>

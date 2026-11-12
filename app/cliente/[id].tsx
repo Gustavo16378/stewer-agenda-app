@@ -18,14 +18,13 @@
  * Anotacoes sao append-only na API (so POST). "EDITAR" abre o editor com o texto atual e
  * salva como uma anotacao NOVA — para quem le, e editar; para o historico, e versionar.
  *   TODO(API): editar/apagar de verdade exigiria PUT/DELETE /clientes/{id}/anotacoes/{anotacaoId}.
- *   TODO(API): NOVO AGENDAMENTO PARA ESTE CLIENTE — POST /agendamentos e "cliente reserva
- *   para si"; nao aceita `clienteId`. Desabilitado.
+ * NOVO AGENDAMENTO PARA ESTE CLIENTE abre o fluxo de agendamento com clienteId: a API
+ * aceita a equipe marcando em nome do cliente.
  *
- * So PROFISSIONAL anota (ADMIN leva 422 "sem ficha de profissional"): o editor so aparece
- * para esse papel. Um 404 aqui e estado normal — cliente promovido a profissional some
+ * Profissional e admin com ficha anotam (admin sem ficha leva 422 com o motivo). Um 404 aqui e estado normal — cliente promovido a profissional some
  * da base de clientes mesmo com atendimentos antigos.
  */
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { Modal, ScrollView, Text, View } from 'react-native';
 
@@ -44,6 +43,7 @@ import { formatCentavos } from '@/lib/money';
 const ANOTACAO_MAX = 8000;
 
 export default function FichaDoCliente() {
+  const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { role } = useAuth();
   const cliente = useCliente(id ?? '');
@@ -64,7 +64,8 @@ export default function FichaDoCliente() {
     [cliente.data]
   );
   const ultimaAnotacao = anotacoes.data?.[0];
-  const podeAnotar = role === 'PROFISSIONAL';
+  // Admin com ficha tambem anota; sem ficha a API recusa e a tela mostra o motivo.
+  const podeAnotar = role === 'PROFISSIONAL' || role === 'ADMIN';
 
   function abrirEditor() {
     setTexto(ultimaAnotacao?.texto ?? '');
@@ -176,12 +177,16 @@ export default function FichaDoCliente() {
             </View>
           )}
 
-          {/* TODO(API): agendar em nome de terceiro — POST /agendamentos nao recebe clienteId */}
           <Botao
             className="mt-[26px]"
             variante="fantasma"
             titulo="NOVO AGENDAMENTO PARA ESTE CLIENTE"
-            disabled
+            onPress={() =>
+              router.push({
+                pathname: '/novo-agendamento/servico',
+                params: { clienteId: id, clienteNome: cliente.data?.nome ?? '' },
+              } as never)
+            }
           />
         </View>
       )}

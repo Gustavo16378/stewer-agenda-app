@@ -142,7 +142,7 @@ export default function MeusHorarios() {
                 descricao="Reserve um horário pela aba AGENDAR."
                 acao={{
                   titulo: 'NOVO AGENDAMENTO',
-                  aoTocar: () => router.push('/(cliente)/novo-agendamento/servico' as never),
+                  aoTocar: () => router.push('/novo-agendamento/servico' as never),
                 }}
               />
             ) : (

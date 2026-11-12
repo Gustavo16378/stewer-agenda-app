@@ -30,10 +30,12 @@ import { DivisorCard } from '@/components/ui/superficies';
 import { TelaRolavel } from '@/components/ui/tela';
 import { LabelCaps, Titulo } from '@/components/ui/texto';
 import { cn } from '@/lib/cn';
+import { useFluxoDeAgendamento } from '@/lib/fluxo-agendamento';
 
 export default function EscolhaDeProfissional() {
   const router = useRouter();
   const { servicoId } = useLocalSearchParams<{ servicoId?: string }>();
+  const { extras, eyebrow } = useFluxoDeAgendamento();
 
   // TODO(API): nao existe vinculo servico x profissional. `GET /profissionais` devolve a
   // equipe inteira e nada diz quem executa o `servicoId` escolhido no passo 01 — nem o
@@ -52,8 +54,8 @@ export default function EscolhaDeProfissional() {
 
   function avancar(profissionalId: string) {
     router.push({
-      pathname: '/(cliente)/novo-agendamento/horario',
-      params: { servicoId: servicoId ?? '', profissionalId },
+      pathname: '/novo-agendamento/horario',
+      params: { servicoId: servicoId ?? '', profissionalId, ...extras },
     } as never);
   }
 
@@ -77,7 +79,7 @@ export default function EscolhaDeProfissional() {
           descricao="Comece pelo serviço, para o ateliê saber quanto tempo reservar."
           acao={{
             titulo: 'NOVO AGENDAMENTO',
-            aoTocar: () => router.replace('/(cliente)/novo-agendamento/servico' as never),
+            aoTocar: () => router.replace('/novo-agendamento/servico' as never),
           }}
         />
       </TelaRolavel>
@@ -96,7 +98,7 @@ export default function EscolhaDeProfissional() {
       <CabecalhoVoltar passo="PASSO 02 DE 04" />
 
       <View className="pt-[34px]">
-        <LabelCaps papel="tela">NOVO AGENDAMENTO</LabelCaps>
+        <LabelCaps papel="tela">{eyebrow}</LabelCaps>
         <Titulo className="mt-3 text-d-29">Escolha o profissional</Titulo>
 
         {profissionais.isLoading ? (

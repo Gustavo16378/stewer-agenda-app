@@ -21,12 +21,14 @@
 import { useRouter } from 'expo-router';
 import { Pressable, RefreshControl, Text, View } from 'react-native';
 
-import { useServicos } from '@/api/hooks';
+import { useMeuProfissional, useServicos } from '@/api/hooks';
 import type { Servico } from '@/api/types';
+import { useAuth } from '@/auth/auth-context';
 import { CabecalhoVoltar } from '@/components/ui/cabecalho';
 import { Carregando, EstadoErro, EstadoVazio } from '@/components/ui/estados';
 import { TelaRolavel } from '@/components/ui/tela';
 import { LabelCaps, Titulo } from '@/components/ui/texto';
+import { useFluxoDeAgendamento } from '@/lib/fluxo-agendamento';
 import { formatCentavos, formatDuracao } from '@/lib/money';
 
 function LinhaServico({ servico, aoEscolher }: { servico: Servico; aoEscolher: () => void }) {
@@ -61,14 +63,25 @@ function LinhaServico({ servico, aoEscolher }: { servico: Servico; aoEscolher: (
 
 export default function EscolhaDeServico() {
   const router = useRouter();
+  const { role } = useAuth();
+  const { extras, eyebrow } = useFluxoDeAgendamento();
   const servicos = useServicos(false);
+  const { profissional: minhaFicha } = useMeuProfissional();
 
   const lista = servicos.data ?? [];
 
   function escolher(servico: Servico) {
+    // O profissional so marca na propria agenda: o passo de escolher quem atende sobra.
+    if (role === 'PROFISSIONAL' && minhaFicha?.id) {
+      router.push({
+        pathname: '/novo-agendamento/horario',
+        params: { servicoId: servico.id ?? '', profissionalId: minhaFicha.id, ...extras },
+      } as never);
+      return;
+    }
     router.push({
-      pathname: '/(cliente)/novo-agendamento/profissional',
-      params: { servicoId: servico.id ?? '' },
+      pathname: '/novo-agendamento/profissional',
+      params: { servicoId: servico.id ?? '', ...extras },
     } as never);
   }
 
@@ -84,7 +97,7 @@ export default function EscolhaDeServico() {
       <CabecalhoVoltar passo="PASSO 01 DE 04" />
 
       <View className="pt-[34px]">
-        <LabelCaps papel="tela">NOVO AGENDAMENTO</LabelCaps>
+        <LabelCaps papel="tela">{eyebrow}</LabelCaps>
         <Titulo className="mt-3 text-d-29">Escolha o serviço</Titulo>
 
         {servicos.isLoading ? (

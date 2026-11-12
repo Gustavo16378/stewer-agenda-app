@@ -33,7 +33,7 @@ export default function AgendarCliente() {
         <Botao
           className="mt-[42px]"
           titulo="NOVO AGENDAMENTO"
-          onPress={() => router.push('/(cliente)/novo-agendamento/servico' as never)}
+          onPress={() => router.push('/novo-agendamento/servico' as never)}
         />
       </View>
     </Tela>

@@ -21,7 +21,7 @@ export default function TabsCliente() {
         listeners={{
           tabPress: (e) => {
             e.preventDefault();
-            router.push('/(cliente)/novo-agendamento/servico');
+            router.push('/novo-agendamento/servico');
           },
         }}
       />
