@@ -94,6 +94,7 @@ npm start          # depois: i (iOS), a (Android), w (web)
 npm run typecheck   # tsc --noEmit
 npm run lint        # ESLint + Prettier
 npm test            # Jest (jest-expo + Testing Library)
+npm run e2e         # Playwright: jornadas em iPhone, Android e desktop (ver Testes)
 npm run format      # Prettier --write
 ```
 
@@ -275,12 +276,38 @@ O foco está no que mais quebra:
   400/422 com violações indo para o campo, falha de rede, token expirado barrado antes de
   sair da máquina, e os 201 que a spec declara sem schema.
 
-### Smoke web (ponta a ponta)
+### Jornadas de ponta a ponta (Playwright)
 
-`npm run smoke:web` exporta o app para web, sobe um servidor local e, num Chrome headless,
-loga com as três contas do seed e confere que a tela inicial de cada papel renderiza contra a
-API real. Precisa da API no ar (na URL do `.env`) e do Chrome instalado
-(`CHROME_PATH` para outro binário). As capturas vão para `scripts/e2e/capturas/`.
+Em [`e2e/jornadas`](e2e/jornadas) o app é usado como uma pessoa usaria: o export web de
+verdade, num navegador de verdade, contra a API de verdade. Cada jornada roda em **iPhone,
+Android e desktop** (no CI, também no **Safari/WebKit**), e cada passo vira um print no
+relatório.
+
+| Jornada | O que garante |
+|---|---|
+| `cliente-agenda` | criar conta, marcar (serviço, Stewer, dia, horário, ticket), ver a confirmação, remarcar e cancelar; se outra pessoa levar o horário no meio do caminho, o app avisa e a pessoa escolhe outro |
+| `equipe` | o Stewer acha o cliente na agenda, conclui o atendimento e anota o visagismo na ficha; o admin cadastra, edita e remove um serviço; painel e equipe abrem |
+| `acesso` | senha errada avisa, a certa entra, sair volta ao login, "esqueci a senha" manda código |
+| `vitrine` | retrato, quem é o Stewer, o trabalho e o mapa da Boss House; abas embaixo no celular e menu lateral no desktop; a abertura com o S sai sozinha |
+| `acessibilidade` | axe-core: contraste, botões e links com nome, imagens com descrição |
+
+Toda tela visitada também passa pela checagem de que nada vaza para o lado.
+
+```bash
+npm run build          # export web com EXPO_PUBLIC_API_URL apontando para a API
+npm run e2e            # precisa da API no ar (perfil dev, com CORS para localhost:4173)
+npm run e2e:relatorio  # abre o relatório com os prints de cada passo
+```
+
+Para a API aceitar o navegador: `CORS_HABILITADO=true CORS_ORIGINS=http://localhost:4173`.
+
+## CI
+
+[`.github/workflows/ci.yml`](.github/workflows/ci.yml) roda em filas separadas, cada uma com
+o próprio nome no PR: typecheck e lint, testes unitários (com cobertura no resumo), build web,
+a API empacotada a partir da `main` dela, e as jornadas E2E em paralelo por aparelho
+(iphone, android, desktop, safari), cada uma com o próprio PostgreSQL. Os relatórios com os
+prints ficam como artefato da execução.
 
 ---
 

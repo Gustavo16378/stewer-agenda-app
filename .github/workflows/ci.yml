@@ -173,6 +173,8 @@ jobs:
           CORS_HABILITADO: 'true'
           CORS_ORIGINS: http://localhost:4173
         run: |
+          # o jar recusa o segredo de exemplo do repositorio fora do `quarkus dev`
+          export JWT_SECRET="$(openssl rand -base64 48)"
           nohup java -jar api/quarkus-run.jar > api.log 2>&1 &
           for i in $(seq 1 60); do
             curl -sf http://localhost:8080/ping && exit 0
