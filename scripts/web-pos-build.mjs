@@ -195,11 +195,12 @@ const hashes = [...scriptsInline].map(
 );
 const CSP = [
   "default-src 'self'",
-  `script-src 'self' ${hashes.join(' ')}`.trim(),
+  // o Cloudflare Web Analytics injeta o beacon dele na pagina publicada
+  `script-src 'self' ${hashes.join(' ')} https://static.cloudflareinsights.com`,
   // o react-native-web escreve estilo em <style> e no atributo style
   "style-src 'self' 'unsafe-inline'",
   `img-src 'self' data: blob: ${API} https://tile.openstreetmap.org`.replace(/\s+/g, ' '),
-  `connect-src 'self' ${API}`.trim(),
+  `connect-src 'self' ${API} https://cloudflareinsights.com`.replace(/\s+/g, ' '),
   "font-src 'self' data:",
   "object-src 'none'",
   "base-uri 'self'",
