@@ -15,20 +15,20 @@
  * Escrita: PUT /profissionais/{id} (ficha), DELETE /profissionais/{id} (soft delete,
  * IRREVERSIVEL pela API), POST /profissionais (promove um usuario que JA EXISTE).
  *
- * ADICIONAR PROFISSIONAL: a API so promove por `usuarioId`. Nao ha endpoint para listar
- * usuarios nem para convidar por e-mail, entao o formulario pede o id do usuario — e
- * honesto e funciona, mas nao e o "convite" que o design promete.
- *   TODO(API): `GET /usuarios?semFichaDeProfissional=true` (para escolher por nome) ou
- *   `POST /profissionais/convites { email }`.
+ * ADICIONAR PROFISSIONAL: o admin busca a pessoa por nome ou e-mail (GET /usuarios) e
+ * escolhe na lista; quem ja tem ficha nao aparece. A pessoa precisa ter criado conta
+ * no app antes (o fluxo e: ela baixa o app, cria a conta, o dono promove).
  *   TODO(API): nao ha upload de foto; `fotoUrl` e so uma URL digitada.
  * GERENCIAR navega para app/profissional/[id]/disponibilidade — a API aceita ADMIN la.
  */
 import { useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { Alert, Modal, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
+import { Modal, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
 
 import {
+  useDebounce,
   useDisponibilidade,
+  usePessoas,
   useProfissionais,
   useRemoverProfissional,
   useSalvarProfissional,
@@ -43,6 +43,7 @@ import { Divisor } from '@/components/ui/superficies';
 import { TelaRolavel } from '@/components/ui/tela';
 import { LabelCaps, Titulo } from '@/components/ui/texto';
 import { cn } from '@/lib/cn';
+import { confirmar } from '@/lib/confirmar';
 import {
   comparaWallTime,
   formatWallTime,
@@ -53,6 +54,8 @@ import {
 interface Formulario {
   id?: string;
   usuarioId: string;
+  /** So para mostrar quem foi escolhido; a API recebe o id. */
+  usuarioNome?: string;
   especialidade: string;
   bio: string;
   fotoUrl: string;
@@ -91,6 +94,79 @@ function ResumoDaAgenda({ profissionalId }: { profissionalId: string }) {
     <LabelCaps papel="micro" className="flex-1 pr-3 text-text-muted" numberOfLines={1}>
       {texto ? `AGENDA · ${texto}` : 'AGENDA · SEM GRADE CADASTRADA'}
     </LabelCaps>
+  );
+}
+
+/** Busca por nome ou e-mail e escolha da pessoa que vai virar profissional. */
+function SeletorDePessoa({
+  jaProfissionais,
+  escolhido,
+  aoEscolher,
+}: {
+  jaProfissionais: Set<string>;
+  escolhido?: { id: string; nome?: string };
+  aoEscolher: (id: string, nome: string) => void;
+}) {
+  const [busca, setBusca] = useState('');
+  const termo = useDebounce(busca.trim());
+  const pessoas = usePessoas(termo, termo.length >= 2);
+  const opcoes = (pessoas.data ?? []).filter((p) => p.id && !jaProfissionais.has(p.id));
+
+  return (
+    <View className="mt-6">
+      <Campo
+        rotulo="QUEM VAI ATENDER"
+        value={busca}
+        onChangeText={setBusca}
+        placeholder="Nome ou e-mail"
+        autoCapitalize="none"
+        autoCorrect={false}
+        ajuda={
+          escolhido?.id
+            ? `Escolhido: ${escolhido.nome ?? ''}`
+            : 'A pessoa precisa já ter criado uma conta no app.'
+        }
+      />
+      {termo.length >= 2 ? (
+        <View className="mt-2">
+          {pessoas.isLoading ? (
+            <Text className="py-3 font-sans text-help text-ink/42">Buscando…</Text>
+          ) : opcoes.length === 0 ? (
+            <Text className="py-3 font-sans text-help text-ink/42">
+              Ninguém com esse nome ou e-mail sem ficha de profissional.
+            </Text>
+          ) : (
+            opcoes.slice(0, 6).map((p) => (
+              <Pressable
+                key={p.id}
+                onPress={() => aoEscolher(p.id!, p.nome ?? '')}
+                accessibilityRole="button"
+                className={cn(
+                  'flex-row items-center justify-between border-b border-divider py-3',
+                  escolhido?.id === p.id && 'opacity-100'
+                )}
+                style={({ pressed }) => (pressed ? { opacity: 0.6 } : null)}
+              >
+                <View className="flex-1 pr-3">
+                  <Text className="font-sans text-row text-ink" numberOfLines={1}>
+                    {p.nome}
+                  </Text>
+                  <Text className="font-sans text-help text-ink/45" numberOfLines={1}>
+                    {p.email}
+                  </Text>
+                </View>
+                <LabelCaps
+                  papel="micro"
+                  className={escolhido?.id === p.id ? 'text-gold' : 'text-ink/40'}
+                >
+                  {escolhido?.id === p.id ? 'ESCOLHIDO' : 'ESCOLHER'}
+                </LabelCaps>
+              </Pressable>
+            ))
+          )}
+        </View>
+      ) : null}
+    </View>
   );
 }
 
@@ -139,17 +215,15 @@ export default function GestaoDeEquipe() {
 
   function confirmarRemocao() {
     if (!form?.id) return;
-    Alert.alert(
+    const id = form.id;
+    confirmar(
       'Remover da equipe?',
-      'A ficha some para sempre — a API não permite trazer de volta. Para afastar temporariamente, desligue "Aparece na agenda".',
-      [
-        { text: 'Voltar', style: 'cancel' },
-        {
-          text: 'Remover',
-          style: 'destructive',
-          onPress: () => remover.mutate(form.id!, { onSuccess: () => setForm(null) }),
-        },
-      ]
+      'A ficha some para sempre e não dá para trazer de volta. Para afastar por um tempo, desligue "Aparece na agenda".',
+      {
+        textoConfirmar: 'Remover',
+        destrutivo: true,
+        aoConfirmar: () => remover.mutate(id, { onSuccess: () => setForm(null) }),
+      }
     );
   }
 
@@ -157,7 +231,7 @@ export default function GestaoDeEquipe() {
   const mensagemErro =
     erroApi && !erroApi.temViolacoes
       ? erroApi.status === 404
-        ? 'Não existe usuário com esse id neste estabelecimento.'
+        ? 'Essa pessoa não foi encontrada. Busque de novo pelo nome.'
         : erroApi.status === 409
           ? 'Esse usuário já faz parte da equipe.'
           : erroApi.message
@@ -262,20 +336,18 @@ export default function GestaoDeEquipe() {
                   {form.id ? 'FICHA DO PROFISSIONAL' : 'ADICIONAR PROFISSIONAL'}
                 </LabelCaps>
                 <Titulo className="mt-3 text-d-23">
-                  {form.id ? 'Editar ficha' : 'Promover um usuário'}
+                  {form.id ? 'Editar ficha' : 'Quem vai atender'}
                 </Titulo>
 
                 {!form.id ? (
-                  <Campo
-                    className="mt-6"
-                    rotulo="ID DO USUÁRIO"
-                    value={form.usuarioId}
-                    onChangeText={(v) => setForm({ ...form, usuarioId: v })}
-                    placeholder="3f4a1c8e-6b2d-4f11-9c7a-0d5e8b2a1f34"
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                    ajuda="A pessoa precisa já ter conta neste estabelecimento. A API só promove por id; não há convite por e-mail."
-                    erro={salvar.error?.violacaoDe('usuarioId')}
+                  <SeletorDePessoa
+                    jaProfissionais={
+                      new Set((equipe.data ?? []).map((p) => p.usuarioId ?? '').filter(Boolean))
+                    }
+                    escolhido={{ id: form.usuarioId, nome: form.usuarioNome }}
+                    aoEscolher={(id, nome) =>
+                      setForm({ ...form, usuarioId: id, usuarioNome: nome })
+                    }
                   />
                 ) : null}
                 <Campo
