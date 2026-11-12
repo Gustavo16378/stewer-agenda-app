@@ -130,6 +130,13 @@ components:
         telefone:
           type: string
           maxLength: 30
+        dataNascimento:
+          $ref: "#/components/schemas/LocalDate"
+          type: string
+          examples:
+          - 1994-11-20
+          description: "Opcional; nulo mantem o que ja estava. Vai para a ficha: o\
+            \ Stewer ve o aniversario no painel."
     AtualizarStatusRequest:
       type: object
       required:
@@ -344,6 +351,108 @@ components:
         tenantSlug:
           type: string
           description: "Slug do estabelecimento. Omitido, usa o tenant padrao."
+    Estudio:
+      type: object
+      properties:
+        nomeLocal:
+          type: string
+        descricao:
+          type: string
+        endereco:
+          type: string
+        regiao:
+          type: string
+        horario:
+          type: string
+        latitude:
+          type: number
+          format: double
+        longitude:
+          type: number
+          format: double
+        linkMapa:
+          type: string
+        whatsapp:
+          type: string
+        instagram:
+          type: string
+        site:
+          type: string
+        frase:
+          type: string
+        retrato:
+          $ref: "#/components/schemas/Imagem"
+          type: object
+          description: Retrato do Stewer; nulo usa o que vem no app
+        fotos:
+          type: array
+          items:
+            $ref: "#/components/schemas/Imagem"
+          description: "Fotos do trabalho, na ordem"
+        atualizadoEm:
+          $ref: "#/components/schemas/OffsetDateTime"
+    EstudioRequest:
+      type: object
+      properties:
+        nomeLocal:
+          type: string
+          examples:
+          - Conciso
+          maxLength: 80
+        descricao:
+          type: string
+          examples:
+          - Studio de imagem masculina
+          maxLength: 120
+        endereco:
+          type: string
+          examples:
+          - "204 Sul, Alameda 10, QI 5, Sala 05, Palmas"
+          maxLength: 240
+        regiao:
+          type: string
+          examples:
+          - "Plano Diretor Sul, Palmas"
+          maxLength: 80
+        horario:
+          type: string
+          examples:
+          - "Segunda a sábado, das 9h às 19h"
+          maxLength: 120
+        latitude:
+          type: number
+          format: double
+          maximum: 90
+          minimum: -90
+        longitude:
+          type: number
+          format: double
+          maximum: 180
+          minimum: -180
+        linkMapa:
+          type: string
+          maxLength: 500
+          description: "Link do Google Maps; se tiver coordenadas, elas preenchem\
+            \ o mapa"
+        whatsapp:
+          type: string
+          examples:
+          - "63985116783"
+          maxLength: 30
+        instagram:
+          type: string
+          examples:
+          - stewergabriel
+          maxLength: 60
+        site:
+          type: string
+          examples:
+          - https://stewergabriel.com
+          maxLength: 200
+        frase:
+          type: string
+          maxLength: 240
+          description: Frase que aparece na tela de entrar
     EventoAuditoria:
       type: object
       description: Quem fez o que e quando
@@ -583,6 +692,39 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/HorarioLivre"
+    Imagem:
+      type: object
+      properties:
+        id:
+          $ref: "#/components/schemas/UUID"
+        legenda:
+          type: string
+        ordem:
+          type: integer
+          format: int32
+    ImagemRequest:
+      type: object
+      required:
+      - tipoConteudo
+      - conteudoBase64
+      properties:
+        tipo:
+          type: string
+          description: RETRATO (troca o atual) ou TRABALHO. Ignorado nas fotos de
+            servico.
+        legenda:
+          type: string
+          maxLength: 200
+        tipoConteudo:
+          type: string
+          examples:
+          - image/jpeg
+          pattern: \S
+        conteudoBase64:
+          type: string
+          maxLength: 2100000
+          pattern: \S
+          description: "A imagem em base64 (JPEG, PNG ou WebP, ate 1,5 MB)"
     LocalDate:
       type: string
       format: date
@@ -800,6 +942,12 @@ components:
           examples:
           - stewer-gabriel
           description: "Slug do estabelecimento. Omitido, usa o tenant padrao."
+        dataNascimento:
+          $ref: "#/components/schemas/LocalDate"
+          type: string
+          examples:
+          - 1994-11-20
+          description: "Opcional. Vai para a ficha: o Stewer ve o aniversario no painel."
     RemarcarRequest:
       type: object
       required:
@@ -851,6 +999,13 @@ components:
           $ref: "#/components/schemas/OffsetDateTime"
         updatedAt:
           $ref: "#/components/schemas/OffsetDateTime"
+        fotos:
+          type: array
+          items:
+            type: string
+            format: uuid
+            pattern: "[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
+          description: "Fotos de exemplo, em ordem; a URL e GET /imagens/{id}"
     ServicoRequest:
       type: object
       required:
@@ -961,6 +1116,11 @@ components:
           examples:
           - 2022-03-10T12:15:50-04:00
           description: Quando a foto de perfil mudou; nulo se nao tem foto
+        dataNascimento:
+          $ref: "#/components/schemas/LocalDate"
+          type: string
+          description: Aniversario informado pelo proprio cliente (ou pela equipe
+            na ficha)
   securitySchemes:
     bearerAuth:
       description: Authentication
@@ -978,6 +1138,8 @@ tags:
   description: Cadastro e autenticacao
 - name: Clientes
   description: Base de clientes e anotacoes de visagismo
+- name: Estudio
+  description: "Endereco, contatos e fotos do estudio"
 - name: Operacao
   description: Sinais de vida da API
 - name: Profissionais
@@ -1767,6 +1929,133 @@ paths:
                 $ref: "#/components/schemas/FotoConteudo"
       security:
       - bearerAuth: []
+  /estudio:
+    get:
+      summary: O estudio como o cliente ve
+      description: "Campos nulos: o app usa o conteudo que ja vem nele."
+      tags:
+      - Estudio
+      parameters:
+      - description: "Slug do estabelecimento; omitido, usa o padrao"
+        name: tenantSlug
+        in: query
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Estudio"
+    put:
+      summary: "Atualiza endereco, mapa, horario e contatos"
+      tags:
+      - Estudio
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EstudioRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Estudio"
+        "400":
+          description: Bad Request
+      security:
+      - bearerAuth: []
+  /estudio/fotos:
+    post:
+      summary: Poe o retrato (troca o atual) ou uma foto do trabalho
+      tags:
+      - Estudio
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ImagemRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: {}
+        "400":
+          description: Bad Request
+      security:
+      - bearerAuth: []
+  /estudio/fotos/{id}:
+    delete:
+      summary: Apaga o retrato ou uma foto do trabalho
+      tags:
+      - Estudio
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: "#/components/schemas/UUID"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: {}
+      security:
+      - bearerAuth: []
+  /estudio/fotos/{id}/posicao/{posicao}:
+    put:
+      summary: Muda a ordem de uma foto do trabalho (0 = primeira)
+      tags:
+      - Estudio
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: "#/components/schemas/UUID"
+      - name: posicao
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+          minimum: 0
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Imagem"
+      security:
+      - bearerAuth: []
+  /imagens/{id}:
+    get:
+      summary: "A foto (retrato, trabalho ou exemplo de servico)"
+      tags:
+      - Estudio
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: "#/components/schemas/UUID"
+      responses:
+        "200":
+          description: OK
+          content:
+            image/jpeg: {}
+            image/png: {}
+            image/webp: {}
   /ping:
     get:
       summary: Responde 200 sem tocar no banco
@@ -2193,6 +2482,57 @@ paths:
           description: Ja existe servico com este nome
         "400":
           description: Bad Request
+      security:
+      - bearerAuth: []
+  /servicos/{id}/fotos:
+    post:
+      summary: Poe uma foto de exemplo no servico (ate 6)
+      tags:
+      - Servicos
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: "#/components/schemas/UUID"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ImagemRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: {}
+        "400":
+          description: Bad Request
+      security:
+      - bearerAuth: []
+  /servicos/{id}/fotos/{fotoId}:
+    delete:
+      summary: Apaga uma foto de exemplo do servico
+      tags:
+      - Servicos
+      parameters:
+      - name: fotoId
+        in: path
+        required: true
+        schema:
+          $ref: "#/components/schemas/UUID"
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: "#/components/schemas/UUID"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: {}
       security:
       - bearerAuth: []
   /usuarios:

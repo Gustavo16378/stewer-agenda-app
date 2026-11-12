@@ -1485,6 +1485,243 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/estudio": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * O estudio como o cliente ve
+         * @description Campos nulos: o app usa o conteudo que ja vem nele.
+         */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description Slug do estabelecimento; omitido, usa o padrao */
+                    tenantSlug?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Estudio"];
+                    };
+                };
+            };
+        };
+        /** Atualiza endereco, mapa, horario e contatos */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["EstudioRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Estudio"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/estudio/fotos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Poe o retrato (troca o atual) ou uma foto do trabalho */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["ImagemRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": unknown;
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/estudio/fotos/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Apaga o retrato ou uma foto do trabalho */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: components["schemas"]["UUID"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": unknown;
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/estudio/fotos/{id}/posicao/{posicao}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Muda a ordem de uma foto do trabalho (0 = primeira) */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: components["schemas"]["UUID"];
+                    posicao: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Imagem"][];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/imagens/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** A foto (retrato, trabalho ou exemplo de servico) */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: components["schemas"]["UUID"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "image/jpeg": unknown;
+                        "image/png": unknown;
+                        "image/webp": unknown;
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/ping": {
         parameters: {
             query?: never;
@@ -2249,6 +2486,94 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/servicos/{id}/fotos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Poe uma foto de exemplo no servico (ate 6) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: components["schemas"]["UUID"];
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["ImagemRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": unknown;
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/servicos/{id}/fotos/{fotoId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Apaga uma foto de exemplo do servico */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    fotoId: components["schemas"]["UUID"];
+                    id: components["schemas"]["UUID"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": unknown;
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/usuarios": {
         parameters: {
             query?: never;
@@ -2498,6 +2823,11 @@ export interface components {
             nome: string;
             email: string;
             telefone?: string;
+            /**
+             * @description Opcional; nulo mantem o que ja estava. Vai para a ficha: o Stewer ve o aniversario no painel.
+             * @example 1994-11-20
+             */
+            dataNascimento?: components["schemas"]["LocalDate"];
         };
         /** @description Novo status do agendamento */
         AtualizarStatusRequest: {
@@ -2639,6 +2969,53 @@ export interface components {
             /** @description Slug do estabelecimento. Omitido, usa o tenant padrao. */
             tenantSlug?: string;
         };
+        Estudio: {
+            nomeLocal?: string;
+            descricao?: string;
+            endereco?: string;
+            regiao?: string;
+            horario?: string;
+            /** Format: double */
+            latitude?: number;
+            /** Format: double */
+            longitude?: number;
+            linkMapa?: string;
+            whatsapp?: string;
+            instagram?: string;
+            site?: string;
+            frase?: string;
+            /** @description Retrato do Stewer; nulo usa o que vem no app */
+            retrato?: components["schemas"]["Imagem"];
+            /** @description Fotos do trabalho, na ordem */
+            fotos?: components["schemas"]["Imagem"][];
+            atualizadoEm?: components["schemas"]["OffsetDateTime"];
+        };
+        EstudioRequest: {
+            /** @example Conciso */
+            nomeLocal?: string;
+            /** @example Studio de imagem masculina */
+            descricao?: string;
+            /** @example 204 Sul, Alameda 10, QI 5, Sala 05, Palmas */
+            endereco?: string;
+            /** @example Plano Diretor Sul, Palmas */
+            regiao?: string;
+            /** @example Segunda a sábado, das 9h às 19h */
+            horario?: string;
+            /** Format: double */
+            latitude?: number;
+            /** Format: double */
+            longitude?: number;
+            /** @description Link do Google Maps; se tiver coordenadas, elas preenchem o mapa */
+            linkMapa?: string;
+            /** @example 63985116783 */
+            whatsapp?: string;
+            /** @example stewergabriel */
+            instagram?: string;
+            /** @example https://stewergabriel.com */
+            site?: string;
+            /** @description Frase que aparece na tela de entrar */
+            frase?: string;
+        };
         /** @description Quem fez o que e quando */
         EventoAuditoria: {
             id?: components["schemas"]["UUID"];
@@ -2755,6 +3132,21 @@ export interface components {
             /** Format: int32 */
             duracaoMinutos?: number;
             horarios?: components["schemas"]["HorarioLivre"][];
+        };
+        Imagem: {
+            id?: components["schemas"]["UUID"];
+            legenda?: string;
+            /** Format: int32 */
+            ordem?: number;
+        };
+        ImagemRequest: {
+            /** @description RETRATO (troca o atual) ou TRABALHO. Ignorado nas fotos de servico. */
+            tipo?: string;
+            legenda?: string;
+            /** @example image/jpeg */
+            tipoConteudo: string;
+            /** @description A imagem em base64 (JPEG, PNG ou WebP, ate 1,5 MB) */
+            conteudoBase64: string;
         };
         /**
          * Format: date
@@ -2891,6 +3283,11 @@ export interface components {
              * @example stewer-gabriel
              */
             tenantSlug?: string;
+            /**
+             * @description Opcional. Vai para a ficha: o Stewer ve o aniversario no painel.
+             * @example 1994-11-20
+             */
+            dataNascimento?: components["schemas"]["LocalDate"];
         };
         /** @description Novo horario do agendamento */
         RemarcarRequest: {
@@ -2924,6 +3321,8 @@ export interface components {
             ativo?: boolean;
             createdAt?: components["schemas"]["OffsetDateTime"];
             updatedAt?: components["schemas"]["OffsetDateTime"];
+            /** @description Fotos de exemplo, em ordem; a URL e GET /imagens/{id} */
+            fotos?: string[];
         };
         ServicoRequest: {
             /** @example Consultoria de imagem */
@@ -2987,6 +3386,8 @@ export interface components {
              * @example 2022-03-10T12:15:50-04:00
              */
             fotoVersao?: components["schemas"]["OffsetDateTime"];
+            /** @description Aniversario informado pelo proprio cliente (ou pela equipe na ficha) */
+            dataNascimento?: components["schemas"]["LocalDate"];
         };
     };
     responses: never;

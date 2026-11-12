@@ -7,6 +7,7 @@
 import type { CalendarDate } from '@/lib/datetime';
 
 import { api, desembrulha, desembrulhaCriado } from './client';
+import { TENANT_SLUG } from './config';
 import type {
   Agendamento,
   AgendamentoRequest,
@@ -19,6 +20,8 @@ import type {
   ClienteResumo,
   ClienteSumido,
   Disponibilidade,
+  Estudio,
+  EstudioRequest,
   EventoAuditoria,
   Ficha,
   FichaRequest,
@@ -26,6 +29,8 @@ import type {
   FotoConteudo,
   FotoRequest,
   HorariosLivres,
+  Imagem,
+  ImagemRequest,
   Periodo,
   Profissional,
   ProfissionalRequest,
@@ -64,6 +69,7 @@ export const chaves = {
 
   pessoas: (busca: string) => ['usuarios', { busca }] as const,
   administradores: () => ['usuarios', 'admins'] as const,
+  estudio: () => ['estudio'] as const,
 
   clientes: (busca: string) => ['clientes', { busca }] as const,
   cliente: (id: string) => ['cliente', id] as const,
@@ -112,6 +118,51 @@ export function darAcessoDeAdmin(usuarioId: string): Promise<Usuario> {
 
 export function tirarAcessoDeAdmin(usuarioId: string): Promise<Usuario> {
   return desembrulha(api.DELETE('/usuarios/{id}/admin', { params: { path: { id: usuarioId } } }));
+}
+
+// ---------------------------------------------------------------------------
+// Estudio
+// ---------------------------------------------------------------------------
+
+/** Publico: a tela de entrar tambem le (retrato e frase). */
+export function buscarEstudio(): Promise<Estudio> {
+  return desembrulha(
+    api.GET('/estudio', { params: { query: TENANT_SLUG ? { tenantSlug: TENANT_SLUG } : {} } })
+  );
+}
+
+export function salvarEstudio(body: EstudioRequest): Promise<Estudio> {
+  return desembrulha(api.PUT('/estudio', { body }));
+}
+
+export function adicionarFotoDoEstudio(body: ImagemRequest): Promise<Imagem> {
+  return desembrulhaCriado<Imagem>(api.POST('/estudio/fotos', { body }));
+}
+
+export function removerFotoDoEstudio(id: string): Promise<void> {
+  return desembrulha(
+    api.DELETE('/estudio/fotos/{id}', { params: { path: { id } } })
+  ) as Promise<void>;
+}
+
+export function moverFotoDoEstudio(id: string, posicao: number): Promise<Imagem[]> {
+  return desembrulha(
+    api.PUT('/estudio/fotos/{id}/posicao/{posicao}', { params: { path: { id, posicao } } })
+  );
+}
+
+export function adicionarFotoDoServico(servicoId: string, body: ImagemRequest): Promise<Imagem> {
+  return desembrulhaCriado<Imagem>(
+    api.POST('/servicos/{id}/fotos', { params: { path: { id: servicoId } }, body })
+  );
+}
+
+export function removerFotoDoServico(servicoId: string, fotoId: string): Promise<void> {
+  return desembrulha(
+    api.DELETE('/servicos/{id}/fotos/{fotoId}', {
+      params: { path: { id: servicoId, fotoId } },
+    })
+  ) as Promise<void>;
 }
 
 // ---------------------------------------------------------------------------

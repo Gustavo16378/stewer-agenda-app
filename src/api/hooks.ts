@@ -20,6 +20,8 @@ import * as q from './queries';
 import type {
   Aniversariante,
   ClienteSumido,
+  Estudio,
+  EstudioRequest,
   EventoAuditoria,
   Ficha,
   FichaRequest,
@@ -36,6 +38,8 @@ import type {
   ClienteResumo,
   Disponibilidade,
   HorariosLivres,
+  Imagem,
+  ImagemRequest,
   Periodo,
   Profissional,
   ProfissionalRequest,
@@ -60,6 +64,51 @@ export function useServicos(incluirInativos = false) {
     queryKey: chaves.servicos(incluirInativos),
     queryFn: () => q.buscarServicos(incluirInativos),
   });
+}
+
+/** O estudio salvo pelo admin. Muda pouco: fica fresco por 10 minutos. */
+export function useEstudioSalvo() {
+  return useQuery<Estudio, ApiError>({
+    queryKey: chaves.estudio(),
+    queryFn: q.buscarEstudio,
+    staleTime: 10 * 60 * 1000,
+  });
+}
+
+export function useSalvarEstudio() {
+  const qc = useQueryClient();
+  return useMutation<Estudio, ApiError, EstudioRequest>({
+    mutationFn: q.salvarEstudio,
+    onSuccess: (estudio) => {
+      qc.setQueryData(chaves.estudio(), estudio);
+      void qc.invalidateQueries({ queryKey: ['auditoria'] });
+    },
+  });
+}
+
+/** Retrato, fotos do trabalho e fotos dos servicos: tudo recarrega estudio e catalogo. */
+export function useFotosPublicas() {
+  const qc = useQueryClient();
+  const depois = () => {
+    void qc.invalidateQueries({ queryKey: chaves.estudio() });
+    void qc.invalidateQueries({ queryKey: ['servicos'] });
+    void qc.invalidateQueries({ queryKey: ['auditoria'] });
+  };
+  const adicionar = useMutation<Imagem, ApiError, ImagemRequest & { servicoId?: string }>({
+    mutationFn: ({ servicoId, ...body }) =>
+      servicoId ? q.adicionarFotoDoServico(servicoId, body) : q.adicionarFotoDoEstudio(body),
+    onSuccess: depois,
+  });
+  const remover = useMutation<void, ApiError, { id: string; servicoId?: string }>({
+    mutationFn: ({ id, servicoId }) =>
+      servicoId ? q.removerFotoDoServico(servicoId, id) : q.removerFotoDoEstudio(id),
+    onSuccess: depois,
+  });
+  const mover = useMutation<Imagem[], ApiError, { id: string; posicao: number }>({
+    mutationFn: ({ id, posicao }) => q.moverFotoDoEstudio(id, posicao),
+    onSuccess: depois,
+  });
+  return { adicionar, remover, mover };
 }
 
 export function useSalvarServico() {
