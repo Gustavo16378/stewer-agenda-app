@@ -86,16 +86,15 @@ export class ApiError extends Error {
 }
 
 const MENSAGEM_REDE =
-  'Nao foi possivel falar com o servidor. Confira se a API esta no ar e se o app aponta para o ' +
-  'IP da sua maquina — no celular, "localhost" e o proprio celular.';
+  'Sem conexão com o servidor agora. Confira a internet e tente de novo em alguns segundos.';
 
 const MENSAGENS_PADRAO: Record<number, string> = {
   400: 'Confira os dados enviados.',
-  401: 'Sua sessao expirou. Entre novamente.',
-  403: 'Voce nao tem permissao para isso.',
-  404: 'Nao encontramos o que voce procurou.',
-  409: 'Esse registro conflita com um que ja existe.',
-  422: 'Nao foi possivel concluir com esses dados.',
+  401: 'Sua sessão expirou. Entre de novo.',
+  403: 'Você não tem permissão para isso.',
+  404: 'Não encontramos o que você procurou.',
+  409: 'Isso já existe com esses dados.',
+  422: 'Não deu para concluir com esses dados. Confira e tente de novo.',
 };
 
 function kindDe(status: number, temViolacoes: boolean): ApiErrorKind {

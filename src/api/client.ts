@@ -67,7 +67,7 @@ const authMiddleware: Middleware = {
       aoDeslogar?.();
       throw new ApiError({
         status: 401,
-        mensagem: 'Sua sessao expirou. Entre novamente.',
+        mensagem: 'Sua sessão expirou. Entre de novo.',
         codigo: 'TOKEN_EXPIRADO',
         kind: 'autenticacao',
       });

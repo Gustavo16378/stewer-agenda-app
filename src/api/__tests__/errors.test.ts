@@ -83,7 +83,7 @@ describe('401 e 403 — a API responde com CORPO VAZIO', () => {
     const erro = apiErrorDeResposta(401, undefined);
     expect(erro.kind).toBe('autenticacao');
     expect(erro.exigeLogin).toBe(true);
-    expect(erro.message).toBe('Sua sessao expirou. Entre novamente.');
+    expect(erro.message).toBe('Sua sessão expirou. Entre de novo.');
     expect(erro.message).not.toBe('');
   });
 
@@ -91,7 +91,7 @@ describe('401 e 403 — a API responde com CORPO VAZIO', () => {
     const erro = apiErrorDeResposta(403, undefined);
     expect(erro.kind).toBe('permissao');
     expect(erro.exigeLogin).toBe(false);
-    expect(erro.message).toBe('Voce nao tem permissao para isso.');
+    expect(erro.message).toBe('Você não tem permissão para isso.');
   });
 
   it('o 401 do /auth/login TEM corpo e a mensagem dele vence a padrao', () => {
@@ -139,12 +139,12 @@ describe('regras de negocio', () => {
 });
 
 describe('erro de rede', () => {
-  it('explica o caso do celular apontando para localhost', () => {
+  it('fala de conexao, nao de detalhe tecnico', () => {
     const erro = apiErrorDeRede();
     expect(erro.kind).toBe('rede');
     expect(erro.status).toBe(0);
     expect(erro.codigo).toBe('FALHA_DE_REDE');
-    expect(erro.message).toMatch(/localhost/i);
+    expect(erro.message).toMatch(/Sem conexão/);
   });
 
   it('comoApiError reconhece o TypeError do fetch', () => {

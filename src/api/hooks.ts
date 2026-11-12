@@ -281,7 +281,7 @@ export function useAgendamento(
         // reconhece o tipo e a tela cai no texto generico.
         throw new ApiError({
           status: 404,
-          mensagem: 'Nao encontramos este agendamento. Volte e abra pela lista.',
+          mensagem: 'Não encontramos este agendamento. Volte e abra pela lista.',
           codigo: 'AGENDAMENTO_FORA_DO_CACHE',
           kind: 'nao_encontrado',
         });

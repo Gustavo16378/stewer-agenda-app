@@ -143,7 +143,7 @@ describe('401 desloga', () => {
 
     await expect(
       desembrulha(api.GET('/clientes', { params: { query: { pagina: 0, tamanho: 20 } } }))
-    ).rejects.toThrow('Voce nao tem permissao para isso.');
+    ).rejects.toThrow('Você não tem permissão para isso.');
   });
 });
 
@@ -251,7 +251,7 @@ describe('erro de rede', () => {
   beforeEach(() => jest.useFakeTimers());
   afterEach(() => jest.useRealTimers());
 
-  it('fetch rejeitando vira ApiError de rede, com dica de localhost', async () => {
+  it('fetch rejeitando vira ApiError de rede, com mensagem para quem usa o app', async () => {
     definirSessaoAtiva({ token: 'jwt', expiraEm: Date.now() + 3_600_000 });
     fetchMock.mockRejectedValue(new TypeError('Network request failed'));
 
@@ -260,7 +260,7 @@ describe('erro de rede', () => {
     );
     const esperado = expect(chamada).rejects.toMatchObject({
       kind: 'rede',
-      message: expect.stringMatching(/localhost/i),
+      message: expect.stringMatching(/Sem conexão/),
     });
     await jest.advanceTimersByTimeAsync(60_000);
     await esperado;

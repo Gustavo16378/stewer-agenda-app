@@ -89,7 +89,7 @@ export function EstadoErro({
 }) {
   const apiErro = erro instanceof ApiError ? erro : null;
   const mensagem =
-    apiErro?.message ?? (erro instanceof Error ? erro.message : 'Nao foi possivel carregar.');
+    apiErro?.message ?? (erro instanceof Error ? erro.message : 'Não deu para carregar.');
 
   const eyebrow =
     apiErro?.kind === 'rede'
