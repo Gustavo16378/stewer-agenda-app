@@ -12,11 +12,19 @@ import type {
   AgendamentoRequest,
   Anotacao,
   AnotacaoRequest,
+  Aniversariante,
   Bloqueio,
   BloqueioRequest,
   ClienteDetalhe,
   ClienteResumo,
+  ClienteSumido,
   Disponibilidade,
+  EventoAuditoria,
+  Ficha,
+  FichaRequest,
+  Foto,
+  FotoConteudo,
+  FotoRequest,
   HorariosLivres,
   Periodo,
   Profissional,
@@ -55,10 +63,19 @@ export const chaves = {
   ) => ['horarios-livres', profissionalId, data, servicoId, ignorarAgendamentoId ?? ''] as const,
 
   pessoas: (busca: string) => ['usuarios', { busca }] as const,
+  administradores: () => ['usuarios', 'admins'] as const,
 
   clientes: (busca: string) => ['clientes', { busca }] as const,
   cliente: (id: string) => ['cliente', id] as const,
   anotacoes: (clienteId: string) => ['cliente', clienteId, 'anotacoes'] as const,
+  fotos: (clienteId: string) => ['cliente', clienteId, 'fotos'] as const,
+  foto: (fotoId: string) => ['foto', fotoId] as const,
+  fotoDeUsuario: (usuarioId: string, versao: string) =>
+    ['usuario', usuarioId, 'foto', versao] as const,
+  aniversariantes: (mes?: number) => ['clientes', 'aniversariantes', mes ?? 'atual'] as const,
+  sumidos: () => ['clientes', 'sumidos'] as const,
+  auditoria: (filtro: { entidades?: string[]; clienteId?: string }) =>
+    ['auditoria', filtro.entidades?.join(',') ?? '', filtro.clienteId ?? ''] as const,
 
   disponibilidade: (profissionalId: string) =>
     ['profissional', profissionalId, 'disponibilidade'] as const,
@@ -82,6 +99,19 @@ export function buscarPessoas(busca: string): Promise<Usuario[]> {
   return desembrulha(
     api.GET('/usuarios', { params: { query: { ...(busca ? { busca } : {}), tamanho: 30 } } })
   );
+}
+
+/** Quem tem acesso de admin (so ADMIN). */
+export function buscarAdministradores(): Promise<Usuario[]> {
+  return desembrulha(api.GET('/usuarios/admins'));
+}
+
+export function darAcessoDeAdmin(usuarioId: string): Promise<Usuario> {
+  return desembrulha(api.PUT('/usuarios/{id}/admin', { params: { path: { id: usuarioId } } }));
+}
+
+export function tirarAcessoDeAdmin(usuarioId: string): Promise<Usuario> {
+  return desembrulha(api.DELETE('/usuarios/{id}/admin', { params: { path: { id: usuarioId } } }));
 }
 
 // ---------------------------------------------------------------------------
@@ -244,6 +274,68 @@ export function apagarAnotacao(clienteId: string, anotacaoId: string): Promise<v
 export function criarAnotacao(clienteId: string, body: AnotacaoRequest): Promise<Anotacao> {
   return desembrulhaCriado<Anotacao>(
     api.POST('/clientes/{id}/anotacoes', { params: { path: { id: clienteId } }, body })
+  );
+}
+
+export function salvarFicha(clienteId: string, body: FichaRequest): Promise<Ficha> {
+  return desembrulha(
+    api.PUT('/clientes/{id}/ficha', { params: { path: { id: clienteId } }, body })
+  );
+}
+
+export function buscarFotos(clienteId: string): Promise<Foto[]> {
+  return desembrulha(api.GET('/clientes/{id}/fotos', { params: { path: { id: clienteId } } }));
+}
+
+export function buscarConteudoDaFoto(clienteId: string, fotoId: string): Promise<FotoConteudo> {
+  return desembrulha(
+    api.GET('/clientes/{id}/fotos/{fotoId}', { params: { path: { id: clienteId, fotoId } } })
+  );
+}
+
+export function adicionarFoto(clienteId: string, body: FotoRequest): Promise<Foto> {
+  return desembrulhaCriado<Foto>(
+    api.POST('/clientes/{id}/fotos', { params: { path: { id: clienteId } }, body })
+  );
+}
+
+export function removerFoto(clienteId: string, fotoId: string): Promise<void> {
+  return desembrulha(
+    api.DELETE('/clientes/{id}/fotos/{fotoId}', { params: { path: { id: clienteId, fotoId } } })
+  ) as Promise<void>;
+}
+
+export function buscarFotoDeUsuario(usuarioId: string): Promise<FotoConteudo> {
+  return desembrulha(api.GET('/usuarios/{id}/foto', { params: { path: { id: usuarioId } } }));
+}
+
+export function buscarAniversariantes(mes?: number): Promise<Aniversariante[]> {
+  return desembrulha(
+    api.GET('/clientes/aniversariantes', { params: { query: mes ? { mes } : {} } })
+  );
+}
+
+export function buscarSumidos(): Promise<ClienteSumido[]> {
+  return desembrulha(api.GET('/clientes/sumidos'));
+}
+
+export function buscarAuditoria(params: {
+  entidades?: string[];
+  clienteId?: string;
+  pagina: number;
+  tamanho: number;
+}): Promise<EventoAuditoria[]> {
+  return desembrulha(
+    api.GET('/auditoria', {
+      params: {
+        query: {
+          ...(params.entidades?.length ? { entidade: params.entidades } : {}),
+          ...(params.clienteId ? { clienteId: params.clienteId } : {}),
+          pagina: params.pagina,
+          tamanho: params.tamanho,
+        },
+      },
+    })
   );
 }
 

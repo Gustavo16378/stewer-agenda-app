@@ -70,6 +70,17 @@ components:
           type: string
           description: Cliente do agendamento. Obrigatorio para PROFISSIONAL e ADMIN;
             ignorado quando quem chama e CLIENTE
+    Aniversariante:
+      type: object
+      properties:
+        id:
+          $ref: "#/components/schemas/UUID"
+        nome:
+          type: string
+        telefone:
+          type: string
+        dataNascimento:
+          $ref: "#/components/schemas/LocalDate"
     Anotacao:
       type: object
       properties:
@@ -184,10 +195,20 @@ components:
           type: string
         createdAt:
           $ref: "#/components/schemas/OffsetDateTime"
+        fotoVersao:
+          $ref: "#/components/schemas/OffsetDateTime"
+          type: string
+          examples:
+          - 2022-03-10T12:15:50-04:00
+          description: Quando a foto de perfil mudou; nulo se nao tem foto
         agendamentos:
           type: array
           items:
             $ref: "#/components/schemas/Agendamento"
+        ficha:
+          $ref: "#/components/schemas/Ficha"
+        metricas:
+          $ref: "#/components/schemas/MetricasCliente"
     ClienteResumo:
       type: object
       properties:
@@ -211,6 +232,34 @@ components:
           examples:
           - 2022-03-10T12:15:50-04:00
           description: Inicio do ultimo atendimento concluido; nulo se nunca veio
+        fotoVersao:
+          $ref: "#/components/schemas/OffsetDateTime"
+          type: string
+          examples:
+          - 2022-03-10T12:15:50-04:00
+          description: Quando a foto de perfil mudou; nulo se nao tem foto
+    ClienteSumido:
+      type: object
+      properties:
+        id:
+          $ref: "#/components/schemas/UUID"
+        nome:
+          type: string
+        telefone:
+          type: string
+        visitas:
+          type: integer
+          format: int64
+        ultimaVisita:
+          $ref: "#/components/schemas/OffsetDateTime"
+        diasSemVir:
+          type: integer
+          format: int32
+          description: Dias desde a ultima visita
+        intervaloHabitualDias:
+          type: integer
+          format: int32
+          description: Intervalo medio entre visitas; nulo com uma visita so
     Disponibilidade:
       type: object
       description: Faixa de atendimento recorrente
@@ -295,6 +344,35 @@ components:
         tenantSlug:
           type: string
           description: "Slug do estabelecimento. Omitido, usa o tenant padrao."
+    EventoAuditoria:
+      type: object
+      description: Quem fez o que e quando
+      properties:
+        id:
+          $ref: "#/components/schemas/UUID"
+        criadoEm:
+          $ref: "#/components/schemas/OffsetDateTime"
+        autorNome:
+          type: string
+          description: Nome de quem fez; nulo se foi o sistema
+        autorRole:
+          type: string
+        acao:
+          type: string
+          examples:
+          - CANCELOU
+        entidade:
+          type: string
+          examples:
+          - AGENDAMENTO
+        entidadeId:
+          $ref: "#/components/schemas/UUID"
+        clienteId:
+          $ref: "#/components/schemas/UUID"
+        resumo:
+          type: string
+          examples:
+          - "Cancelou Corte + Visagismo de Joana Ribeiro, sex 13/11 15:00"
     ExcluirContaRequest:
       type: object
       required:
@@ -335,6 +413,140 @@ components:
           externalDocs:
             description: As defined by 'partial-time' in RFC3339
             url: https://www.rfc-editor.org/rfc/rfc3339.html#section-5.6
+    Ficha:
+      type: object
+      description: Dados e perfil de visagismo do cliente; vazia se ninguem preencheu
+      properties:
+        dataNascimento:
+          $ref: "#/components/schemas/LocalDate"
+        origem:
+          type: string
+        etiquetas:
+          type: array
+          items:
+            type: string
+        formatoRosto:
+          type: string
+        cabelo:
+          type: string
+        barba:
+          type: string
+        estilo:
+          type: string
+        manter:
+          type: string
+        evitar:
+          type: string
+        atualizadaEm:
+          $ref: "#/components/schemas/OffsetDateTime"
+          type: string
+          examples:
+          - 2022-03-10T12:15:50-04:00
+          description: Ultima vez que alguem salvou; nulo se nunca foi preenchida
+    FichaRequest:
+      type: object
+      properties:
+        dataNascimento:
+          $ref: "#/components/schemas/LocalDate"
+        origem:
+          type: string
+          examples:
+          - Instagram
+          maxLength: 40
+        etiquetas:
+          type: array
+          maxItems: 12
+          items:
+            type: string
+            maxLength: 40
+        formatoRosto:
+          type: string
+          examples:
+          - Oval
+          maxLength: 40
+        cabelo:
+          type: string
+          maxLength: 80
+        barba:
+          type: string
+          maxLength: 80
+        estilo:
+          type: string
+          maxLength: 120
+        manter:
+          type: string
+          maxLength: 1000
+        evitar:
+          type: string
+          maxLength: 1000
+    Foto:
+      type: object
+      properties:
+        id:
+          $ref: "#/components/schemas/UUID"
+        momento:
+          $ref: "#/components/schemas/Momento"
+        legenda:
+          type: string
+        agendamentoId:
+          $ref: "#/components/schemas/UUID"
+        tipoConteudo:
+          type: string
+        tamanhoBytes:
+          type: integer
+          format: int32
+        autorNome:
+          type: string
+        createdAt:
+          $ref: "#/components/schemas/OffsetDateTime"
+    FotoConteudo:
+      type: object
+      properties:
+        id:
+          $ref: "#/components/schemas/UUID"
+        dataUrl:
+          type: string
+          description: "data:image/jpeg;base64,..."
+    FotoPerfilRequest:
+      type: object
+      required:
+      - tipoConteudo
+      - conteudoBase64
+      properties:
+        tipoConteudo:
+          type: string
+          examples:
+          - image/jpeg
+          pattern: \S
+        conteudoBase64:
+          type: string
+          maxLength: 900000
+          pattern: \S
+    FotoRequest:
+      type: object
+      required:
+      - momento
+      - tipoConteudo
+      - conteudoBase64
+      properties:
+        momento:
+          $ref: "#/components/schemas/Momento"
+        legenda:
+          type: string
+          maxLength: 200
+        agendamentoId:
+          $ref: "#/components/schemas/UUID"
+          type: string
+          description: Atendimento a que a foto pertence (opcional)
+        tipoConteudo:
+          type: string
+          examples:
+          - image/jpeg
+          pattern: \S
+        conteudoBase64:
+          type: string
+          maxLength: 2100000
+          pattern: \S
     GradeSemanal:
       type: object
       required:
@@ -403,6 +615,59 @@ components:
           examples:
           - stewer-gabriel
           description: "Slug do estabelecimento. Omitido, usa o tenant padrao."
+    MetricasCliente:
+      type: object
+      properties:
+        visitas:
+          type: integer
+          format: int32
+          description: Atendimentos concluidos
+        totalGastoCentavos:
+          type: integer
+          format: int64
+          description: "Soma do valor dos atendimentos concluidos, no preco do dia"
+        ticketMedioCentavos:
+          type: integer
+          format: int64
+          description: Media por atendimento concluido
+        intervaloMedioDias:
+          type: integer
+          format: int32
+          description: De quantos em quantos dias ele volta; nulo com menos de 2 visitas
+        diasDesdeUltimaVisita:
+          type: integer
+          format: int32
+          description: Dias desde a ultima visita concluida; nulo se nunca veio
+        faltas:
+          type: integer
+          format: int32
+          description: Vezes que nao compareceu
+        cancelamentos:
+          type: integer
+          format: int32
+          description: Horarios cancelados
+        cancelamentosEmCimaDaHora:
+          type: integer
+          format: int32
+          description: Cancelados com menos de 24 horas de antecedencia
+        servicoPreferido:
+          type: string
+          description: Servico que ele mais faz
+        profissionalPreferido:
+          type: string
+          description: Com quem ele mais atende
+        proximoHorario:
+          $ref: "#/components/schemas/OffsetDateTime"
+          type: string
+          examples:
+          - 2022-03-10T12:15:50-04:00
+          description: Proximo horario marcado; nulo se nao tem
+    Momento:
+      type: string
+      enum:
+      - ANTES
+      - DEPOIS
+      - OUTRA
     OffsetDateTime:
       type: string
       format: date-time
@@ -435,6 +700,12 @@ components:
           type: string
         fotoUrl:
           type: string
+        fotoVersao:
+          $ref: "#/components/schemas/OffsetDateTime"
+          type: string
+          examples:
+          - 2022-03-10T12:15:50-04:00
+          description: Quando a foto de perfil da conta mudou; nulo se nao tem foto
         ativo:
           type: boolean
         createdAt:
@@ -684,6 +955,12 @@ components:
         lembreteEmail:
           type: boolean
           description: Recebe lembrete do horario por e-mail
+        fotoVersao:
+          $ref: "#/components/schemas/OffsetDateTime"
+          type: string
+          examples:
+          - 2022-03-10T12:15:50-04:00
+          description: Quando a foto de perfil mudou; nulo se nao tem foto
   securitySchemes:
     bearerAuth:
       description: Authentication
@@ -695,6 +972,8 @@ tags:
   description: Grade semanal de atendimento e bloqueios
 - name: Agendamentos
   description: Horarios livres e reservas
+- name: Auditoria
+  description: Quem fez o que e quando
 - name: Auth
   description: Cadastro e autenticacao
 - name: Clientes
@@ -706,7 +985,7 @@ tags:
 - name: Servicos
   description: Catalogo de servicos do estabelecimento
 - name: Usuarios
-  description: Pessoas do estabelecimento (somente ADMIN)
+  description: Pessoas do estabelecimento
 paths:
   /agendamentos:
     post:
@@ -855,6 +1134,51 @@ paths:
           description: Agendamento ja esta num status final
       security:
       - bearerAuth: []
+  /auditoria:
+    get:
+      summary: "Eventos de auditoria, do mais novo para o mais antigo"
+      description: ADMIN ve tudo. Profissional so com `clienteId` (a linha do tempo
+        daquele cliente).
+      tags:
+      - Auditoria
+      parameters:
+      - name: clienteId
+        in: query
+        schema:
+          $ref: "#/components/schemas/UUID"
+      - description: "Filtra por tipo: AGENDAMENTO, SERVICO, PROFISSIONAL, HORARIOS,\
+          \ BLOQUEIO, FICHA, ANOTACAO, FOTO, CLIENTE (pode repetir)"
+        name: entidade
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+      - name: pagina
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: tamanho
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 30
+      responses:
+        "200":
+          description: Pagina de eventos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/EventoAuditoria"
+        "403":
+          description: Profissional pedindo a auditoria completa
+      security:
+      - bearerAuth: []
   /auth/eu:
     get:
       summary: Dados do usuario do token atual
@@ -948,6 +1272,43 @@ paths:
           description: Senha nao confere
         "400":
           description: Bad Request
+      security:
+      - bearerAuth: []
+  /auth/eu/foto:
+    put:
+      summary: Troca a foto de perfil da conta
+      description: "Imagem em base64 (JPEG, PNG ou WebP, ate 600 KB). O app ja manda\
+        \ reduzida."
+      tags:
+      - Auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FotoPerfilRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Usuario"
+        "400":
+          description: Bad Request
+      security:
+      - bearerAuth: []
+    delete:
+      summary: Tira a foto de perfil
+      tags:
+      - Auth
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Usuario"
       security:
       - bearerAuth: []
   /auth/eu/preferencias:
@@ -1108,6 +1469,47 @@ paths:
           description: Somente profissional ou admin
       security:
       - bearerAuth: []
+  /clientes/aniversariantes:
+    get:
+      summary: Clientes que fazem aniversario no mes
+      description: "Sem `mes`, usa o mes de hoje no fuso do estabelecimento."
+      tags:
+      - Clientes
+      parameters:
+      - name: mes
+        in: query
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Aniversariante"
+      security:
+      - bearerAuth: []
+  /clientes/sumidos:
+    get:
+      summary: Clientes que passaram do proprio ritmo sem voltar
+      description: "Quem nao tem horario marcado e esta ha mais de 1,5x o intervalo\
+        \ medio dele sem vir (no minimo 21 dias); com uma visita so, mais de 60 dias."
+      tags:
+      - Clientes
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ClienteSumido"
+      security:
+      - bearerAuth: []
   /clientes/{id}:
     get:
       summary: Ficha do cliente com o historico de atendimentos
@@ -1236,6 +1638,133 @@ paths:
           content:
             application/json:
               schema: {}
+      security:
+      - bearerAuth: []
+  /clientes/{id}/ficha:
+    put:
+      summary: "Salva a ficha do cliente (aniversario, origem, etiquetas, visagismo)"
+      description: "Substitui a ficha inteira: campo vazio apaga o valor."
+      tags:
+      - Clientes
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: "#/components/schemas/UUID"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FichaRequest"
+        required: true
+      responses:
+        "200":
+          description: Ficha salva
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Ficha"
+        "404":
+          description: Cliente inexistente no estabelecimento
+        "400":
+          description: Bad Request
+      security:
+      - bearerAuth: []
+  /clientes/{id}/fotos:
+    get:
+      summary: "Fotos do cliente (sem a imagem), da mais nova para a mais antiga"
+      tags:
+      - Clientes
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: "#/components/schemas/UUID"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Foto"
+      security:
+      - bearerAuth: []
+    post:
+      summary: "Adiciona uma foto de antes, depois ou outra"
+      description: "A imagem vai em base64 (JPEG, PNG ou WebP, ate 1,5 MB)."
+      tags:
+      - Clientes
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: "#/components/schemas/UUID"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FotoRequest"
+        required: true
+      responses:
+        "201":
+          description: Foto guardada
+        "422":
+          description: "Tipo invalido, imagem vazia ou grande demais"
+        "400":
+          description: Bad Request
+      security:
+      - bearerAuth: []
+  /clientes/{id}/fotos/{fotoId}:
+    delete:
+      summary: Apaga uma foto
+      tags:
+      - Clientes
+      parameters:
+      - name: fotoId
+        in: path
+        required: true
+        schema:
+          $ref: "#/components/schemas/UUID"
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: "#/components/schemas/UUID"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: {}
+      security:
+      - bearerAuth: []
+    get:
+      summary: "A imagem da foto, como data URL"
+      tags:
+      - Clientes
+      parameters:
+      - name: fotoId
+        in: path
+        required: true
+        schema:
+          $ref: "#/components/schemas/UUID"
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: "#/components/schemas/UUID"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FotoConteudo"
       security:
       - bearerAuth: []
   /ping:
@@ -1701,6 +2230,86 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/Usuario"
+      security:
+      - bearerAuth: []
+  /usuarios/admins:
+    get:
+      summary: Quem tem acesso de admin
+      tags:
+      - Usuarios
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Usuario"
+      security:
+      - bearerAuth: []
+  /usuarios/{id}/admin:
+    delete:
+      summary: Tira o acesso de admin
+      description: "Volta a profissional (se atende) ou cliente. Ninguem tira o proprio\
+        \ acesso, e o ultimo admin fica: 422."
+      tags:
+      - Usuarios
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: "#/components/schemas/UUID"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Usuario"
+      security:
+      - bearerAuth: []
+    put:
+      summary: Da acesso de admin a uma pessoa
+      description: Vale a partir do proximo login dela. Repetir nao muda nada.
+      tags:
+      - Usuarios
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: "#/components/schemas/UUID"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Usuario"
+      security:
+      - bearerAuth: []
+  /usuarios/{id}/foto:
+    get:
+      summary: "Foto de perfil de alguem do estabelecimento, como data URL"
+      description: "A equipe ve todas; o cliente ve a propria e a de quem atende.\
+        \ Sem foto ou sem permissao: 404."
+      tags:
+      - Usuarios
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: "#/components/schemas/UUID"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FotoConteudo"
       security:
       - bearerAuth: []
 info:

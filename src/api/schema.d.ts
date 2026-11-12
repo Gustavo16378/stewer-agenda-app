@@ -293,6 +293,58 @@ export interface paths {
         };
         trace?: never;
     };
+    "/auditoria": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Eventos de auditoria, do mais novo para o mais antigo
+         * @description ADMIN ve tudo. Profissional so com `clienteId` (a linha do tempo daquele cliente).
+         */
+        get: {
+            parameters: {
+                query?: {
+                    clienteId?: components["schemas"]["UUID"];
+                    /** @description Filtra por tipo: AGENDAMENTO, SERVICO, PROFISSIONAL, HORARIOS, BLOQUEIO, FICHA, ANOTACAO, FOTO, CLIENTE (pode repetir) */
+                    entidade?: string[];
+                    pagina?: number;
+                    tamanho?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Pagina de eventos */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["EventoAuditoria"][];
+                    };
+                };
+                /** @description Profissional pedindo a auditoria completa */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/auth/eu": {
         parameters: {
             query?: never;
@@ -510,6 +562,76 @@ export interface paths {
             };
         };
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/eu/foto": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Troca a foto de perfil da conta
+         * @description Imagem em base64 (JPEG, PNG ou WebP, ate 600 KB). O app ja manda reduzida.
+         */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["FotoPerfilRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Usuario"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        post?: never;
+        /** Tira a foto de perfil */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Usuario"];
+                    };
+                };
+            };
+        };
         options?: never;
         head?: never;
         patch?: never;
@@ -872,6 +994,86 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/clientes/aniversariantes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Clientes que fazem aniversario no mes
+         * @description Sem `mes`, usa o mes de hoje no fuso do estabelecimento.
+         */
+        get: {
+            parameters: {
+                query?: {
+                    mes?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Aniversariante"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/clientes/sumidos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Clientes que passaram do proprio ritmo sem voltar
+         * @description Quem nao tem horario marcado e esta ha mais de 1,5x o intervalo medio dele sem vir (no minimo 21 dias); com uma visita so, mais de 60 dias.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ClienteSumido"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/clientes/{id}": {
         parameters: {
             query?: never;
@@ -1061,6 +1263,206 @@ export interface paths {
                 header?: never;
                 path: {
                     anotacaoId: components["schemas"]["UUID"];
+                    id: components["schemas"]["UUID"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": unknown;
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/clientes/{id}/ficha": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Salva a ficha do cliente (aniversario, origem, etiquetas, visagismo)
+         * @description Substitui a ficha inteira: campo vazio apaga o valor.
+         */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: components["schemas"]["UUID"];
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["FichaRequest"];
+                };
+            };
+            responses: {
+                /** @description Ficha salva */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Ficha"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Cliente inexistente no estabelecimento */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/clientes/{id}/fotos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Fotos do cliente (sem a imagem), da mais nova para a mais antiga */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: components["schemas"]["UUID"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Foto"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /**
+         * Adiciona uma foto de antes, depois ou outra
+         * @description A imagem vai em base64 (JPEG, PNG ou WebP, ate 1,5 MB).
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: components["schemas"]["UUID"];
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["FotoRequest"];
+                };
+            };
+            responses: {
+                /** @description Foto guardada */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Tipo invalido, imagem vazia ou grande demais */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/clientes/{id}/fotos/{fotoId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** A imagem da foto, como data URL */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    fotoId: components["schemas"]["UUID"];
+                    id: components["schemas"]["UUID"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["FotoConteudo"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        /** Apaga uma foto */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    fotoId: components["schemas"]["UUID"];
                     id: components["schemas"]["UUID"];
                 };
                 cookie?: never;
@@ -1888,6 +2290,149 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/usuarios/admins": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Quem tem acesso de admin */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Usuario"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/usuarios/{id}/admin": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Da acesso de admin a uma pessoa
+         * @description Vale a partir do proximo login dela. Repetir nao muda nada.
+         */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: components["schemas"]["UUID"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Usuario"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        /**
+         * Tira o acesso de admin
+         * @description Volta a profissional (se atende) ou cliente. Ninguem tira o proprio acesso, e o ultimo admin fica: 422.
+         */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: components["schemas"]["UUID"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Usuario"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/usuarios/{id}/foto": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Foto de perfil de alguem do estabelecimento, como data URL
+         * @description A equipe ve todas; o cliente ve a propria e a de quem atende. Sem foto ou sem permissao: 404.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: components["schemas"]["UUID"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["FotoConteudo"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1927,6 +2472,12 @@ export interface components {
             observacao?: string;
             /** @description Cliente do agendamento. Obrigatorio para PROFISSIONAL e ADMIN; ignorado quando quem chama e CLIENTE */
             clienteId?: components["schemas"]["UUID"];
+        };
+        Aniversariante: {
+            id?: components["schemas"]["UUID"];
+            nome?: string;
+            telefone?: string;
+            dataNascimento?: components["schemas"]["LocalDate"];
         };
         Anotacao: {
             id?: components["schemas"]["UUID"];
@@ -1981,7 +2532,14 @@ export interface components {
             email?: string;
             telefone?: string;
             createdAt?: components["schemas"]["OffsetDateTime"];
+            /**
+             * @description Quando a foto de perfil mudou; nulo se nao tem foto
+             * @example 2022-03-10T12:15:50-04:00
+             */
+            fotoVersao?: components["schemas"]["OffsetDateTime"];
             agendamentos?: components["schemas"]["Agendamento"][];
+            ficha?: components["schemas"]["Ficha"];
+            metricas?: components["schemas"]["MetricasCliente"];
         };
         ClienteResumo: {
             id?: components["schemas"]["UUID"];
@@ -1999,6 +2557,29 @@ export interface components {
              * @example 2022-03-10T12:15:50-04:00
              */
             ultimaVisita?: components["schemas"]["OffsetDateTime"];
+            /**
+             * @description Quando a foto de perfil mudou; nulo se nao tem foto
+             * @example 2022-03-10T12:15:50-04:00
+             */
+            fotoVersao?: components["schemas"]["OffsetDateTime"];
+        };
+        ClienteSumido: {
+            id?: components["schemas"]["UUID"];
+            nome?: string;
+            telefone?: string;
+            /** Format: int64 */
+            visitas?: number;
+            ultimaVisita?: components["schemas"]["OffsetDateTime"];
+            /**
+             * Format: int32
+             * @description Dias desde a ultima visita
+             */
+            diasSemVir?: number;
+            /**
+             * Format: int32
+             * @description Intervalo medio entre visitas; nulo com uma visita so
+             */
+            intervaloHabitualDias?: number;
         };
         /** @description Faixa de atendimento recorrente */
         Disponibilidade: {
@@ -2058,6 +2639,22 @@ export interface components {
             /** @description Slug do estabelecimento. Omitido, usa o tenant padrao. */
             tenantSlug?: string;
         };
+        /** @description Quem fez o que e quando */
+        EventoAuditoria: {
+            id?: components["schemas"]["UUID"];
+            criadoEm?: components["schemas"]["OffsetDateTime"];
+            /** @description Nome de quem fez; nulo se foi o sistema */
+            autorNome?: string;
+            autorRole?: string;
+            /** @example CANCELOU */
+            acao?: string;
+            /** @example AGENDAMENTO */
+            entidade?: string;
+            entidadeId?: components["schemas"]["UUID"];
+            clienteId?: components["schemas"]["UUID"];
+            /** @example Cancelou Corte + Visagismo de Joana Ribeiro, sex 13/11 15:00 */
+            resumo?: string;
+        };
         ExcluirContaRequest: {
             senha: string;
         };
@@ -2079,6 +2676,66 @@ export interface components {
              * @example 18:00
              */
             horaFim: string;
+        };
+        /** @description Dados e perfil de visagismo do cliente; vazia se ninguem preencheu */
+        Ficha: {
+            dataNascimento?: components["schemas"]["LocalDate"];
+            origem?: string;
+            etiquetas?: string[];
+            formatoRosto?: string;
+            cabelo?: string;
+            barba?: string;
+            estilo?: string;
+            manter?: string;
+            evitar?: string;
+            /**
+             * @description Ultima vez que alguem salvou; nulo se nunca foi preenchida
+             * @example 2022-03-10T12:15:50-04:00
+             */
+            atualizadaEm?: components["schemas"]["OffsetDateTime"];
+        };
+        FichaRequest: {
+            dataNascimento?: components["schemas"]["LocalDate"];
+            /** @example Instagram */
+            origem?: string;
+            etiquetas?: string[];
+            /** @example Oval */
+            formatoRosto?: string;
+            cabelo?: string;
+            barba?: string;
+            estilo?: string;
+            manter?: string;
+            evitar?: string;
+        };
+        Foto: {
+            id?: components["schemas"]["UUID"];
+            momento?: components["schemas"]["Momento"];
+            legenda?: string;
+            agendamentoId?: components["schemas"]["UUID"];
+            tipoConteudo?: string;
+            /** Format: int32 */
+            tamanhoBytes?: number;
+            autorNome?: string;
+            createdAt?: components["schemas"]["OffsetDateTime"];
+        };
+        FotoConteudo: {
+            id?: components["schemas"]["UUID"];
+            /** @description data:image/jpeg;base64,... */
+            dataUrl?: string;
+        };
+        FotoPerfilRequest: {
+            /** @example image/jpeg */
+            tipoConteudo: string;
+            conteudoBase64: string;
+        };
+        FotoRequest: {
+            momento: components["schemas"]["Momento"];
+            legenda?: string;
+            /** @description Atendimento a que a foto pertence (opcional) */
+            agendamentoId?: components["schemas"]["UUID"];
+            /** @example image/jpeg */
+            tipoConteudo: string;
+            conteudoBase64: string;
         };
         /** @description Faixas de atendimento da semana inteira */
         GradeSemanal: {
@@ -2117,6 +2774,59 @@ export interface components {
              */
             tenantSlug?: string;
         };
+        MetricasCliente: {
+            /**
+             * Format: int32
+             * @description Atendimentos concluidos
+             */
+            visitas?: number;
+            /**
+             * Format: int64
+             * @description Soma do valor dos atendimentos concluidos, no preco do dia
+             */
+            totalGastoCentavos?: number;
+            /**
+             * Format: int64
+             * @description Media por atendimento concluido
+             */
+            ticketMedioCentavos?: number;
+            /**
+             * Format: int32
+             * @description De quantos em quantos dias ele volta; nulo com menos de 2 visitas
+             */
+            intervaloMedioDias?: number;
+            /**
+             * Format: int32
+             * @description Dias desde a ultima visita concluida; nulo se nunca veio
+             */
+            diasDesdeUltimaVisita?: number;
+            /**
+             * Format: int32
+             * @description Vezes que nao compareceu
+             */
+            faltas?: number;
+            /**
+             * Format: int32
+             * @description Horarios cancelados
+             */
+            cancelamentos?: number;
+            /**
+             * Format: int32
+             * @description Cancelados com menos de 24 horas de antecedencia
+             */
+            cancelamentosEmCimaDaHora?: number;
+            /** @description Servico que ele mais faz */
+            servicoPreferido?: string;
+            /** @description Com quem ele mais atende */
+            profissionalPreferido?: string;
+            /**
+             * @description Proximo horario marcado; nulo se nao tem
+             * @example 2022-03-10T12:15:50-04:00
+             */
+            proximoHorario?: components["schemas"]["OffsetDateTime"];
+        };
+        /** @enum {string} */
+        Momento: "ANTES" | "DEPOIS" | "OUTRA";
         /** Format: date-time */
         OffsetDateTime: string;
         PreferenciasRequest: {
@@ -2133,6 +2843,11 @@ export interface components {
             especialidade?: string;
             bio?: string;
             fotoUrl?: string;
+            /**
+             * @description Quando a foto de perfil da conta mudou; nulo se nao tem foto
+             * @example 2022-03-10T12:15:50-04:00
+             */
+            fotoVersao?: components["schemas"]["OffsetDateTime"];
             ativo?: boolean;
             createdAt?: components["schemas"]["OffsetDateTime"];
             updatedAt?: components["schemas"]["OffsetDateTime"];
@@ -2267,6 +2982,11 @@ export interface components {
             criadoEm?: components["schemas"]["OffsetDateTime"];
             /** @description Recebe lembrete do horario por e-mail */
             lembreteEmail?: boolean;
+            /**
+             * @description Quando a foto de perfil mudou; nulo se nao tem foto
+             * @example 2022-03-10T12:15:50-04:00
+             */
+            fotoVersao?: components["schemas"]["OffsetDateTime"];
         };
     };
     responses: never;

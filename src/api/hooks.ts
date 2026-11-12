@@ -18,6 +18,14 @@ import type { CalendarDate } from '@/lib/datetime';
 import { ApiError } from './errors';
 import * as q from './queries';
 import type {
+  Aniversariante,
+  ClienteSumido,
+  EventoAuditoria,
+  Ficha,
+  FichaRequest,
+  Foto,
+  FotoConteudo,
+  FotoRequest,
   Agendamento,
   AgendamentoRequest,
   Anotacao,
@@ -110,6 +118,26 @@ export function usePessoas(busca: string, habilitado = true) {
     queryKey: chaves.pessoas(busca),
     queryFn: () => q.buscarPessoas(busca),
     enabled: habilitado,
+  });
+}
+
+export function useAdministradores() {
+  return useQuery<Usuario[], ApiError>({
+    queryKey: chaves.administradores(),
+    queryFn: q.buscarAdministradores,
+  });
+}
+
+/** Dar ou tirar o acesso de admin. A lista de pessoas e a auditoria se atualizam. */
+export function useAcessoDeAdmin() {
+  const qc = useQueryClient();
+  return useMutation<Usuario, ApiError, { usuarioId: string; admin: boolean }>({
+    mutationFn: ({ usuarioId, admin }) =>
+      admin ? q.darAcessoDeAdmin(usuarioId) : q.tirarAcessoDeAdmin(usuarioId),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['usuarios'] });
+      void qc.invalidateQueries({ queryKey: ['auditoria'] });
+    },
   });
 }
 
@@ -372,6 +400,110 @@ export function useCriarAnotacao(clienteId: string) {
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: chaves.anotacoes(clienteId) });
     },
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Ficha, fotos, aniversariantes, sumidos e auditoria
+// ---------------------------------------------------------------------------
+
+export function useSalvarFicha(clienteId: string) {
+  const qc = useQueryClient();
+  return useMutation<Ficha, ApiError, FichaRequest>({
+    mutationFn: (body) => q.salvarFicha(clienteId, body),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: chaves.cliente(clienteId) });
+      void qc.invalidateQueries({ queryKey: ['clientes', 'aniversariantes'] });
+      void qc.invalidateQueries({ queryKey: ['auditoria'] });
+    },
+  });
+}
+
+export function useFotos(clienteId: string) {
+  return useQuery<Foto[], ApiError>({
+    queryKey: chaves.fotos(clienteId),
+    queryFn: () => q.buscarFotos(clienteId),
+    enabled: !!clienteId,
+  });
+}
+
+/** A imagem de uma foto (data URL). Nao muda nunca: fica no cache a sessao toda. */
+export function useConteudoDaFoto(clienteId: string, fotoId: string | undefined) {
+  return useQuery<FotoConteudo, ApiError>({
+    queryKey: chaves.foto(fotoId ?? ''),
+    queryFn: () => q.buscarConteudoDaFoto(clienteId, fotoId!),
+    enabled: !!clienteId && !!fotoId,
+    staleTime: Infinity,
+    gcTime: 30 * 60 * 1000,
+  });
+}
+
+export function useAdicionarFoto(clienteId: string) {
+  const qc = useQueryClient();
+  return useMutation<Foto, ApiError, FotoRequest>({
+    mutationFn: (body) => q.adicionarFoto(clienteId, body),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: chaves.fotos(clienteId) });
+      void qc.invalidateQueries({ queryKey: ['auditoria'] });
+    },
+  });
+}
+
+export function useRemoverFoto(clienteId: string) {
+  const qc = useQueryClient();
+  return useMutation<void, ApiError, string>({
+    mutationFn: (fotoId) => q.removerFoto(clienteId, fotoId),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: chaves.fotos(clienteId) });
+      void qc.invalidateQueries({ queryKey: ['auditoria'] });
+    },
+  });
+}
+
+/**
+ * Foto de perfil de alguem. A `versao` (quando a foto mudou) entra na chave: trocar a
+ * foto invalida o cache sozinho. Sem versao, ninguem tem foto e nada e buscado.
+ */
+export function useFotoDeUsuario(usuarioId: string | undefined, versao: string | null | undefined) {
+  return useQuery<FotoConteudo, ApiError>({
+    queryKey: chaves.fotoDeUsuario(usuarioId ?? '', versao ?? ''),
+    queryFn: () => q.buscarFotoDeUsuario(usuarioId!),
+    enabled: !!usuarioId && !!versao,
+    staleTime: Infinity,
+    gcTime: 60 * 60 * 1000,
+    retry: false,
+  });
+}
+
+export function useAniversariantes(mes?: number) {
+  return useQuery<Aniversariante[], ApiError>({
+    queryKey: chaves.aniversariantes(mes),
+    queryFn: () => q.buscarAniversariantes(mes),
+  });
+}
+
+export function useSumidos() {
+  return useQuery<ClienteSumido[], ApiError>({
+    queryKey: chaves.sumidos(),
+    queryFn: () => q.buscarSumidos(),
+  });
+}
+
+export const TAMANHO_PAGINA_AUDITORIA = 30;
+
+/** Auditoria paginada (mais nova primeiro), com filtro por tipo ou por cliente. */
+export function useAuditoria(filtro: { entidades?: string[]; clienteId?: string }) {
+  return useInfiniteQuery<EventoAuditoria[], ApiError>({
+    queryKey: chaves.auditoria(filtro),
+    initialPageParam: 0,
+    queryFn: ({ pageParam }) =>
+      q.buscarAuditoria({
+        ...filtro,
+        pagina: pageParam as number,
+        tamanho: TAMANHO_PAGINA_AUDITORIA,
+      }),
+    getNextPageParam: (ultima, todas) =>
+      ultima.length < TAMANHO_PAGINA_AUDITORIA ? undefined : todas.length,
   });
 }
 
