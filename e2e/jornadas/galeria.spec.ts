@@ -10,7 +10,16 @@ const TELAS = {
   acesso: ['/entrar', '/criar-conta', '/esqueci-senha'],
   cliente: ['/inicio', '/agendar', '/meus-horarios', '/perfil', '/conta/dados', '/conta/senha'],
   profissional: ['/agenda', '/clientes', '/disponibilidade'],
-  admin: ['/visao-geral', '/servicos', '/equipe', '/clientes', '/conta', '/auditoria', '/estudio'],
+  admin: [
+    '/visao-geral',
+    '/servicos',
+    '/equipe',
+    '/clientes',
+    '/conta',
+    '/auditoria',
+    '/estudio',
+    '/financeiro',
+  ],
 };
 
 async function visitar(

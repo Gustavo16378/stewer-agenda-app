@@ -6,15 +6,15 @@ banco, segurança do servidor, carga) ficam no repositório
 
 ## Resumo
 
-| suíte                  | técnica      | o que roda                                                                                       | testes              |
-| ---------------------- | ------------ | ------------------------------------------------------------------------------------------------ | ------------------- |
-| Unitários              | caixa branca | datas, dinheiro, telefone, carteira de clientes, estúdio, sessão, cliente da API, telas isoladas | 211                 |
-| Jornadas               | caixa preta  | o app de verdade no navegador, contra a API de verdade com banco, como cliente, Stewer e admin   | 36 por aparelho     |
-| Aparelhos              | caixa preta  | as jornadas em iPhone, Android, computador e Safari (WebKit), e a galeria no tema escuro         | 5 filas na CI       |
-| Acessibilidade         | caixa preta  | axe-core (WCAG 2 A e AA) nas telas principais                                                    | dentro das jornadas |
-| Segurança no navegador | caixa preta  | CSP, script injetado, nome com HTML, token e saída                                               | 4 por aparelho      |
-| Temas                  | caixa preta  | fundo em volta da tela no claro e no escuro, admin e cliente, no computador                      | 4                   |
-| Lighthouse             | caixa preta  | celular e computador, telas públicas, três rodadas cada                                          | 2 telas             |
+| suíte                  | técnica      | o que roda                                                                                     | testes              |
+| ---------------------- | ------------ | ---------------------------------------------------------------------------------------------- | ------------------- |
+| Unitários              | caixa branca | datas, períodos, dinheiro, telefone, baixa, carteira, estúdio, sessão, cliente da API, telas   | 220                 |
+| Jornadas               | caixa preta  | o app de verdade no navegador, contra a API de verdade com banco, como cliente, Stewer e admin | 37 por aparelho     |
+| Aparelhos              | caixa preta  | as jornadas em iPhone, Android, computador e Safari (WebKit), e a galeria no tema escuro       | 5 filas na CI       |
+| Acessibilidade         | caixa preta  | axe-core (WCAG 2 A e AA) nas telas principais                                                  | dentro das jornadas |
+| Segurança no navegador | caixa preta  | CSP, script injetado, nome com HTML, token e saída                                             | 4 por aparelho      |
+| Temas                  | caixa preta  | fundo em volta da tela no claro e no escuro, admin e cliente, no computador                    | 4                   |
+| Lighthouse             | caixa preta  | celular e computador, telas públicas, três rodadas cada                                        | 2 telas             |
 
 Na CI cada push roda: tipos e lint, unitários com cobertura, o build da web, a API
 empacotada a partir da `main` dela, as jornadas em cinco filas paralelas (iPhone,
@@ -30,9 +30,9 @@ papel lido de dentro do token, o 401 que desloga e o 5xx que não desloga.
 
 **Caixa preta**, nas jornadas (`e2e/jornadas`): o app compilado como vai para o ar,
 servido com os mesmos cabeçalhos da produção, falando com a API de verdade. Uma pessoa
-cria a conta, marca, remarca e cancela; o Stewer abre a agenda, conclui, escreve na
-ficha, guarda o antes e depois; o admin cuida de serviços, equipe, acesso, estúdio e
-auditoria. Cada passo vira um print.
+cria a conta, marca, remarca e cancela; o Stewer abre a agenda (dia, semana, mês, pula
+para uma data), dá baixa, escreve na ficha, guarda o antes e depois; o admin cuida de
+serviços, equipe, acesso, estúdio, auditoria e vê o atendimento entrar no financeiro. Cada passo vira um print.
 
 **Caixa cinza** fica no repositório da API (os testes abrem o banco depois do pedido).
 Do lado do app, as jornadas usam a API para preparar o cenário (criar cliente, marcar
