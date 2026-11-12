@@ -140,8 +140,8 @@ export default function VisaoGeral() {
         {/* SAIR na linha do eyebrow, igual a agenda do profissional: o design nao
             desenhou saida para este papel, e o ADMIN nao tem aba de perfil. */}
         <View className="flex-row items-center justify-between">
-          <LabelCaps papel="tela">VISÃO GERAL</LabelCaps>
-          <AcaoLinha titulo="CONTA" onPress={() => router.push('/conta' as never)} />
+          <LabelCaps papel="tela">Visão geral</LabelCaps>
+          <AcaoLinha titulo="Conta" onPress={() => router.push('/conta' as never)} />
         </View>
         <Titulo className="mt-3 text-d-29">Esta semana</Titulo>
         <LabelCaps papel="meta" className="mt-[14px]">
@@ -164,7 +164,7 @@ export default function VisaoGeral() {
                 <View>
                   <Titulo className="text-d-42 leading-[42px]">{totalSemana}</Titulo>
                   <LabelCaps papel="micro" className="mt-3 tracking-button text-text-muted">
-                    AGENDAMENTOS NA SEMANA
+                    Agendamentos na semana
                   </LabelCaps>
                 </View>
                 <View className="flex-row items-end gap-[9px]">
@@ -197,7 +197,7 @@ export default function VisaoGeral() {
                 {ocupacao === null ? '—' : `${ocupacao}%`}
               </Titulo>
               <LabelCaps papel="micro" className="mt-3 tracking-button text-text-muted">
-                TAXA DE OCUPAÇÃO
+                Taxa de ocupação
               </LabelCaps>
               <View className="mt-5 h-[2px] bg-ink/12">
                 <View className="h-full bg-gold" style={{ width: `${ocupacao ?? 0}%` }} />
@@ -219,7 +219,7 @@ export default function VisaoGeral() {
                     {clientes.data ? novos.esteMes : clientes.error ? '—' : '…'}
                   </Titulo>
                   <LabelCaps papel="micro" className="mt-3 tracking-button text-text-muted">
-                    CLIENTES NOVOS NO MÊS
+                    Clientes novos no mês
                   </LabelCaps>
                 </View>
                 {clientes.data ? (

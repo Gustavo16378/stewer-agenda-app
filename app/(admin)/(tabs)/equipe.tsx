@@ -88,7 +88,7 @@ function ResumoDaAgenda({ profissionalId }: { profissionalId: string }) {
   if (grade.isLoading)
     return (
       <LabelCaps papel="micro" className="text-text-muted">
-        AGENDA · …
+        Agenda · …
       </LabelCaps>
     );
   return (
@@ -116,7 +116,7 @@ function SeletorDePessoa({
   return (
     <View className="mt-6">
       <Campo
-        rotulo="QUEM VAI ATENDER"
+        rotulo="Quem vai atender"
         value={busca}
         onChangeText={setBusca}
         placeholder="Nome ou e-mail"
@@ -281,7 +281,7 @@ export default function GestaoDeEquipe() {
                     {p.nome}
                   </Titulo>
                   <LabelCaps papel="micro" className="tracking-wide text-ink/50" numberOfLines={2}>
-                    {(p.especialidade ?? '').toUpperCase() || 'SEM ESPECIALIDADE'}
+                    {p.especialidade || 'Sem especialidade'}
                   </LabelCaps>
                 </View>
                 <LabelCaps
@@ -297,9 +297,9 @@ export default function GestaoDeEquipe() {
               <View className="flex-row items-center justify-between">
                 {p.id ? <ResumoDaAgenda profissionalId={p.id} /> : <View className="flex-1" />}
                 <View className="flex-row gap-4">
-                  <AcaoLinha titulo="EDITAR" onPress={() => abrirEdicao(p)} />
+                  <AcaoLinha titulo="Editar" onPress={() => abrirEdicao(p)} />
                   <AcaoLinha
-                    titulo="GERENCIAR"
+                    titulo="Gerenciar"
                     onPress={() => router.push(`/profissional/${p.id}/disponibilidade` as never)}
                   />
                 </View>
@@ -316,7 +316,7 @@ export default function GestaoDeEquipe() {
         >
           <Text className="font-sans text-icon leading-4 text-ink/55">+</Text>
           <LabelCaps papel="meta" className="text-caps-sm tracking-button text-ink/60">
-            ADICIONAR PROFISSIONAL
+            Adicionar profissional
           </LabelCaps>
         </Pressable>
 
@@ -354,7 +354,7 @@ export default function GestaoDeEquipe() {
                 ) : null}
                 <Campo
                   className="mt-[22px]"
-                  rotulo="ESPECIALIDADE"
+                  rotulo="Especialidade"
                   value={form.especialidade}
                   onChangeText={(v) => setForm({ ...form, especialidade: v })}
                   placeholder="Visagismo e consultoria de imagem"
@@ -363,7 +363,7 @@ export default function GestaoDeEquipe() {
                 />
                 <Campo
                   className="mt-[22px]"
-                  rotulo="BIO"
+                  rotulo="Bio"
                   value={form.bio}
                   onChangeText={(v) => setForm({ ...form, bio: v })}
                   placeholder="Dez anos de estúdio, especialista em colorimetria."
@@ -375,7 +375,7 @@ export default function GestaoDeEquipe() {
                 />
                 <Campo
                   className="mt-[22px]"
-                  rotulo="URL DA FOTO"
+                  rotulo="URL da foto"
                   value={form.fotoUrl}
                   onChangeText={(v) => setForm({ ...form, fotoUrl: v })}
                   placeholder="https://cdn.stewer.dev/fotos/gabriel.webp"
@@ -409,13 +409,13 @@ export default function GestaoDeEquipe() {
                 <Botao
                   className="mt-3"
                   variante="fantasma"
-                  titulo="VOLTAR"
+                  titulo="Voltar"
                   onPress={() => setForm(null)}
                 />
                 {form.id ? (
                   <View className="mt-6 items-center">
                     <AcaoLinha
-                      titulo="REMOVER DA EQUIPE"
+                      titulo="Remover da equipe"
                       onPress={confirmarRemocao}
                       disabled={remover.isPending}
                     />

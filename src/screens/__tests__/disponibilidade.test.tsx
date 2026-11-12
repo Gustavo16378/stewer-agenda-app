@@ -110,7 +110,7 @@ describe('TelaDisponibilidade — horario por dia', () => {
     const tela = await renderizarTela();
 
     fireEvent.press(tela.getByLabelText('Quarta'));
-    fireEvent.press(await tela.findByText('SALVAR GRADE'));
+    fireEvent.press(await tela.findByText('Salvar grade'));
     await waitFor(() => expect(mockSalvarMutate).toHaveBeenCalled());
 
     const enviadas = faixasEnviadas();
@@ -125,7 +125,7 @@ describe('TelaDisponibilidade — horario por dia', () => {
     const tela = await renderizarTela();
 
     fireEvent.press(tela.getByLabelText('Quarta'));
-    fireEvent.press(await tela.findByText('SALVAR GRADE'));
+    fireEvent.press(await tela.findByText('Salvar grade'));
     await waitFor(() => expect(mockSalvarMutate).toHaveBeenCalled());
 
     for (const f of faixasEnviadas()) {
@@ -137,7 +137,7 @@ describe('TelaDisponibilidade — horario por dia', () => {
     const tela = await renderizarTela();
 
     fireEvent.press(tela.getByLabelText('Domingo'));
-    fireEvent.press(await tela.findByText('SALVAR GRADE'));
+    fireEvent.press(await tela.findByText('Salvar grade'));
     await waitFor(() => expect(mockSalvarMutate).toHaveBeenCalled());
 
     const enviadas = faixasEnviadas();

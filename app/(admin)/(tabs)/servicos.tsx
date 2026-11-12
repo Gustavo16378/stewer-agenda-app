@@ -138,7 +138,7 @@ export default function GestaoDeServicos() {
           <Titulo className="text-d-29">Serviços</Titulo>
           <Botao
             variante="fantasmaCompacto"
-            titulo="NOVO SERVIÇO"
+            titulo="Novo serviço"
             onPress={abrirNovo}
             className="mb-[2px]"
           />
@@ -157,7 +157,7 @@ export default function GestaoDeServicos() {
             className="mt-[26px]"
             titulo="O catálogo está vazio."
             descricao="Cadastre o primeiro serviço para os clientes poderem agendar."
-            acao={{ titulo: 'NOVO SERVIÇO', aoTocar: abrirNovo }}
+            acao={{ titulo: 'Novo serviço', aoTocar: abrirNovo }}
           />
         ) : (
           <View className="mt-[26px]">
@@ -178,7 +178,7 @@ export default function GestaoDeServicos() {
                     {s.ativo === false ? ' · INATIVO' : ''}
                   </LabelCaps>
                 </View>
-                <AcaoLinha titulo="EDITAR" onPress={() => abrirEdicao(s)} className="opacity-100" />
+                <AcaoLinha titulo="Editar" onPress={() => abrirEdicao(s)} className="opacity-100" />
               </View>
             ))}
           </View>
@@ -205,7 +205,7 @@ export default function GestaoDeServicos() {
 
                 <Campo
                   className="mt-6"
-                  rotulo="NOME"
+                  rotulo="Nome"
                   value={form.nome}
                   onChangeText={(v) => setForm({ ...form, nome: v })}
                   placeholder="Corte Assinatura"
@@ -214,7 +214,7 @@ export default function GestaoDeServicos() {
                 />
                 <Campo
                   className="mt-[22px]"
-                  rotulo="DESCRIÇÃO"
+                  rotulo="Descrição"
                   value={form.descricao}
                   onChangeText={(v) => setForm({ ...form, descricao: v })}
                   placeholder="O que está incluído (opcional)"
@@ -227,7 +227,7 @@ export default function GestaoDeServicos() {
                 <View className="mt-[22px] flex-row gap-4">
                   <Campo
                     className="flex-1"
-                    rotulo="DURAÇÃO (MIN)"
+                    rotulo="Duração (min)"
                     value={form.duracao}
                     onChangeText={(v) => setForm({ ...form, duracao: v.replace(/\D/g, '') })}
                     placeholder="60"
@@ -236,7 +236,7 @@ export default function GestaoDeServicos() {
                   />
                   <Campo
                     className="flex-1"
-                    rotulo="PREÇO (R$)"
+                    rotulo="Preço (R$)"
                     value={form.preco}
                     onChangeText={(v) => setForm({ ...form, preco: v })}
                     placeholder="190,00"
@@ -272,13 +272,13 @@ export default function GestaoDeServicos() {
                 <Botao
                   className="mt-3"
                   variante="fantasma"
-                  titulo="VOLTAR"
+                  titulo="Voltar"
                   onPress={() => setForm(null)}
                 />
                 {form.id ? (
                   <View className="mt-6 items-center">
                     <AcaoLinha
-                      titulo="REMOVER DO CATÁLOGO"
+                      titulo="Remover do catálogo"
                       onPress={confirmarRemocao}
                       disabled={remover.isPending}
                     />

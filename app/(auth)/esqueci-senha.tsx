@@ -75,7 +75,7 @@ export default function EsqueciSenha() {
     <TelaRolavel larguraMaxima={440}>
       <CabecalhoVoltar />
       <LabelCaps papel="tela" className="mt-8">
-        O ATELIÊ, NO SEU TEMPO
+        O ateliê, no seu tempo
       </LabelCaps>
       <Titulo className="mt-[14px] text-d-31">Esqueci a senha.</Titulo>
 
@@ -87,7 +87,7 @@ export default function EsqueciSenha() {
           </Text>
           <Campo
             className="mt-8"
-            rotulo="E-MAIL"
+            rotulo="E-mail"
             value={email}
             onChangeText={setEmail}
             placeholder="seunome@email.com"
@@ -101,7 +101,7 @@ export default function EsqueciSenha() {
           ) : null}
           <Botao
             className="mt-[34px]"
-            titulo="MANDAR CÓDIGO"
+            titulo="Mandar código"
             carregando={enviando}
             disabled={!email.trim() || enviando}
             onPress={() => void pedirCodigo()}
@@ -115,7 +115,7 @@ export default function EsqueciSenha() {
           </Text>
           <Campo
             className="mt-8"
-            rotulo="CÓDIGO"
+            rotulo="Código"
             value={codigo}
             onChangeText={(v) => setCodigo(v.replace(/\D/g, '').slice(0, 6))}
             placeholder="000000"
@@ -126,7 +126,7 @@ export default function EsqueciSenha() {
           />
           <Campo
             className="mt-[22px]"
-            rotulo="SENHA NOVA"
+            rotulo="Senha nova"
             value={senha}
             onChangeText={setSenha}
             placeholder="Mínimo de 8 caracteres"
@@ -145,13 +145,13 @@ export default function EsqueciSenha() {
           ) : null}
           <Botao
             className="mt-[34px]"
-            titulo="CRIAR SENHA NOVA"
+            titulo="Criar senha nova"
             carregando={enviando}
             disabled={codigo.length !== 6 || senha.length < SENHA_MIN || enviando}
             onPress={() => void trocar()}
           />
           <View className="mt-5 items-center">
-            <AcaoLinha titulo="MANDAR OUTRO CÓDIGO" onPress={() => void pedirCodigo()} />
+            <AcaoLinha titulo="Mandar outro código" onPress={() => void pedirCodigo()} />
           </View>
         </>
       )}

@@ -18,11 +18,11 @@ export default function NaoEncontrado() {
     <Tela>
       <EstadoVazio
         className="flex-1"
-        eyebrow="PÁGINA NÃO ENCONTRADA"
+        eyebrow="Página não encontrada"
         titulo="Esse caminho não existe."
         descricao="O link pode estar velho ou incompleto."
         acao={{
-          titulo: 'VOLTAR AO INÍCIO',
+          titulo: 'Voltar ao início',
           aoTocar: () => router.replace(rotaInicialDoPapel(role) as never),
         }}
       />

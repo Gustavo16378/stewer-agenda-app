@@ -117,14 +117,14 @@ export default function FichaDoCliente() {
 
   return (
     <TelaRolavel>
-      <CabecalhoVoltar passo="CLIENTES" />
+      <CabecalhoVoltar passo="Clientes" />
 
       {cliente.isLoading ? (
         <Carregando className="mt-8" />
       ) : cliente.error?.status === 404 ? (
         <EstadoVazio
           className="mt-8"
-          eyebrow="FICHA INDISPONÍVEL"
+          eyebrow="Ficha indisponível"
           titulo="Este usuário não está mais na base de clientes."
           descricao="Isso acontece quando um cliente passa a fazer parte da equipe."
         />
@@ -151,8 +151,8 @@ export default function FichaDoCliente() {
 
           <View className="mt-[34px] rounded-token bg-surface p-[22px]">
             <View className="flex-row items-center justify-between">
-              <LabelCaps papel="campo">ANOTAÇÕES DE VISAGISMO</LabelCaps>
-              {podeAnotar ? <AcaoLinha titulo="EDITAR" destaque onPress={abrirEditor} /> : null}
+              <LabelCaps papel="campo">Anotações de visagismo</LabelCaps>
+              {podeAnotar ? <AcaoLinha titulo="Editar" destaque onPress={abrirEditor} /> : null}
             </View>
             {anotacoes.isLoading ? (
               <Carregando className="py-4" />
@@ -168,9 +168,7 @@ export default function FichaDoCliente() {
                 {ultimaAnotacao ? (
                   <LabelCaps papel="micro" className="mt-4 text-2xs tracking-wide text-ink/35">
                     ATUALIZADO EM {formatDiaMesCurtoCaps(ultimaAnotacao.createdAt)}
-                    {ultimaAnotacao.profissionalNome
-                      ? ` · ${ultimaAnotacao.profissionalNome.toUpperCase()}`
-                      : ''}
+                    {ultimaAnotacao.profissionalNome ? ` · ${ultimaAnotacao.profissionalNome}` : ''}
                   </LabelCaps>
                 ) : null}
                 {(anotacoes.data?.length ?? 0) > 1 ? (
@@ -182,14 +180,14 @@ export default function FichaDoCliente() {
                   </Text>
                 ) : null}
                 {ehMinha ? (
-                  <AcaoLinha className="mt-3 self-start" titulo="APAGAR" onPress={apagarAnotacao} />
+                  <AcaoLinha className="mt-3 self-start" titulo="Apagar" onPress={apagarAnotacao} />
                 ) : null}
               </>
             )}
           </View>
 
           <LabelCaps papel="secao" className="mt-10">
-            HISTÓRICO DE VISITAS
+            Histórico de visitas
           </LabelCaps>
           {visitas.length === 0 ? (
             <Text className="mt-4 font-sans text-help text-ink/42">
@@ -219,7 +217,7 @@ export default function FichaDoCliente() {
           <Botao
             className="mt-[26px]"
             variante="fantasma"
-            titulo="NOVO AGENDAMENTO PARA ESTE CLIENTE"
+            titulo="Novo agendamento para este cliente"
             onPress={() =>
               router.push({
                 pathname: '/novo-agendamento/servico',
@@ -242,11 +240,11 @@ export default function FichaDoCliente() {
             contentContainerClassName="px-screen-x pb-10 pt-8"
             contentContainerStyle={PAINEL_CENTRALIZADO}
           >
-            <LabelCaps papel="secao">ANOTAÇÕES DE VISAGISMO</LabelCaps>
+            <LabelCaps papel="secao">Anotações de visagismo</LabelCaps>
             <Titulo className="mt-3 text-d-23">{cliente.data?.nome ?? ''}</Titulo>
             <Campo
               className="mt-6"
-              rotulo="TEXTO"
+              rotulo="Texto"
               value={texto}
               onChangeText={setTexto}
               placeholder="Formato de rosto, proporções, o que manter e o que evitar…"
@@ -262,7 +260,7 @@ export default function FichaDoCliente() {
             ) : null}
             <Botao
               className="mt-8"
-              titulo="SALVAR ANOTAÇÃO"
+              titulo="Salvar anotação"
               disabled={!texto.trim()}
               carregando={criar.isPending}
               onPress={salvarAnotacao}
@@ -270,7 +268,7 @@ export default function FichaDoCliente() {
             <Botao
               className="mt-3"
               variante="fantasma"
-              titulo="VOLTAR"
+              titulo="Voltar"
               onPress={() => setEditor(false)}
             />
           </ScrollView>

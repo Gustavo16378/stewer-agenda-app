@@ -43,13 +43,13 @@ export default function EditarDados() {
     <TelaRolavel>
       <CabecalhoVoltar />
       <LabelCaps papel="tela" className="mt-8">
-        CONTA
+        Conta
       </LabelCaps>
       <Titulo className="mt-3 text-d-27">Seus dados</Titulo>
 
       <Campo
         className="mt-9"
-        rotulo="NOME"
+        rotulo="Nome"
         value={nome}
         onChangeText={setNome}
         autoCapitalize="words"
@@ -59,7 +59,7 @@ export default function EditarDados() {
       />
       <Campo
         className="mt-[22px]"
-        rotulo="E-MAIL"
+        rotulo="E-mail"
         value={email}
         onChangeText={setEmail}
         autoCapitalize="none"
@@ -71,7 +71,7 @@ export default function EditarDados() {
       />
       <Campo
         className="mt-[22px]"
-        rotulo="TELEFONE"
+        rotulo="Telefone"
         value={telefone}
         onChangeText={setTelefone}
         placeholder="(63) 90000-0000"
@@ -90,7 +90,7 @@ export default function EditarDados() {
 
       <Botao
         className="mt-[34px]"
-        titulo="SALVAR"
+        titulo="Salvar"
         carregando={enviando}
         disabled={!podeSalvar}
         onPress={() => void aoSalvar()}

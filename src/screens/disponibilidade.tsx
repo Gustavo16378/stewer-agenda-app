@@ -219,8 +219,8 @@ function problemaDaGrade(g: Grade): string | null {
 
 /** "09:00 — 19:00" ou, com almoco, "09:00 — 12:30 · 13:30 — 19:00". */
 function resumoDoHorario(h: HorarioDoDia): string {
-  if (!h.intervalo) return `${h.inicio} — ${h.fim}`;
-  return `${h.inicio} — ${h.intervalo.inicio} · ${h.intervalo.fim} — ${h.fim}`;
+  if (!h.intervalo) return `${h.inicio} às ${h.fim}`;
+  return `${h.inicio} às ${h.intervalo.inicio} e ${h.intervalo.fim} às ${h.fim}`;
 }
 
 function LinhaHorario({
@@ -250,7 +250,7 @@ function LinhaHorario({
 }
 
 function descricaoDoBloqueio(b: Bloqueio): string {
-  const motivo = b.motivo ? ` · ${b.motivo.toUpperCase()}` : '';
+  const motivo = b.motivo ? ` · ${b.motivo}` : '';
   if (b.inicio && b.fim && cobreODiaInteiro(b.inicio, b.fim)) return `DIA INTEIRO${motivo}`;
   return `${formatFaixaHoras(b.inicio, b.fim)}${motivo}`;
 }
@@ -421,7 +421,7 @@ export function TelaDisponibilidade({
         <RefreshControl refreshing={disponibilidade.isRefetching} onRefresh={refetch} />
       }
     >
-      {comCabecalhoVoltar ? <CabecalhoVoltar passo="EQUIPE" /> : null}
+      {comCabecalhoVoltar ? <CabecalhoVoltar passo="Equipe" /> : null}
       <View className={comCabecalhoVoltar ? 'pt-[30px]' : 'pt-10'}>
         <Titulo className="text-d-29">Disponibilidade</Titulo>
         <LabelCaps papel="meta" className="mt-[14px]">
@@ -442,7 +442,7 @@ export function TelaDisponibilidade({
         ) : (
           <>
             <LabelCaps papel="secao" className="mt-10">
-              DIAS DE ATENDIMENTO
+              Dias de atendimento
             </LabelCaps>
             <View className="mt-4 flex-row gap-[9px]">
               {DIAS_SEMANA.map((dia) => {
@@ -473,7 +473,7 @@ export function TelaDisponibilidade({
             </View>
 
             <LabelCaps papel="secao" className="mt-[42px]">
-              HORÁRIO DE TRABALHO
+              Horário de trabalho
             </LabelCaps>
             {ligados.length === 0 ? (
               <Text className="mt-4 font-sans text-help text-ink/42">
@@ -496,7 +496,7 @@ export function TelaDisponibilidade({
                   rotulo="Intervalo"
                   valor={
                     uniforme.intervalo
-                      ? `${uniforme.intervalo.inicio} — ${uniforme.intervalo.fim}`
+                      ? `${uniforme.intervalo.inicio} às ${uniforme.intervalo.fim}`
                       : 'Sem intervalo'
                   }
                   aoTocar={() => abrirHorario(null)}
@@ -537,7 +537,7 @@ export function TelaDisponibilidade({
             ) : null}
 
             <LabelCaps papel="secao" className="mt-[42px]">
-              BLOQUEIOS PONTUAIS
+              Bloqueios pontuais
             </LabelCaps>
             {(bloqueios.data ?? []).length === 0 ? (
               <Text className="mt-4 font-sans text-help text-ink/42">Nenhum bloqueio marcado.</Text>
@@ -577,7 +577,7 @@ export function TelaDisponibilidade({
             <Botao
               className="mt-[18px]"
               variante="fantasma"
-              titulo="ADICIONAR BLOQUEIO"
+              titulo="Adicionar bloqueio"
               onPress={abrirBloqueio}
             />
           </>
@@ -600,7 +600,7 @@ export function TelaDisponibilidade({
             <LabelCaps papel="secao">
               {diaEmEdicao === null
                 ? 'HORÁRIO DE TRABALHO'
-                : `HORÁRIO DE ${nomeDiaSemana(diaEmEdicao).toUpperCase()}`}
+                : `Horário de ${nomeDiaSemana(diaEmEdicao)}`}
             </LabelCaps>
             <Titulo className="mt-3 text-d-23">
               {diaEmEdicao === null
@@ -621,7 +621,7 @@ export function TelaDisponibilidade({
             ) : null}
             <Campo
               className="mt-6"
-              rotulo="INÍCIO"
+              rotulo="Início"
               value={fInicio}
               onChangeText={setFInicio}
               placeholder="09:00"
@@ -629,7 +629,7 @@ export function TelaDisponibilidade({
             />
             <Campo
               className="mt-[22px]"
-              rotulo="TÉRMINO"
+              rotulo="Término"
               value={fFim}
               onChangeText={setFFim}
               placeholder="19:00"
@@ -637,7 +637,7 @@ export function TelaDisponibilidade({
             />
             <Campo
               className="mt-[22px]"
-              rotulo="INTERVALO · INÍCIO"
+              rotulo="Intervalo · início"
               value={fIntInicio}
               onChangeText={setFIntInicio}
               placeholder="12:30 (opcional)"
@@ -645,7 +645,7 @@ export function TelaDisponibilidade({
             />
             <Campo
               className="mt-[22px]"
-              rotulo="INTERVALO · FIM"
+              rotulo="Intervalo · fim"
               value={fIntFim}
               onChangeText={setFIntFim}
               placeholder="13:30 (opcional)"
@@ -654,11 +654,11 @@ export function TelaDisponibilidade({
             {erroHorario ? (
               <Text className="mt-4 font-sans text-help text-red-500">{erroHorario}</Text>
             ) : null}
-            <Botao className="mt-8" titulo="APLICAR" onPress={aplicarHorario} />
+            <Botao className="mt-8" titulo="Aplicar" onPress={aplicarHorario} />
             <Botao
               className="mt-3"
               variante="fantasma"
-              titulo="VOLTAR"
+              titulo="Voltar"
               onPress={() => setModalHorario(false)}
             />
           </ScrollView>
@@ -678,11 +678,11 @@ export function TelaDisponibilidade({
             contentContainerClassName="px-screen-x pb-10 pt-8"
             contentContainerStyle={PAINEL_CENTRALIZADO}
           >
-            <LabelCaps papel="secao">BLOQUEIO PONTUAL</LabelCaps>
+            <LabelCaps papel="secao">Bloqueio pontual</LabelCaps>
             <Titulo className="mt-3 text-d-23">Uma janela em que você não atende</Titulo>
             <Campo
               className="mt-6"
-              rotulo="DATA"
+              rotulo="Data"
               value={bData}
               onChangeText={setBData}
               placeholder="DD/MM/AAAA"
@@ -696,7 +696,7 @@ export function TelaDisponibilidade({
               <>
                 <Campo
                   className="mt-[22px]"
-                  rotulo="DAS"
+                  rotulo="Das"
                   value={bInicio}
                   onChangeText={setBInicio}
                   placeholder="16:00"
@@ -704,7 +704,7 @@ export function TelaDisponibilidade({
                 />
                 <Campo
                   className="mt-[22px]"
-                  rotulo="ATÉ"
+                  rotulo="Até"
                   value={bFim}
                   onChangeText={setBFim}
                   placeholder="19:00"
@@ -714,7 +714,7 @@ export function TelaDisponibilidade({
             ) : null}
             <Campo
               className="mt-[22px]"
-              rotulo="MOTIVO"
+              rotulo="Motivo"
               value={bMotivo}
               onChangeText={setBMotivo}
               placeholder="Congresso de visagismo (opcional)"
@@ -731,14 +731,14 @@ export function TelaDisponibilidade({
             ) : null}
             <Botao
               className="mt-8"
-              titulo="BLOQUEAR"
+              titulo="Bloquear"
               carregando={criarBloqueio.isPending}
               onPress={enviarBloqueio}
             />
             <Botao
               className="mt-3"
               variante="fantasma"
-              titulo="VOLTAR"
+              titulo="Voltar"
               onPress={() => setModalBloqueio(false)}
             />
           </ScrollView>

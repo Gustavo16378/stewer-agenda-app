@@ -75,13 +75,13 @@ beforeEach(() => {
 describe('VisaoGeral — caminho para a conta do ADMIN', () => {
   it('mostra a acao CONTA', async () => {
     const tela = await renderizarTela();
-    expect(tela.getByText('CONTA')).toBeTruthy();
+    expect(tela.getByText('Conta')).toBeTruthy();
   });
 
   it('tocar em CONTA abre a tela de conta', async () => {
     const tela = await renderizarTela();
 
-    fireEvent.press(tela.getByText('CONTA'));
+    fireEvent.press(tela.getByText('Conta'));
 
     await waitFor(() => expect(mockPush).toHaveBeenCalledWith('/conta'));
   });

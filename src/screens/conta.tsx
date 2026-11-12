@@ -36,7 +36,7 @@ function LinhaDado({ rotulo, valor }: { rotulo: string; valor: string | undefine
     <View className="flex-row items-center justify-between gap-4 border-b border-divider py-[19px]">
       <Text className="font-sans text-meta text-ink/50">{rotulo}</Text>
       <Text className="flex-1 text-right font-sans text-body-lg text-text-strong" numberOfLines={1}>
-        {valor || '—'}
+        {valor || 'Não informado'}
       </Text>
     </View>
   );
@@ -86,7 +86,7 @@ export default function Conta({ comVoltar = false }: { comVoltar?: boolean }) {
         </View>
 
         <LabelCaps papel="secao" className="mt-12">
-          DADOS PESSOAIS
+          Dados pessoais
         </LabelCaps>
         <View className="mt-[6px]">
           <LinhaDado rotulo="E-mail" valor={usuario?.email} />
@@ -96,7 +96,7 @@ export default function Conta({ comVoltar = false }: { comVoltar?: boolean }) {
         </View>
 
         <LabelCaps papel="secao" className="mt-10">
-          PREFERÊNCIAS
+          Preferências
         </LabelCaps>
         <View className="mt-[6px]">
           <PreferenciaLembrete />
@@ -118,20 +118,20 @@ export default function Conta({ comVoltar = false }: { comVoltar?: boolean }) {
         <Botao
           className="mt-11"
           variante="fantasma"
-          titulo="SAIR DA CONTA"
+          titulo="Sair da conta"
           onPress={() => void aoSair()}
         />
 
         <View className="mt-8 items-center gap-4">
           {usuario?.role === 'CLIENTE' ? (
             <AcaoLinha
-              titulo="EXCLUIR MINHA CONTA"
+              titulo="Excluir minha conta"
               onPress={() => router.push('/conta/excluir' as never)}
             />
           ) : null}
           <View className="flex-row gap-6">
-            <AcaoLinha titulo="TERMOS" onPress={() => abrirPaginaDoSite('/termos')} />
-            <AcaoLinha titulo="PRIVACIDADE" onPress={() => abrirPaginaDoSite('/privacidade')} />
+            <AcaoLinha titulo="Termos" onPress={() => abrirPaginaDoSite('/termos')} />
+            <AcaoLinha titulo="Privacidade" onPress={() => abrirPaginaDoSite('/privacidade')} />
           </View>
         </View>
       </View>

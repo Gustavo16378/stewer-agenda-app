@@ -108,7 +108,7 @@ export default function AgendaDoDia() {
     if (faixas.length === 0) return null;
     const inicios = faixas.map((f) => f.horaInicio ?? '').sort(comparaWallTime);
     const fins = faixas.map((f) => f.horaFim ?? '').sort(comparaWallTime);
-    return `${formatWallTime(inicios[0])} — ${formatWallTime(fins[fins.length - 1])}`;
+    return `${formatWallTime(inicios[0])} às ${formatWallTime(fins[fins.length - 1])}`;
   }, [grade.data, data]);
 
   function abrir(item: Agendamento) {
@@ -138,7 +138,7 @@ export default function AgendaDoDia() {
             nao desenhou saida para este papel; ver cabecalho do arquivo) */}
         <View className="flex-row items-center justify-between">
           <LabelCaps papel="tela">{hoje ? 'AGENDA · HOJE' : 'AGENDA'}</LabelCaps>
-          <AcaoLinha titulo="CONTA" onPress={() => router.push('/conta' as never)} />
+          <AcaoLinha titulo="Conta" onPress={() => router.push('/conta' as never)} />
         </View>
         <View className="flex-row items-end justify-between">
           <View className="flex-1 pr-3">
@@ -215,11 +215,11 @@ export default function AgendaDoDia() {
                         {bloco.item.clienteNome}
                       </Text>
                       <LabelCaps papel="micro" className="text-ink/50" numberOfLines={1}>
-                        {(bloco.item.servicoNome ?? '').toUpperCase()}
+                        {bloco.item.servicoNome ?? ''}
                       </LabelCaps>
                       {bloco.item.primeiraVisita && bloco.item.status === 'AGENDADO' ? (
                         <LabelCaps papel="micro" className="mt-[6px] tracking-tab text-gold">
-                          PRIMEIRA VISITA
+                          Primeira visita
                         </LabelCaps>
                       ) : null}
                       {bloco.item.status && bloco.item.status !== 'AGENDADO' ? (
@@ -241,7 +241,7 @@ export default function AgendaDoDia() {
                   {/* tracejado sem raio: no Android, dashed + border-radius nao renderiza */}
                   <View className="flex-1 items-center border border-dashed border-field-border p-[10px]">
                     <LabelCaps papel="micro" className="tracking-button text-ink/32">
-                      DISPONÍVEL
+                      Disponível
                     </LabelCaps>
                   </View>
                 </View>

@@ -49,7 +49,7 @@ export default function ExcluirConta() {
     <TelaRolavel>
       <CabecalhoVoltar />
       <LabelCaps papel="tela" className="mt-8">
-        CONTA
+        Conta
       </LabelCaps>
       <Titulo className="mt-3 text-d-27">Excluir conta</Titulo>
 
@@ -64,7 +64,7 @@ export default function ExcluirConta() {
 
       <Campo
         className="mt-10"
-        rotulo="SUA SENHA, PARA CONFIRMAR"
+        rotulo="Sua senha, para confirmar"
         value={senha}
         onChangeText={setSenha}
         secureTextEntry
@@ -80,7 +80,7 @@ export default function ExcluirConta() {
       <Botao
         className="mt-[34px]"
         variante="fantasma"
-        titulo="EXCLUIR MINHA CONTA"
+        titulo="Excluir minha conta"
         carregando={enviando}
         disabled={!senha || enviando}
         onPress={() =>

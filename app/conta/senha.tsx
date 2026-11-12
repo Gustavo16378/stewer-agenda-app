@@ -32,7 +32,7 @@ export default function TrocarSenha() {
     <TelaRolavel>
       <CabecalhoVoltar />
       <LabelCaps papel="tela" className="mt-8">
-        CONTA
+        Conta
       </LabelCaps>
       <Titulo className="mt-3 text-d-27">Trocar senha</Titulo>
 
@@ -41,13 +41,13 @@ export default function TrocarSenha() {
           <Text className="mt-8 font-sans text-body-lg text-text-body">
             Senha trocada. Da próxima vez, entre com a senha nova.
           </Text>
-          <Botao className="mt-8" titulo="VOLTAR" onPress={() => router.back()} />
+          <Botao className="mt-8" titulo="Voltar" onPress={() => router.back()} />
         </>
       ) : (
         <>
           <Campo
             className="mt-9"
-            rotulo="SENHA ATUAL"
+            rotulo="Senha atual"
             value={atual}
             onChangeText={setAtual}
             secureTextEntry
@@ -60,7 +60,7 @@ export default function TrocarSenha() {
           />
           <Campo
             className="mt-[22px]"
-            rotulo="SENHA NOVA"
+            rotulo="Senha nova"
             value={nova}
             onChangeText={setNova}
             placeholder="Mínimo de 8 caracteres"
@@ -72,7 +72,7 @@ export default function TrocarSenha() {
           />
           <Campo
             className="mt-[22px]"
-            rotulo="REPITA A SENHA NOVA"
+            rotulo="Repita a senha nova"
             value={confirmacao}
             onChangeText={setConfirmacao}
             secureTextEntry
@@ -86,7 +86,7 @@ export default function TrocarSenha() {
           ) : null}
           <Botao
             className="mt-[34px]"
-            titulo="TROCAR SENHA"
+            titulo="Trocar senha"
             carregando={trocar.isPending}
             disabled={!podeEnviar}
             onPress={() =>
