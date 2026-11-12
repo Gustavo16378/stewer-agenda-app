@@ -18,12 +18,83 @@
 // O Expo Router 57 nao usa mais o @react-navigation: ele traz o navegador vendorizado,
 // e o `Tabs` com tabBar customizavel vive em 'expo-router/js-tabs'.
 import type { BottomTabBarProps } from 'expo-router/js-tabs';
-import { Pressable, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import { LogoStewer } from '@/components/marca/Logo';
+import { useLayoutLargo } from '@/lib/responsivo';
+import { useTema } from '@/theme/theme-context';
 
 import { LabelCaps } from './texto';
 
-export function TabBar({ state, descriptors, navigation }: BottomTabBarProps) {
+/**
+ * Tela larga (tablet deitado, desktop): as mesmas abas, num menu lateral com a logo.
+ * Mesma linguagem da barra de baixo: sem icone, tracinho dourado na ativa, caps.
+ */
+function MenuLateral({ state, descriptors, navigation }: BottomTabBarProps) {
+  const insets = useSafeAreaInsets();
+  const { tema } = useTema();
+
+  return (
+    <View
+      className="w-[232px] border-r border-divider bg-canvas px-8"
+      style={{ paddingTop: insets.top + 44, paddingBottom: insets.bottom + 24 }}
+    >
+      <View className="mb-14 flex-row items-center gap-4">
+        <LogoStewer altura={34} cor={tema === 'dark' ? '#f3f3f3' : '#0A0A0A'} />
+        <View className="gap-1">
+          <Text className="font-display text-d-18 text-ink">Stewer Gabriel</Text>
+          <LabelCaps papel="micro" className="text-ink/40">
+            AGENDA
+          </LabelCaps>
+        </View>
+      </View>
+
+      <View className="gap-1">
+        {state.routes.map((route, index) => {
+          const { options } = descriptors[route.key]!;
+          const ativa = state.index === index;
+          const titulo =
+            typeof options.title === 'string' ? options.title : route.name.toUpperCase();
+          const aoTocar = () => {
+            const evento = navigation.emit({
+              type: 'tabPress',
+              target: route.key,
+              canPreventDefault: true,
+            });
+            if (!ativa && !evento.defaultPrevented) navigation.navigate(route.name, route.params);
+          };
+          return (
+            <Pressable
+              key={route.key}
+              onPress={aoTocar}
+              accessibilityRole="button"
+              accessibilityState={ativa ? { selected: true } : {}}
+              accessibilityLabel={options.tabBarAccessibilityLabel ?? titulo}
+              className="flex-row items-center gap-4 py-[14px]"
+              style={({ pressed, hovered }: { pressed: boolean; hovered?: boolean }) =>
+                pressed || hovered ? { opacity: 0.7 } : null
+              }
+            >
+              <View className={ativa ? 'h-[14px] w-px bg-gold' : 'h-[14px] w-px'} />
+              <LabelCaps papel={ativa ? 'tabAtiva' : 'tab'} numberOfLines={1}>
+                {titulo}
+              </LabelCaps>
+            </Pressable>
+          );
+        })}
+      </View>
+    </View>
+  );
+}
+
+export function TabBar(props: BottomTabBarProps) {
+  const largo = useLayoutLargo();
+  if (largo) return <MenuLateral {...props} />;
+  return <BarraDeBaixo {...props} />;
+}
+
+function BarraDeBaixo({ state, descriptors, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
 
   return (

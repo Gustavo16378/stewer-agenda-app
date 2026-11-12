@@ -72,7 +72,7 @@ export default function EsqueciSenha() {
   }
 
   return (
-    <TelaRolavel>
+    <TelaRolavel larguraMaxima={440}>
       <CabecalhoVoltar />
       <LabelCaps papel="tela" className="mt-8">
         O ATELIÊ, NO SEU TEMPO

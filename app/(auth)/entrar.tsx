@@ -50,7 +50,7 @@ export default function Entrar() {
   }
 
   return (
-    <TelaRolavel>
+    <TelaRolavel larguraMaxima={440}>
       {/* margin:6px 0 42px 8px no design */}
       <View className="mb-[42px] ml-2 mt-[6px] self-start">
         <LogoStewer altura={44} cor={tema === 'dark' ? '#f3f3f3' : '#0A0A0A'} />

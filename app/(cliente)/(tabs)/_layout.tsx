@@ -10,10 +10,15 @@ import { router } from 'expo-router';
 import { Tabs } from 'expo-router/js-tabs';
 
 import { TabBar } from '@/components/ui/tab-bar';
+import { useLayoutLargo } from '@/lib/responsivo';
 
 export default function TabsCliente() {
+  const largo = useLayoutLargo();
   return (
-    <Tabs tabBar={(props) => <TabBar {...props} />} screenOptions={{ headerShown: false }}>
+    <Tabs
+      tabBar={(props) => <TabBar {...props} />}
+      screenOptions={{ headerShown: false, tabBarPosition: largo ? 'left' : 'bottom' }}
+    >
       <Tabs.Screen name="inicio" options={{ title: 'INÍCIO' }} />
       <Tabs.Screen
         name="agendar"

@@ -50,6 +50,7 @@ import {
   isDiaSemana,
   nomeDiaSemanaCurtoCaps,
 } from '@/lib/datetime';
+import { PAINEL_CENTRALIZADO } from '@/lib/responsivo';
 
 interface Formulario {
   id?: string;
@@ -329,6 +330,7 @@ export default function GestaoDeEquipe() {
           <ScrollView
             keyboardShouldPersistTaps="handled"
             contentContainerClassName="px-screen-x pb-10 pt-8"
+            contentContainerStyle={PAINEL_CENTRALIZADO}
           >
             {form ? (
               <>

@@ -58,7 +58,7 @@ export default function CriarConta() {
   }
 
   return (
-    <TelaRolavel>
+    <TelaRolavel larguraMaxima={440}>
       <LabelCaps papel="tela" className="mt-12">
         O ATELIÊ, NO SEU TEMPO
       </LabelCaps>

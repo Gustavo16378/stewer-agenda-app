@@ -34,6 +34,7 @@ import { LabelCaps, Titulo } from '@/components/ui/texto';
 import { cn } from '@/lib/cn';
 import { confirmar } from '@/lib/confirmar';
 import { formatCentavos, formatCentavosCurto, formatDuracaoCaps, parseCentavos } from '@/lib/money';
+import { PAINEL_CENTRALIZADO } from '@/lib/responsivo';
 
 interface Formulario {
   id?: string;
@@ -193,6 +194,7 @@ export default function GestaoDeServicos() {
           <ScrollView
             keyboardShouldPersistTaps="handled"
             contentContainerClassName="px-screen-x pb-10 pt-8"
+            contentContainerStyle={PAINEL_CENTRALIZADO}
           >
             {form ? (
               <>

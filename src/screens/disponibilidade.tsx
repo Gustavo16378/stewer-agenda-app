@@ -76,6 +76,7 @@ import {
   type DiaSemana,
   type WallTime,
 } from '@/lib/datetime';
+import { PAINEL_CENTRALIZADO } from '@/lib/responsivo';
 
 /** O horario de UM dia. Cada dia ligado tem o seu. */
 export interface HorarioDoDia {
@@ -594,6 +595,7 @@ export function TelaDisponibilidade({
           <ScrollView
             keyboardShouldPersistTaps="handled"
             contentContainerClassName="px-screen-x pb-10 pt-8"
+            contentContainerStyle={PAINEL_CENTRALIZADO}
           >
             <LabelCaps papel="secao">
               {diaEmEdicao === null
@@ -674,6 +676,7 @@ export function TelaDisponibilidade({
           <ScrollView
             keyboardShouldPersistTaps="handled"
             contentContainerClassName="px-screen-x pb-10 pt-8"
+            contentContainerStyle={PAINEL_CENTRALIZADO}
           >
             <LabelCaps papel="secao">BLOQUEIO PONTUAL</LabelCaps>
             <Titulo className="mt-3 text-d-23">Uma janela em que você não atende</Titulo>

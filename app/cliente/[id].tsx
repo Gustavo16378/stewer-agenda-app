@@ -47,6 +47,7 @@ import { LabelCaps, Titulo } from '@/components/ui/texto';
 import { confirmar } from '@/lib/confirmar';
 import { formatDiaMesCurtoCaps, formatMesAnoLongoCaps, parseInstant } from '@/lib/datetime';
 import { formatCentavos } from '@/lib/money';
+import { PAINEL_CENTRALIZADO } from '@/lib/responsivo';
 
 const ANOTACAO_MAX = 8000;
 
@@ -239,6 +240,7 @@ export default function FichaDoCliente() {
           <ScrollView
             keyboardShouldPersistTaps="handled"
             contentContainerClassName="px-screen-x pb-10 pt-8"
+            contentContainerStyle={PAINEL_CENTRALIZADO}
           >
             <LabelCaps papel="secao">ANOTAÇÕES DE VISAGISMO</LabelCaps>
             <Titulo className="mt-3 text-d-23">{cliente.data?.nome ?? ''}</Titulo>

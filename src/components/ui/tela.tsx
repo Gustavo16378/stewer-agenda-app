@@ -14,6 +14,7 @@ import { ScrollView, View, type ScrollViewProps } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { cn } from '@/lib/cn';
+import { LARGURA_CONTEUDO, useLayoutLargo } from '@/lib/responsivo';
 
 export interface TelaProps {
   children: ReactNode;
@@ -22,6 +23,8 @@ export interface TelaProps {
   className?: string;
   /** Respeita o inset de baixo. Desligue quando a tela vive dentro das Tabs. */
   insetInferior?: boolean;
+  /** Em tela larga, o conteudo nao passa disto (padrao 760; formularios de acesso, 440). */
+  larguraMaxima?: number;
 }
 
 export function Tela({
@@ -29,13 +32,18 @@ export function Tela({
   semPaddingLateral = false,
   className,
   insetInferior = true,
+  larguraMaxima = LARGURA_CONTEUDO,
 }: TelaProps) {
   const insets = useSafeAreaInsets();
+  const largo = useLayoutLargo();
 
   return (
     <View
       className={cn('flex-1 bg-canvas', !semPaddingLateral && 'px-screen-x', className)}
-      style={{ paddingTop: insets.top, paddingBottom: insetInferior ? insets.bottom : 0 }}
+      style={[
+        { paddingTop: insets.top, paddingBottom: insetInferior ? insets.bottom : 0 },
+        largo && { width: '100%', maxWidth: larguraMaxima, alignSelf: 'center' },
+      ]}
     >
       {children}
     </View>
@@ -47,6 +55,7 @@ export interface TelaRolavelProps extends ScrollViewProps {
   semPaddingLateral?: boolean;
   className?: string;
   insetInferior?: boolean;
+  larguraMaxima?: number;
 }
 
 /** Igual a `Tela`, mas o conteudo rola. O padding lateral vai no conteudo, nao na casca,
@@ -56,10 +65,12 @@ export function TelaRolavel({
   semPaddingLateral = false,
   className,
   insetInferior = true,
+  larguraMaxima = LARGURA_CONTEUDO,
   contentContainerStyle,
   ...props
 }: TelaRolavelProps) {
   const insets = useSafeAreaInsets();
+  const largo = useLayoutLargo();
 
   return (
     <View className={cn('flex-1 bg-canvas', className)} style={{ paddingTop: insets.top }}>
@@ -68,6 +79,8 @@ export function TelaRolavel({
         contentContainerClassName={cn(!semPaddingLateral && 'px-screen-x')}
         contentContainerStyle={[
           { paddingBottom: (insetInferior ? insets.bottom : 0) + 32 },
+          // em tela larga o conteudo fica numa coluna de leitura centralizada, com folga em cima
+          largo && { width: '100%', maxWidth: larguraMaxima, alignSelf: 'center', paddingTop: 24 },
           contentContainerStyle,
         ]}
         keyboardShouldPersistTaps="handled"
