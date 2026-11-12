@@ -26,9 +26,11 @@ import type { Agendamento, Servico } from '@/api/types';
 import { useAuth } from '@/auth/auth-context';
 import { BotaoAtelie, Paragrafo, TituloSecao } from '@/components/atelie/base';
 import { MapaDoAtelie } from '@/components/atelie/MapaDoAtelie';
+import { FotosDoServico } from '@/components/estudio/FotosDoServico';
 import { GeometriaDoRosto, MARCAS_BUSTO, MARCAS_RETRATO } from '@/components/marca/Geometria';
 import { LogoStewer } from '@/components/marca/Logo';
-import { FOTOS, LEMA, LOCAL, SITE_DO_STEWER } from '@/content/atelie';
+import { FOTOS, LEMA } from '@/content/atelie';
+import { useEstudio } from '@/content/estudio';
 import {
   formatDiaSemanaDiaMes,
   formatHora,
@@ -67,6 +69,9 @@ function Heroi({ nome }: { nome: string }) {
   const { tema } = useTema();
   const { width } = useWindowDimensions();
   const largo = useLayoutLargo();
+  // retrato enviado pelo admin: entra no lugar, sem a leitura do rosto (que foi medida
+  // nas fotos que vem no app)
+  const enviado = useEstudio().retratoEnviado;
   const insets = useSafeAreaInsets();
 
   const marca = (
@@ -96,7 +101,7 @@ function Heroi({ nome }: { nome: string }) {
     const largoFoto = Math.round(alto * 0.8);
     // no claro, o retrato de estudio de fundo cinza conversa com o papel; no escuro, o
     // retrato de fundo preto
-    const foto = tema === 'dark' ? FOTOS.retrato : FOTOS.busto;
+    const foto = enviado ?? (tema === 'dark' ? FOTOS.retrato : FOTOS.busto);
     const marcas = tema === 'dark' ? MARCAS_RETRATO : MARCAS_BUSTO;
     return (
       <View className="bg-fundo px-12 pb-6 pt-12">
@@ -130,7 +135,7 @@ function Heroi({ nome }: { nome: string }) {
                 style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
                 transition={300}
               />
-              <GeometriaDoRosto marcas={marcas} atraso={300} />
+              {enviado ? null : <GeometriaDoRosto marcas={marcas} atraso={300} />}
             </View>
           </View>
         </View>
@@ -142,14 +147,14 @@ function Heroi({ nome }: { nome: string }) {
   return (
     <View style={{ height: altura }} className="overflow-hidden bg-[#0c0c0c]">
       <Image
-        source={FOTOS.retrato.fonte}
-        accessibilityLabel={FOTOS.retrato.descricao}
+        source={(enviado ?? FOTOS.retrato).fonte}
+        accessibilityLabel={(enviado ?? FOTOS.retrato).descricao}
         contentFit="cover"
-        contentPosition="center"
+        contentPosition={enviado ? 'top' : 'center'}
         style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
         transition={300}
       />
-      <GeometriaDoRosto marcas={MARCAS_RETRATO} atraso={300} />
+      {enviado ? null : <GeometriaDoRosto marcas={MARCAS_RETRATO} atraso={300} />}
       <LinearGradient
         colors={['rgba(12,12,12,0.55)', 'rgba(12,12,12,0)', 'rgba(12,12,12,0)', 'rgba(12,12,12,1)']}
         locations={[0, 0.22, 0.55, 1]}
@@ -238,6 +243,7 @@ function LinhaServico({ servico, aoEscolher }: { servico: Servico; aoEscolher: (
             {servico.descricao}
           </Text>
         ) : null}
+        <FotosDoServico fotos={servico.fotos} nome={servico.nome} tamanho={56} />
       </View>
       <View className="items-end gap-1">
         <Text className="font-display text-ds-20 text-latao">
@@ -259,6 +265,7 @@ export default function InicioCliente() {
 
   const futuros = useMeusAgendamentos('futuros');
   const servicos = useServicos(false);
+  const estudio = useEstudio();
   const proximo = useMemo(() => proximoDaLista(futuros.data), [futuros.data]);
 
   function abrirDetalhe(item: Agendamento) {
@@ -348,15 +355,15 @@ export default function InicioCliente() {
         {/* O app agenda; quem e o Stewer e o trabalho dele ficam no site. Aqui so o
             convite para conhecer, sem repetir o site. */}
         <Pressable
-          onPress={() => void Linking.openURL(SITE_DO_STEWER)}
+          onPress={() => void Linking.openURL(estudio.site)}
           accessibilityRole="link"
           accessibilityLabel="Conhecer o trabalho do Stewer no site"
           className="mt-16 flex-row items-center gap-4 rounded-[3px] border border-borda bg-superficie p-4"
           style={({ pressed }) => (pressed ? { opacity: 0.85 } : null)}
         >
           <Image
-            source={FOTOS.perfil.fonte}
-            accessibilityLabel={FOTOS.perfil.descricao}
+            source={(estudio.retratoEnviado ?? FOTOS.perfil).fonte}
+            accessibilityLabel={(estudio.retratoEnviado ?? FOTOS.perfil).descricao}
             contentFit="cover"
             contentPosition="top"
             style={{ width: 56, height: 56, borderRadius: 56 }}
@@ -364,7 +371,7 @@ export default function InicioCliente() {
           <View className="flex-1">
             <Text className="font-display text-ds-20 text-texto">Conheça o trabalho do Stewer</Text>
             <Text className="font-sans text-ui-sm text-texto-3">
-              Portfólio, cursos e a história dele em stewergabriel.com
+              Portfólio, cursos e a história dele em {estudio.site.replace(/^https?:\/\//, '')}
             </Text>
           </View>
           <Text className="font-sans text-ds-24 text-latao">›</Text>
@@ -377,8 +384,8 @@ export default function InicioCliente() {
         <BotaoAtelie
           className="mt-2 self-start"
           variante="texto"
-          titulo="@stewer.gabriel no Instagram"
-          onPress={() => void Linking.openURL(LOCAL.instagram)}
+          titulo={`@${estudio.instagramUrl.replace(/^.*instagram\.com\//, '')} no Instagram`}
+          onPress={() => void Linking.openURL(estudio.instagramUrl)}
         />
 
         <View className="mt-16 items-center">

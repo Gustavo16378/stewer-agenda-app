@@ -25,6 +25,7 @@ import { useMeuProfissional, useServicos } from '@/api/hooks';
 import type { Servico } from '@/api/types';
 import { useAuth } from '@/auth/auth-context';
 import { CabecalhoDoFluxo } from '@/components/atelie/fluxo';
+import { FotosDoServico } from '@/components/estudio/FotosDoServico';
 import { Carregando, EstadoErro, EstadoVazio } from '@/components/ui/estados';
 import { TelaRolavel } from '@/components/ui/tela';
 import { useFluxoDeAgendamento } from '@/lib/fluxo-agendamento';
@@ -53,6 +54,7 @@ function LinhaServico({ servico, aoEscolher }: { servico: Servico; aoEscolher: (
             {servico.descricao}
           </Text>
         ) : null}
+        <FotosDoServico fotos={servico.fotos} nome={servico.nome} />
       </View>
       <View className="items-end gap-1">
         <Text className="font-display text-ds-20 text-latao">{preco}</Text>

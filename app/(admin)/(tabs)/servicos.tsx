@@ -20,17 +20,20 @@
  *
  * DESVIO: o design nao desenhou o formulario; ele e um modal no mesmo vocabulario.
  */
+import { Image } from 'expo-image';
 import { useMemo, useState } from 'react';
 import { Modal, RefreshControl, ScrollView, Text, View } from 'react-native';
 
 import { useRemoverServico, useSalvarServico, useServicos } from '@/api/hooks';
 import type { Servico } from '@/api/types';
+import { GradeDeFotos } from '@/components/estudio/GradeDeFotos';
 import { AcaoLinha, Botao } from '@/components/ui/botao';
 import { Campo } from '@/components/ui/campo';
 import { Carregando, EstadoErro, EstadoVazio } from '@/components/ui/estados';
 import { Interruptor } from '@/components/ui/interruptor';
 import { TelaRolavel } from '@/components/ui/tela';
 import { LabelCaps, Titulo } from '@/components/ui/texto';
+import { urlDaImagem } from '@/content/estudio';
 import { cn } from '@/lib/cn';
 import { confirmar } from '@/lib/confirmar';
 import { formatCentavos, formatCentavosCurto, formatDuracaoCaps, parseCentavos } from '@/lib/money';
@@ -169,6 +172,14 @@ export default function GestaoDeServicos() {
                   s.ativo === false && 'opacity-45'
                 )}
               >
+                {s.fotos?.[0] ? (
+                  <Image
+                    source={{ uri: urlDaImagem(s.fotos[0]) }}
+                    contentFit="cover"
+                    accessibilityLabel={`Foto de exemplo de ${s.nome}`}
+                    style={{ width: 48, height: 60, borderRadius: 3, marginRight: 16 }}
+                  />
+                ) : null}
                 <View className="flex-1 gap-2 pr-4">
                   <Titulo className="text-d-19" numberOfLines={1}>
                     {s.nome}
@@ -260,6 +271,30 @@ export default function GestaoDeServicos() {
                     aoMudar={(v) => setForm({ ...form, ativo: v })}
                   />
                 </View>
+
+                {form.id ? (
+                  <View className="mt-8">
+                    <Text className="font-sans-medium text-ui-sm text-texto-2">
+                      Fotos de exemplo
+                    </Text>
+                    <Text className="mt-1 font-sans text-ui-sm text-texto-3">
+                      O cliente vê na hora de escolher o serviço. Até 6.
+                    </Text>
+                    <GradeDeFotos
+                      fotos={(lista.find((x) => x.id === form.id)?.fotos ?? []).map((id) => ({
+                        id,
+                      }))}
+                      servicoId={form.id}
+                      maximo={6}
+                      ordenavel={false}
+                      colunas={3}
+                    />
+                  </View>
+                ) : (
+                  <Text className="mt-6 font-sans text-ui-sm text-texto-3">
+                    Depois de cadastrar, abra o serviço de novo para pôr fotos de exemplo.
+                  </Text>
+                )}
 
                 {erroLocal ? (
                   <Text className="mt-4 font-sans text-help text-red-500">{erroLocal}</Text>
