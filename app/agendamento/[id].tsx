@@ -241,7 +241,7 @@ export default function DetalheAgendamento() {
                 <BotaoAtelie
                   className="flex-1"
                   variante="perigo"
-                  titulo="Cancelar horário"
+                  titulo="Cancelar"
                   carregando={atualizar.isPending && atualizar.variables?.status === 'CANCELADO'}
                   onPress={() =>
                     mudarStatus('CANCELADO', 'Cancelar este horário? Não dá para desfazer.')

@@ -32,12 +32,14 @@ export default function HorarioMarcado() {
         <SDesenhado altura={84} />
 
         <Animated.View entering={entrar(900)}>
-          <Text accessibilityRole="header" className="mt-10 font-display text-ds-48 text-texto">
+          <Text accessibilityRole="header" className="mt-10 font-display text-ds-38 text-texto">
             {remarcado ? 'Horário remarcado.' : 'Horário marcado.'}
           </Text>
         </Animated.View>
 
-        <Animated.View entering={entrar(1050)} className="mt-6 gap-1">
+        {/* o className vai num View comum: o Animated.View nao recebe as classes do NativeWind */}
+        <Animated.View entering={entrar(1050)}>
+          <View className="mt-6 gap-1">
           <Text className="font-display text-ds-24 text-texto">
             {dia ? diaPorExtenso(dia) : ''}
           </Text>
@@ -48,9 +50,11 @@ export default function HorarioMarcado() {
           <Text className="font-sans text-ui text-texto-3">
             {LOCAL.nome}, {LOCAL.endereco}
           </Text>
+          </View>
         </Animated.View>
 
-        <Animated.View entering={entrar(1200)} className="mt-10 gap-3">
+        <Animated.View entering={entrar(1200)}>
+          <View className="mt-10 gap-3">
           <BotaoAtelie
             titulo="Ver meus horários"
             onPress={() => router.replace('/(cliente)/(tabs)/meus-horarios' as never)}
@@ -65,6 +69,7 @@ export default function HorarioMarcado() {
             titulo="Voltar ao início"
             onPress={() => router.replace('/(cliente)/(tabs)/inicio' as never)}
           />
+          </View>
         </Animated.View>
       </View>
     </Tela>
