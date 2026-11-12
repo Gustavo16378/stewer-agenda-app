@@ -127,21 +127,23 @@ module.exports = {
 
       fontSize: {
         // --- escala Inter (UI) ---
-        micro: '7.5px',
-        '2xs': '8px',
-        'caps-xs': '8.5px', // micro-caps (67 usos)
-        caps: '9px', // CAPS PADRAO (108 usos)
-        'caps-sm': '9.5px',
-        'caps-md': '10px',
-        'caps-lg': '10.5px', // label de botao primario
-        help: '11px',
-        'help-lg': '11.5px',
-        chip: '12px',
-        meta: '12.5px',
-        body: '13px',
-        'body-lg': '13.5px',
-        row: '14px',
-        'row-lg': '14.5px',
+        // Redesenho (nov/2026): os degraus antigos (7,5 a 14,5px, feitos para caixa alta
+        // espacada) subiram para a faixa legivel. Telas ainda nao redesenhadas herdam isso.
+        micro: '11px',
+        '2xs': '11px',
+        'caps-xs': '12px', // micro-caps (67 usos)
+        caps: '12px', // CAPS PADRAO (108 usos)
+        'caps-sm': '12.5px',
+        'caps-md': '13px',
+        'caps-lg': '14px', // label de botao primario
+        help: '13px',
+        'help-lg': '13.5px',
+        chip: '13.5px',
+        meta: '14px',
+        body: '15px',
+        'body-lg': '15.5px',
+        row: '16px',
+        'row-lg': '16.5px',
         'icon-sm': '15px',
         icon: '16px',
         'icon-lg': '19px', // seta de voltar
@@ -178,19 +180,20 @@ module.exports = {
       },
 
       letterSpacing: {
+        // redesenho: sem caixa alta espacada; os nomes antigos ficam, quase sem tracking
         // o design so usa `em`; o NativeWind converte para o equivalente em px por tamanho
         brand: '0.08em',
-        tightest: '0.1em',
-        tighter: '0.12em',
-        tab: '0.14em', // label de tab bar
-        chip: '0.16em',
-        row: '0.18em', // micro-caps de status
-        wide: '0.2em', // metadado em caps
-        button: '0.22em', // label de botao primario
-        section: '0.24em', // eyebrow / label de secao
-        screen: '0.26em', // eyebrow de topo de tela
-        cover: '0.28em',
-        widest: '0.3em',
+        tightest: '0.01em',
+        tighter: '0.01em',
+        tab: '0.01em', // label de tab bar
+        chip: '0.01em',
+        row: '0.01em', // micro-caps de status
+        wide: '0.01em', // metadado em caps
+        button: '0.01em', // label de botao primario
+        section: '0.01em', // eyebrow / label de secao
+        screen: '0.01em', // eyebrow de topo de tela
+        cover: '0.01em',
+        widest: '0.01em',
         logo: '0.32em', // "STEWER GABRIEL" da splash
       },
 
@@ -199,7 +202,7 @@ module.exports = {
         DEFAULT: '2px',
         token: '2px',
         hair: '1px',
-        chip: '3px',
+        chip: '13.5px',
         pill: '99px',
       },
 
