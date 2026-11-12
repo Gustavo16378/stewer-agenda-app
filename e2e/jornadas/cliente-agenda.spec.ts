@@ -46,15 +46,34 @@ test('cliente cria a conta, marca, remarca e cancela um horario', async ({ page 
   });
 
   let hora = '';
-  await test.step('passo 3: o primeiro dia livre ja vem escolhido; escolhe um horario', async () => {
-    await expect(naTela(page, 'Quando fica bom?')).toBeVisible();
-    const continuar = botao(page, 'Continuar');
-    await expect(continuar).toBeDisabled();
+
+  /** Sorteia um dos primeiros dias livres e um horario dele (jornadas em paralelo). */
+  async function escolherHorario() {
+    const dias = page
+      .getByRole('button', { name: /^[A-ZÁÉÍÓÚ][a-zçáéíóúâêô]+, \d+ de / })
+      .filter({ visible: true });
+    await expect(dias.first()).toBeVisible();
+    const habilitados = [];
+    for (let i = 0; i < Math.min(await dias.count(), 8); i++) {
+      if (await dias.nth(i).isEnabled()) habilitados.push(i);
+    }
+    await dias.nth(habilitados[Math.floor(Math.random() * habilitados.length)]!).click();
     const horarios = page.getByRole('button', { name: HORA }).filter({ visible: true });
     await expect(horarios.first()).toBeVisible();
     const escolhido = horarios.nth(Math.floor(Math.random() * (await horarios.count())));
     hora = (await escolhido.innerText()).trim();
     await escolhido.click();
+  }
+
+  await test.step('passo 3: o primeiro dia livre ja vem escolhido; escolhe um horario', async () => {
+    await expect(naTela(page, 'Quando fica bom?')).toBeVisible();
+    const continuar = botao(page, 'Continuar');
+    await expect(continuar).toBeDisabled();
+    // o primeiro dia livre ja vem escolhido, com os horarios a vista
+    await expect(
+      page.getByRole('button', { name: HORA }).filter({ visible: true }).first()
+    ).toBeVisible();
+    await escolherHorario();
     await expect(continuar).toBeEnabled();
     await expect(naTela(page, `às ${hora}`)).toBeVisible();
     await semRolagemLateral(page);
@@ -67,7 +86,19 @@ test('cliente cria a conta, marca, remarca e cancela um horario', async ({ page 
     await expect(naTela(page, new RegExp(`^${hora} às`))).toBeVisible();
     await expect(naTela(page, 'Boss House Barbearia')).toBeVisible();
     await registrar(page, info, '07 confirmar');
-    await botao(page, 'Confirmar horário').click();
+    // se outra pessoa (outra jornada em paralelo) levou o horario, o app avisa e a
+    // pessoa volta para escolher outro: e exatamente o caminho que testamos aqui
+    for (let tentativa = 0; tentativa < 4; tentativa++) {
+      await botao(page, 'Confirmar horário').click();
+      const ocupado = naTela(page, /acabou de ser ocupado/);
+      const marcado = naTela(page, 'Horário marcado.');
+      await expect(ocupado.or(marcado)).toBeVisible();
+      if (await marcado.isVisible()) return;
+      await registrar(page, info, '07b horario ocupado');
+      await botao(page, 'Alterar data ou horário').click();
+      await escolherHorario();
+      await botao(page, 'Continuar').click();
+    }
   });
 
   await test.step('ve a confirmacao e o horario na lista', async () => {
