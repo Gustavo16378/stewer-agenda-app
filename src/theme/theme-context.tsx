@@ -122,7 +122,7 @@ export const CORES = {
     divider: 'rgba(241,235,224,0.1)',
     fieldBorder: 'rgba(241,235,224,0.16)',
     placeholder: 'rgba(240,235,228,0.4)',
-    textMuted: 'rgba(241,235,224,0.45)',
+    textMuted: '#8A8178',
   },
   light: {
     canvas: '#F2EDE5',
@@ -133,7 +133,7 @@ export const CORES = {
     divider: 'rgba(10,10,10,0.12)',
     fieldBorder: 'rgba(10,10,10,0.18)',
     placeholder: 'rgba(10,10,10,0.38)',
-    textMuted: 'rgba(10,10,10,0.45)',
+    textMuted: '#665D52',
   },
 } as const satisfies Record<TemaEfetivo, Record<string, string>>;
 

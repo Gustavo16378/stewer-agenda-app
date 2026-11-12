@@ -23,7 +23,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { LogoStewer } from '@/components/marca/Logo';
 import { useLayoutLargo } from '@/lib/responsivo';
-import { useTema } from '@/theme/theme-context';
+import { useCores, useTema } from '@/theme/theme-context';
+
+import { IconeDaAba } from './icones-abas';
 
 /**
  * Tela larga (tablet deitado, desktop): as mesmas abas, num menu lateral com a logo.
@@ -32,6 +34,7 @@ import { useTema } from '@/theme/theme-context';
 function MenuLateral({ state, descriptors, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
   const { tema } = useTema();
+  const cores = useCores();
 
   return (
     <View
@@ -40,13 +43,13 @@ function MenuLateral({ state, descriptors, navigation }: BottomTabBarProps) {
     >
       <View className="mb-14 flex-row items-center gap-4">
         <LogoStewer altura={34} cor={tema === 'dark' ? '#f3f3f3' : '#0A0A0A'} />
-        <View className="gap-1" accessibilityRole="tablist">
+        <View className="gap-1">
           <Text className="font-display text-d-18 text-ink">Stewer Gabriel</Text>
           <Text className="font-sans text-ui-sm text-texto-3">Agenda</Text>
         </View>
       </View>
 
-      <View className="gap-1">
+      <View className="gap-1" accessibilityRole="tablist">
         {state.routes.map((route, index) => {
           const { options } = descriptors[route.key]!;
           const ativa = state.index === index;
@@ -67,12 +70,17 @@ function MenuLateral({ state, descriptors, navigation }: BottomTabBarProps) {
               accessibilityRole="tab"
               accessibilityState={{ selected: ativa }}
               accessibilityLabel={options.tabBarAccessibilityLabel ?? titulo}
-              className="flex-row items-center gap-4 py-[13px]"
+              className="flex-row items-center gap-3 py-[13px]"
               style={({ pressed, hovered }: { pressed: boolean; hovered?: boolean }) =>
                 pressed || hovered ? { opacity: 0.7 } : null
               }
             >
               <View className={ativa ? 'h-[18px] w-[2px] bg-latao' : 'h-[18px] w-[2px]'} />
+              <IconeDaAba
+                rota={route.name}
+                cor={ativa ? cores.gold : cores.textMuted}
+                tamanho={20}
+              />
               <Text
                 className={
                   ativa
@@ -99,13 +107,14 @@ export function TabBar(props: BottomTabBarProps) {
 
 function BarraDeBaixo({ state, descriptors, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
+  const cores = useCores();
 
   return (
     <View
       className="border-t border-borda bg-fundo"
       style={{ paddingBottom: Math.max(insets.bottom, 8) }}
     >
-      <View className="flex-row px-1 pb-1 pt-[10px]" accessibilityRole="tablist">
+      <View className="flex-row px-1 pb-1" accessibilityRole="tablist">
         {state.routes.map((route, index) => {
           const { options } = descriptors[route.key]!;
           const ativa = state.index === index;
@@ -131,13 +140,13 @@ function BarraDeBaixo({ state, descriptors, navigation }: BottomTabBarProps) {
               accessibilityRole="tab"
               accessibilityState={{ selected: ativa }}
               accessibilityLabel={options.tabBarAccessibilityLabel ?? titulo}
-              className="flex-1 items-center gap-[6px] py-1"
+              className="flex-1 items-center gap-1 py-1"
               style={({ pressed }) => (pressed ? { opacity: 0.7 } : null)}
             >
-              {/* o ponto ocupa espaco mesmo inativo, para o rotulo nao pular */}
-              <View
-                className={ativa ? 'h-[5px] w-[5px] rounded-full bg-latao' : 'h-[5px] w-[5px]'}
-              />
+              {/* abas de mesma largura, icone em cima e rotulo embaixo; a ativa em latao,
+                  com um traco curto em cima para marcar onde a pessoa esta */}
+              <View className={ativa ? 'mb-1 h-[2px] w-6 bg-latao' : 'mb-1 h-[2px] w-6'} />
+              <IconeDaAba rota={route.name} cor={ativa ? cores.gold : cores.textMuted} />
               <Text
                 className={
                   ativa
