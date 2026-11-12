@@ -39,6 +39,7 @@ import {
   useTodosClientes,
 } from '@/api/hooks';
 import type { Agendamento } from '@/api/types';
+import { NumeroAnimado } from '@/components/atelie/NumeroAnimado';
 import { AcaoLinha } from '@/components/ui/botao';
 import { Carregando, EstadoErro } from '@/components/ui/estados';
 import { TelaRolavel } from '@/components/ui/tela';
@@ -140,10 +141,10 @@ export default function VisaoGeral() {
         {/* SAIR na linha do eyebrow, igual a agenda do profissional: o design nao
             desenhou saida para este papel, e o ADMIN nao tem aba de perfil. */}
         <View className="flex-row items-center justify-between">
-          <LabelCaps papel="tela">Visão geral</LabelCaps>
+          <Text className="font-sans-medium text-ui-sm text-texto-3">Painel</Text>
           <AcaoLinha titulo="Conta" onPress={() => router.push('/conta' as never)} />
         </View>
-        <Titulo className="mt-3 text-d-29">Esta semana</Titulo>
+        <Titulo className="mt-3 text-ds-38">Esta semana</Titulo>
         <LabelCaps papel="meta" className="mt-[14px]">
           {formatFaixaDiasCaps(semana[0] ?? hoje, semana[6] ?? hoje)}
         </LabelCaps>
@@ -154,7 +155,7 @@ export default function VisaoGeral() {
           <EstadoErro className="mt-[38px]" erro={erro} aoTentarDeNovo={refetch} />
         ) : ids.length === 0 ? (
           <Text className="mt-[38px] font-sans text-help text-ink/42">
-            Sem profissionais ativos: não há agenda para somar. Cadastre a equipe na aba EQUIPE.
+            Sem profissionais ativos: não há agenda para somar. Cadastre a equipe na aba Equipe.
           </Text>
         ) : (
           <>
@@ -162,7 +163,10 @@ export default function VisaoGeral() {
             <View className="mt-[38px] border-b border-divider pb-[30px]">
               <View className="flex-row items-end justify-between">
                 <View>
-                  <Titulo className="text-d-42 leading-[42px]">{totalSemana}</Titulo>
+                  <NumeroAnimado
+                    valor={totalSemana}
+                    className="font-display text-[52px] leading-[56px] text-texto"
+                  />
                   <LabelCaps papel="micro" className="mt-3 tracking-button text-text-muted">
                     Agendamentos na semana
                   </LabelCaps>
@@ -177,7 +181,7 @@ export default function VisaoGeral() {
                     return (
                       <View key={dia} className="items-center gap-2">
                         <View
-                          className={cn('w-[18px]', dia === hoje ? 'bg-gold' : 'bg-ink/16')}
+                          className={cn('w-[18px]', dia === hoje ? 'bg-latao' : 'bg-borda')}
                           style={{ height: altura }}
                           accessibilityLabel={`${lista.length} em ${dia}`}
                         />
@@ -193,14 +197,23 @@ export default function VisaoGeral() {
 
             {/* 2. taxa de ocupacao */}
             <View className="mt-[30px] border-b border-divider pb-[30px]">
-              <Titulo className="text-d-42 leading-[42px]">
-                {ocupacao === null ? '—' : `${ocupacao}%`}
-              </Titulo>
+              {ocupacao === null ? (
+                <Titulo className="text-[52px] leading-[56px]">sem grade</Titulo>
+              ) : (
+                <NumeroAnimado
+                  valor={ocupacao}
+                  sufixo="%"
+                  className="font-display text-[52px] leading-[56px] text-texto"
+                />
+              )}
               <LabelCaps papel="micro" className="mt-3 tracking-button text-text-muted">
                 Taxa de ocupação
               </LabelCaps>
-              <View className="mt-5 h-[2px] bg-ink/12">
-                <View className="h-full bg-gold" style={{ width: `${ocupacao ?? 0}%` }} />
+              <View className="mt-5 h-[3px] rounded-full bg-borda">
+                <View
+                  className="h-full rounded-full bg-latao"
+                  style={{ width: `${ocupacao ?? 0}%` }}
+                />
               </View>
               {grades.erro ? (
                 <Text className="mt-3 font-sans text-help text-red-500">{grades.erro.message}</Text>
@@ -215,9 +228,14 @@ export default function VisaoGeral() {
             <View className="mt-[30px] border-b border-divider pb-[30px]">
               <View className="flex-row items-end justify-between">
                 <View>
-                  <Titulo className="text-d-42 leading-[42px]">
-                    {clientes.data ? novos.esteMes : clientes.error ? '—' : '…'}
-                  </Titulo>
+                  {clientes.data ? (
+                    <NumeroAnimado
+                      valor={novos.esteMes}
+                      className="font-display text-[52px] leading-[56px] text-texto"
+                    />
+                  ) : (
+                    <Titulo className="text-[52px] leading-[56px]">…</Titulo>
+                  )}
                   <LabelCaps papel="micro" className="mt-3 tracking-button text-text-muted">
                     Clientes novos no mês
                   </LabelCaps>
