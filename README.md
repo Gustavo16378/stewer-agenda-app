@@ -263,6 +263,10 @@ cold start, app morto pelo SO).
 
 ## Testes
 
+O plano completo, com o relatório da última rodada (unitários, jornadas em cinco
+aparelhos, segurança no navegador, temas e Lighthouse), está em
+[`docs/testes.md`](docs/testes.md). A política de segurança, em [`SECURITY.md`](SECURITY.md).
+
 O foco está no que mais quebra:
 
 - **`src/lib/__tests__/datetime.test.ts`** — instante × hora de parede × data local, com
@@ -283,14 +287,14 @@ verdade, num navegador de verdade, contra a API de verdade. Cada jornada roda em
 Android e desktop** (no CI, também no **Safari/WebKit**), e cada passo vira um print no
 relatório.
 
-| Jornada | O que garante |
-|---|---|
+| Jornada          | O que garante                                                                                                                                                                                 |
+| ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `cliente-agenda` | criar conta, marcar (serviço, Stewer, dia, horário, ticket), ver a confirmação, remarcar e cancelar; se outra pessoa levar o horário no meio do caminho, o app avisa e a pessoa escolhe outro |
-| `equipe` | o Stewer acha o cliente na agenda, conclui o atendimento e anota o visagismo na ficha; o admin cadastra, edita e remove um serviço; painel e equipe abrem |
-| `acesso` | senha errada avisa, a certa entra, sair volta ao login, "esqueci a senha" manda código |
-| `vitrine` | retrato, quem é o Stewer, o trabalho e o mapa da Boss House; abas embaixo no celular e menu lateral no desktop; a abertura com o S sai sozinha |
-| `acessibilidade` | axe-core: contraste, botões e links com nome, imagens com descrição |
-| `galeria` | passa por todas as telas de cada papel e guarda um print de cada uma |
+| `equipe`         | o Stewer acha o cliente na agenda, conclui o atendimento e anota o visagismo na ficha; o admin cadastra, edita e remove um serviço; painel e equipe abrem                                     |
+| `acesso`         | senha errada avisa, a certa entra, sair volta ao login, "esqueci a senha" manda código                                                                                                        |
+| `vitrine`        | retrato, quem é o Stewer, o trabalho e o mapa da Boss House; abas embaixo no celular e menu lateral no desktop; a abertura com o S sai sozinha                                                |
+| `acessibilidade` | axe-core: contraste, botões e links com nome, imagens com descrição                                                                                                                           |
+| `galeria`        | passa por todas as telas de cada papel e guarda um print de cada uma                                                                                                                          |
 
 O projeto `escuro` repete galeria, vitrine e acessibilidade com o aparelho no tema escuro.
 
