@@ -14,16 +14,22 @@ import { Carregando, EstadoErro, EstadoVazio } from '@/components/ui/estados';
 import { TelaRolavel } from '@/components/ui/tela';
 import { FILTROS_AUDITORIA } from '@/lib/carteira';
 import { cn } from '@/lib/cn';
+import { useLayoutLargo } from '@/lib/responsivo';
 
 function Auditoria() {
+  const largo = useLayoutLargo();
   const [filtro, setFiltro] = useState<(typeof FILTROS_AUDITORIA)[number]>(FILTROS_AUDITORIA[0]);
   const consulta = useAuditoria({ entidades: [...filtro.entidades] });
   const eventos = consulta.data?.pages.flat() ?? [];
 
   return (
     <TelaRolavel>
-      <CabecalhoVoltar />
-      <Text accessibilityRole="header" className="mt-8 font-display text-ds-38 text-texto">
+      {/* no celular a auditoria abre pelo Painel, entao tem o voltar; no menu lateral nao */}
+      {largo ? null : <CabecalhoVoltar />}
+      <Text
+        accessibilityRole="header"
+        className={cn('font-display text-ds-38 text-texto', largo ? 'mt-10' : 'mt-8')}
+      >
         Auditoria
       </Text>
       <Text className="mt-2 font-sans text-ui text-texto-2">
@@ -35,6 +41,8 @@ function Auditoria() {
         showsHorizontalScrollIndicator={false}
         className="-mx-7 mt-6"
         contentContainerClassName="gap-2 px-7"
+        accessibilityRole="radiogroup"
+        accessibilityLabel="Filtrar por assunto"
       >
         {FILTROS_AUDITORIA.map((f) => {
           const on = f.chave === filtro.chave;
@@ -42,8 +50,8 @@ function Auditoria() {
             <Pressable
               key={f.chave}
               onPress={() => setFiltro(f)}
-              accessibilityRole="tab"
-              accessibilityState={{ selected: on }}
+              accessibilityRole="radio"
+              accessibilityState={{ checked: on }}
               className={cn(
                 'rounded-full border px-4 py-2',
                 on ? 'border-latao bg-latao' : 'border-borda'

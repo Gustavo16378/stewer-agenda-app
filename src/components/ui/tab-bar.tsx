@@ -105,6 +105,12 @@ export function TabBar(props: BottomTabBarProps) {
   return <BarraDeBaixo {...props} />;
 }
 
+/**
+ * Abas que so aparecem no menu lateral. No celular a barra de baixo fica com cinco; estas
+ * abrem pelos atalhos do Painel.
+ */
+const SO_NO_MENU_LATERAL = new Set(['estudio', 'auditoria']);
+
 function BarraDeBaixo({ state, descriptors, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
   const cores = useCores();
@@ -120,6 +126,7 @@ function BarraDeBaixo({ state, descriptors, navigation }: BottomTabBarProps) {
           const ativa = state.index === index;
           const titulo =
             typeof options.title === 'string' ? options.title : route.name.toUpperCase();
+          if (SO_NO_MENU_LATERAL.has(route.name)) return null;
 
           const aoTocar = () => {
             const evento = navigation.emit({

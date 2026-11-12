@@ -97,8 +97,9 @@ export const FILTROS_AUDITORIA = [
   {
     chave: 'equipe',
     rotulo: 'Equipe e horários',
-    entidades: ['PROFISSIONAL', 'HORARIOS', 'BLOQUEIO'],
+    entidades: ['PROFISSIONAL', 'HORARIOS', 'BLOQUEIO', 'ACESSO'],
   },
+  { chave: 'estudio', rotulo: 'Estúdio', entidades: ['ESTUDIO'] },
 ] as const;
 
 /** O tom do evento na linha do tempo: o que tira horario da agenda chama atencao. */

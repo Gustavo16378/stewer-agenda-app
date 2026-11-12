@@ -1,6 +1,6 @@
 /**
  * Icones das abas, desenhados aqui no mesmo traco (1,6 sobre 24) para o conjunto ter
- * cara de familia. Sem biblioteca de icones: sao dez desenhos, e assim ficam do jeito da
+ * cara de familia. Sem biblioteca de icones: sao doze desenhos, e assim ficam do jeito da
  * marca (cantos retos, latao quando a aba esta ativa).
  */
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
@@ -112,6 +112,25 @@ const DESENHOS: Record<string, (cor: string) => React.ReactNode> = {
         strokeWidth={1.6}
         strokeLinecap="round"
       />
+    </>
+  ),
+  // a fachada do estudio: toldo e porta
+  estudio: (c) => (
+    <>
+      <Path
+        d="M4 9.5 5.5 4h13L20 9.5M4 9.5h16M4 9.5c0 1.4 1.2 2.5 2.7 2.5s2.6-1.1 2.6-2.5c0 1.4 1.2 2.5 2.7 2.5s2.7-1.1 2.7-2.5c0 1.4 1.1 2.5 2.6 2.5S20 10.9 20 9.5M5.5 12v8h13v-8M10 20v-4.5h4V20"
+        stroke={c}
+        strokeWidth={1.6}
+        strokeLinejoin="round"
+      />
+    </>
+  ),
+  // uma lista com o relogio: o que aconteceu e quando
+  auditoria: (c) => (
+    <>
+      <Path d="M5 6.5h8M5 11h6M5 15.5h4" stroke={c} strokeWidth={1.6} strokeLinecap="round" />
+      <Circle cx={16.5} cy={15.5} r={4.5} stroke={c} strokeWidth={1.6} />
+      <Path d="M16.5 13.2v2.5l1.6 1" stroke={c} strokeWidth={1.6} strokeLinecap="round" />
     </>
   ),
 };

@@ -105,7 +105,7 @@ test('admin ve o aniversariante no painel e a mudanca na auditoria', async ({
 
   await page.getByRole('link', { name: 'Abrir a auditoria' }).filter({ visible: true }).click();
   await expect(naTela(page, 'Auditoria')).toBeVisible();
-  await page.getByRole('tab', { name: 'Clientes' }).filter({ visible: true }).click();
+  await page.getByRole('radio', { name: 'Clientes' }).filter({ visible: true }).click();
   await expect(naTela(page, `Atualizou a ficha de ${cliente.nome}`)).toBeVisible();
   await expect(naTela(page, `${cliente.nome} criou a conta pelo app`)).toBeVisible();
   await registrar(page, info, '02 auditoria');
