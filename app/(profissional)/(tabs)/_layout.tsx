@@ -17,9 +17,9 @@ export default function TabsProfissional() {
       tabBar={(props) => <TabBar {...props} />}
       screenOptions={{ headerShown: false, tabBarPosition: largo ? 'left' : 'bottom' }}
     >
-      <Tabs.Screen name="agenda" options={{ title: 'AGENDA' }} />
-      <Tabs.Screen name="clientes" options={{ title: 'CLIENTES' }} />
-      <Tabs.Screen name="disponibilidade" options={{ title: 'DISPONIBILIDADE' }} />
+      <Tabs.Screen name="agenda" options={{ title: 'Agenda' }} />
+      <Tabs.Screen name="clientes" options={{ title: 'Clientes' }} />
+      <Tabs.Screen name="disponibilidade" options={{ title: 'Horários' }} />
     </Tabs>
   );
 }

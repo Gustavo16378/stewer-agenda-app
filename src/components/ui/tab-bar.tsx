@@ -25,8 +25,6 @@ import { LogoStewer } from '@/components/marca/Logo';
 import { useLayoutLargo } from '@/lib/responsivo';
 import { useTema } from '@/theme/theme-context';
 
-import { LabelCaps } from './texto';
-
 /**
  * Tela larga (tablet deitado, desktop): as mesmas abas, num menu lateral com a logo.
  * Mesma linguagem da barra de baixo: sem icone, tracinho dourado na ativa, caps.
@@ -37,16 +35,14 @@ function MenuLateral({ state, descriptors, navigation }: BottomTabBarProps) {
 
   return (
     <View
-      className="w-[232px] border-r border-divider bg-canvas px-8"
+      className="w-[232px] border-r border-borda bg-fundo px-8"
       style={{ paddingTop: insets.top + 44, paddingBottom: insets.bottom + 24 }}
     >
       <View className="mb-14 flex-row items-center gap-4">
         <LogoStewer altura={34} cor={tema === 'dark' ? '#f3f3f3' : '#0A0A0A'} />
         <View className="gap-1">
           <Text className="font-display text-d-18 text-ink">Stewer Gabriel</Text>
-          <LabelCaps papel="micro" className="text-ink/40">
-            AGENDA
-          </LabelCaps>
+          <Text className="font-sans text-ui-sm text-texto-3">Agenda</Text>
         </View>
       </View>
 
@@ -71,15 +67,22 @@ function MenuLateral({ state, descriptors, navigation }: BottomTabBarProps) {
               accessibilityRole="button"
               accessibilityState={ativa ? { selected: true } : {}}
               accessibilityLabel={options.tabBarAccessibilityLabel ?? titulo}
-              className="flex-row items-center gap-4 py-[14px]"
+              className="flex-row items-center gap-4 py-[13px]"
               style={({ pressed, hovered }: { pressed: boolean; hovered?: boolean }) =>
                 pressed || hovered ? { opacity: 0.7 } : null
               }
             >
-              <View className={ativa ? 'h-[14px] w-px bg-gold' : 'h-[14px] w-px'} />
-              <LabelCaps papel={ativa ? 'tabAtiva' : 'tab'} numberOfLines={1}>
+              <View className={ativa ? 'h-[18px] w-[2px] bg-latao' : 'h-[18px] w-[2px]'} />
+              <Text
+                className={
+                  ativa
+                    ? 'font-sans-semibold text-ui-lg text-latao'
+                    : 'font-sans-medium text-ui-lg text-texto-3'
+                }
+                numberOfLines={1}
+              >
                 {titulo}
-              </LabelCaps>
+              </Text>
             </Pressable>
           );
         })}
@@ -99,10 +102,10 @@ function BarraDeBaixo({ state, descriptors, navigation }: BottomTabBarProps) {
 
   return (
     <View
-      className="border-t border-divider bg-canvas"
+      className="border-t border-borda bg-fundo"
       style={{ paddingBottom: Math.max(insets.bottom, 8) }}
     >
-      <View className="flex-row px-2 pb-1 pt-4">
+      <View className="flex-row px-1 pb-1 pt-[10px]">
         {state.routes.map((route, index) => {
           const { options } = descriptors[route.key]!;
           const ativa = state.index === index;
@@ -128,14 +131,23 @@ function BarraDeBaixo({ state, descriptors, navigation }: BottomTabBarProps) {
               accessibilityRole="button"
               accessibilityState={ativa ? { selected: true } : {}}
               accessibilityLabel={options.tabBarAccessibilityLabel ?? titulo}
-              className="flex-1 items-center gap-[7px]"
+              className="flex-1 items-center gap-[6px] py-1"
               style={({ pressed }) => (pressed ? { opacity: 0.7 } : null)}
             >
-              {/* o tracinho ocupa espaco mesmo inativo, para o label nao pular */}
-              <View className={ativa ? 'h-px w-[14px] bg-gold' : 'h-px w-[14px]'} />
-              <LabelCaps papel={ativa ? 'tabAtiva' : 'tab'} numberOfLines={1}>
+              {/* o ponto ocupa espaco mesmo inativo, para o rotulo nao pular */}
+              <View
+                className={ativa ? 'h-[5px] w-[5px] rounded-full bg-latao' : 'h-[5px] w-[5px]'}
+              />
+              <Text
+                className={
+                  ativa
+                    ? 'font-sans-semibold text-ui-xs text-latao'
+                    : 'font-sans-medium text-ui-xs text-texto-3'
+                }
+                numberOfLines={1}
+              >
                 {titulo}
-              </LabelCaps>
+              </Text>
             </Pressable>
           );
         })}

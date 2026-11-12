@@ -19,10 +19,10 @@ export default function TabsCliente() {
       tabBar={(props) => <TabBar {...props} />}
       screenOptions={{ headerShown: false, tabBarPosition: largo ? 'left' : 'bottom' }}
     >
-      <Tabs.Screen name="inicio" options={{ title: 'INÍCIO' }} />
+      <Tabs.Screen name="inicio" options={{ title: 'Início' }} />
       <Tabs.Screen
         name="agendar"
-        options={{ title: 'AGENDAR' }}
+        options={{ title: 'Agendar' }}
         listeners={{
           tabPress: (e) => {
             e.preventDefault();
@@ -30,8 +30,8 @@ export default function TabsCliente() {
           },
         }}
       />
-      <Tabs.Screen name="meus-horarios" options={{ title: 'MEUS HORÁRIOS' }} />
-      <Tabs.Screen name="perfil" options={{ title: 'PERFIL' }} />
+      <Tabs.Screen name="meus-horarios" options={{ title: 'Meus horários' }} />
+      <Tabs.Screen name="perfil" options={{ title: 'Perfil' }} />
     </Tabs>
   );
 }

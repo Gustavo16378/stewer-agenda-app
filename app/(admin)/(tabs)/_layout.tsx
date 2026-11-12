@@ -15,11 +15,11 @@ export default function TabsAdmin() {
       tabBar={(props) => <TabBar {...props} />}
       screenOptions={{ headerShown: false, tabBarPosition: largo ? 'left' : 'bottom' }}
     >
-      <Tabs.Screen name="agenda" options={{ title: 'AGENDA' }} />
-      <Tabs.Screen name="clientes" options={{ title: 'CLIENTES' }} />
-      <Tabs.Screen name="visao-geral" options={{ title: 'PAINEL' }} />
-      <Tabs.Screen name="servicos" options={{ title: 'SERVIÇOS' }} />
-      <Tabs.Screen name="equipe" options={{ title: 'EQUIPE' }} />
+      <Tabs.Screen name="agenda" options={{ title: 'Agenda' }} />
+      <Tabs.Screen name="clientes" options={{ title: 'Clientes' }} />
+      <Tabs.Screen name="visao-geral" options={{ title: 'Painel' }} />
+      <Tabs.Screen name="servicos" options={{ title: 'Serviços' }} />
+      <Tabs.Screen name="equipe" options={{ title: 'Equipe' }} />
     </Tabs>
   );
 }
