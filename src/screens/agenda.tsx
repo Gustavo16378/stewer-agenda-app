@@ -19,6 +19,11 @@
  *
  * `data` e o dia de calendario LOCAL: comeca em hoje e anda com somaDias.
  *
+ * Redesenho (nov/2026): alem do dia, a semana (lista por dia) e o mes (calendario com
+ * quantos atendimentos tem em cada dia), num pedido so (GET /agendamentos/agenda/periodo).
+ * "Escolher data" abre o calendario para pular direto para qualquer dia, e o horario que
+ * ja comecou ganha os botoes Atendido e Faltou para dar baixa ali mesmo.
+ *
  * O que a tela mostra de "DISPONÍVEL" e o vao entre dois atendimentos consecutivos —
  * derivado dos proprios instantes da agenda. A tag "PRIMEIRA VISITA" vem da API
  * (`primeiraVisita` no agendamento da agenda do dia).
@@ -28,21 +33,26 @@
  */
 import { useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { Pressable, RefreshControl, Text, View } from 'react-native';
+import { Modal, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
 
 import {
   useAgendaDoDia,
+  useAgendaDoPeriodo,
   useDisponibilidade,
   useMeuProfissional,
   useSemearAgendamento,
 } from '@/api/hooks';
 import { ROTULO_STATUS, type Agendamento } from '@/api/types';
 import { useAuth } from '@/auth/auth-context';
+import { Baixa } from '@/components/agenda/Baixa';
+import { CalendarioMes } from '@/components/agenda/CalendarioMes';
 import { BotaoAtelie } from '@/components/atelie/base';
 import { Carregando, EstadoErro, EstadoVazio } from '@/components/ui/estados';
+import { IconeDaAba } from '@/components/ui/icones-abas';
 import { TelaRolavel } from '@/components/ui/tela';
 import { cn } from '@/lib/cn';
 import {
+  calendarDateDoInstante,
   comparaWallTime,
   diaPorExtenso,
   diaSemanaDe,
@@ -58,6 +68,17 @@ import {
   type DiaSemana,
 } from '@/lib/datetime';
 import { formatDuracao } from '@/lib/money';
+import { andarPeriodo, diasEntre, periodoDe } from '@/lib/periodo';
+import { useLayoutLargo } from '@/lib/responsivo';
+import { useCores } from '@/theme/theme-context';
+
+type Modo = 'dia' | 'semana' | 'mes';
+const MODOS: { chave: Modo; rotulo: string }[] = [
+  { chave: 'dia', rotulo: 'Dia' },
+  { chave: 'semana', rotulo: 'Semana' },
+  { chave: 'mes', rotulo: 'Mês' },
+];
+const conta = (a: Agendamento) => a.status === 'AGENDADO' || a.status === 'CONCLUIDO';
 
 export type Bloco =
   | { tipo: 'atendimento'; hora: string; item: Agendamento }
@@ -103,12 +124,22 @@ export default function AgendaDoDia() {
   const { role } = useAuth();
   const semear = useSemearAgendamento();
   const [data, setData] = useState<CalendarDate>(() => hojeCalendarDate());
+  const [modo, setModo] = useState<Modo>('dia');
+  const [escolhendo, setEscolhendo] = useState(false);
+  const [mesDoSeletor, setMesDoSeletor] = useState<CalendarDate>(data);
 
   const { profissional, isLoading: carregandoFicha } = useMeuProfissional();
   // PROFISSIONAL: a API usa a ficha do token. ADMIN: manda a propria ficha.
-  const agenda = useAgendaDoDia(data, role === 'ADMIN' ? profissional?.id : undefined);
+  const profId = role === 'ADMIN' ? profissional?.id : undefined;
+  const agenda = useAgendaDoDia(data, profId);
   const semFicha = role === 'ADMIN' && !carregandoFicha && !profissional;
   const grade = useDisponibilidade(profissional?.id);
+
+  const periodo = useMemo(() => periodoDe(modo === 'dia' ? 'dia' : modo, data), [modo, data]);
+  const doPeriodo = useAgendaDoPeriodo(periodo.de, periodo.ate, profId, modo !== 'dia');
+  // contagem por dia para o calendario do seletor de data (mes que esta aberto nele)
+  const mesSeletor = useMemo(() => periodoDe('mes', mesDoSeletor), [mesDoSeletor]);
+  const doMesSeletor = useAgendaDoPeriodo(mesSeletor.de, mesSeletor.ate, profId, escolhendo);
 
   const hoje = isHoje(data);
   const blocos = useMemo(
@@ -139,19 +170,79 @@ export default function AgendaDoDia() {
     } as never);
   }
 
-  function mudarDia(delta: number) {
-    const novo = somaDias(data, delta);
-    if (novo) setData(novo);
+  function andar(delta: number) {
+    if (modo === 'dia') {
+      const novo = somaDias(data, delta);
+      if (novo) setData(novo);
+    } else {
+      setData(andarPeriodo(modo, data, delta));
+    }
+  }
+
+  const cores = useCores();
+  const largo = useLayoutLargo();
+
+  function abrirDia(dia: CalendarDate) {
+    setData(dia);
+    setModo('dia');
+    setEscolhendo(false);
   }
 
   const dataDate = parseCalendarDate(data);
   const semana = dataDate ? nomeDiaSemana(dataDate.getDay() as DiaSemana) : '';
+  const titulo =
+    modo === 'dia'
+      ? hoje
+        ? 'Hoje'
+        : semana
+      : modo === 'semana'
+        ? 'Semana'
+        : periodo.rotulo.split(' de ')[0];
+  const subtitulo =
+    modo === 'dia'
+      ? dataDate
+        ? diaPorExtenso(data).split(', ')[1]
+        : ''
+      : modo === 'semana'
+        ? periodo.rotulo
+        : periodo.rotulo.split(' de ')[1];
+  const noPeriodoAtual =
+    modo === 'dia' ? hoje : periodo.de <= hojeCalendarDate() && hojeCalendarDate() <= periodo.ate;
+
+  // semana e mes: os horarios agrupados por dia
+  const porDia = useMemo(() => {
+    const mapa = new Map<CalendarDate, Agendamento[]>();
+    for (const a of doPeriodo.data ?? []) {
+      const dia = calendarDateDoInstante(a.inicio);
+      if (!dia) continue;
+      mapa.set(dia, [...(mapa.get(dia) ?? []), a]);
+    }
+    return mapa;
+  }, [doPeriodo.data]);
+  const contagemDe = (mapa: Map<CalendarDate, Agendamento[]>) =>
+    new Map([...mapa].map(([d, l]) => [d, l.filter(conta).length] as const));
+  const contagemSeletor = useMemo(() => {
+    const mapa = new Map<CalendarDate, Agendamento[]>();
+    for (const a of doMesSeletor.data ?? []) {
+      const dia = calendarDateDoInstante(a.inicio);
+      if (dia) mapa.set(dia, [...(mapa.get(dia) ?? []), a]);
+    }
+    return contagemDe(mapa);
+  }, [doMesSeletor.data]);
+  const totalPeriodo = (doPeriodo.data ?? []).filter(conta).length;
+
+  const carregando = modo === 'dia' ? agenda.isLoading : doPeriodo.isLoading;
+  const erro = modo === 'dia' ? agenda.error : doPeriodo.error;
+  const recarregar = () => void (modo === 'dia' ? agenda.refetch() : doPeriodo.refetch());
 
   return (
     <TelaRolavel
       insetInferior={false}
       refreshControl={
-        <RefreshControl refreshing={agenda.isRefetching} onRefresh={() => void agenda.refetch()} />
+        <RefreshControl
+          refreshing={modo === 'dia' ? agenda.isRefetching : doPeriodo.isRefetching}
+          onRefresh={recarregar}
+        />
       }
     >
       <View className="pt-10">
@@ -167,30 +258,92 @@ export default function AgendaDoDia() {
         <View className="mt-1 flex-row items-end justify-between gap-3">
           <View className="flex-1">
             <Text accessibilityRole="header" className="font-display text-ds-48 text-texto">
-              {hoje ? 'Hoje' : semana}
+              {titulo}
             </Text>
-            <Text className="mt-1 font-sans text-ui-lg text-texto-2">
-              {dataDate ? diaPorExtenso(data).split(', ')[1] : ''}
-            </Text>
+            <Text className="mt-1 font-sans text-ui-lg text-texto-2">{subtitulo}</Text>
           </View>
           <View className="flex-row items-center gap-2 pb-1">
-            {hoje ? null : (
+            {noPeriodoAtual ? null : (
               <BotaoAtelie
                 variante="texto"
                 titulo="Hoje"
                 onPress={() => setData(hojeCalendarDate())}
               />
             )}
-            <Seta direcao={-1} aoTocar={() => mudarDia(-1)} rotulo="Dia anterior" />
-            <Seta direcao={1} aoTocar={() => mudarDia(1)} rotulo="Próximo dia" />
+            <Seta
+              direcao={-1}
+              aoTocar={() => andar(-1)}
+              rotulo={
+                modo === 'dia'
+                  ? 'Dia anterior'
+                  : modo === 'semana'
+                    ? 'Semana anterior'
+                    : 'Mês anterior'
+              }
+            />
+            <Seta
+              direcao={1}
+              aoTocar={() => andar(1)}
+              rotulo={
+                modo === 'dia'
+                  ? 'Próximo dia'
+                  : modo === 'semana'
+                    ? 'Próxima semana'
+                    : 'Próximo mês'
+              }
+            />
           </View>
         </View>
 
+        <View className="mt-5 flex-row items-center gap-2">
+          <View className="flex-1 flex-row gap-2" accessibilityRole="radiogroup">
+            {MODOS.map((m) => {
+              const on = modo === m.chave;
+              return (
+                <Pressable
+                  key={m.chave}
+                  onPress={() => setModo(m.chave)}
+                  accessibilityRole="radio"
+                  accessibilityState={{ checked: on }}
+                  className={cn(
+                    'flex-1 items-center rounded-full border py-[10px]',
+                    on ? 'border-latao bg-latao' : 'border-borda'
+                  )}
+                >
+                  <Text
+                    className={cn(
+                      'font-sans-semibold text-ui-sm',
+                      on ? 'text-fundo' : 'text-texto-2'
+                    )}
+                  >
+                    {m.rotulo}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+          <Pressable
+            onPress={() => {
+              setMesDoSeletor(data);
+              setEscolhendo(true);
+            }}
+            accessibilityRole="button"
+            accessibilityLabel="Escolher data"
+            className="h-11 flex-row items-center justify-center gap-2 rounded-full border border-latao px-3"
+            style={({ pressed }) => (pressed ? { opacity: 0.6 } : null)}
+          >
+            <IconeDaAba rota="agenda" cor={cores.gold} tamanho={20} />
+            {/* no celular so o calendario: o texto apertava os tres botoes do lado */}
+            {largo ? (
+              <Text className="font-sans-semibold text-ui-sm text-latao">Escolher data</Text>
+            ) : null}
+          </Pressable>
+        </View>
+
         <Text className="mt-4 font-sans text-ui text-texto-2">
-          {totalAtendimentos === 0
-            ? 'Nenhum atendimento'
-            : `${totalAtendimentos} ${totalAtendimentos === 1 ? 'atendimento' : 'atendimentos'}`}
-          {faixaDoDia ? `, das ${faixaDoDia}` : ''}
+          {modo === 'dia'
+            ? `${totalAtendimentos === 0 ? 'Nenhum atendimento' : `${totalAtendimentos} ${totalAtendimentos === 1 ? 'atendimento' : 'atendimentos'}`}${faixaDoDia ? `, das ${faixaDoDia}` : ''}`
+            : `${totalPeriodo === 0 ? 'Nenhum atendimento' : `${totalPeriodo} ${totalPeriodo === 1 ? 'atendimento' : 'atendimentos'}`} ${modo === 'semana' ? 'na semana' : 'no mês'}`}
         </Text>
 
         {semFicha ? (
@@ -199,13 +352,23 @@ export default function AgendaDoDia() {
             titulo="Você ainda não atende."
             descricao="Para ter agenda, crie a sua ficha na aba Equipe, em Adicionar profissional."
           />
-        ) : agenda.isLoading || carregandoFicha ? (
+        ) : carregando || carregandoFicha ? (
           <Carregando className="mt-7" />
-        ) : agenda.error ? (
-          <EstadoErro
-            className="mt-7"
-            erro={agenda.error}
-            aoTentarDeNovo={() => void agenda.refetch()}
+        ) : erro ? (
+          <EstadoErro className="mt-7" erro={erro} aoTentarDeNovo={recarregar} />
+        ) : modo === 'mes' ? (
+          <View className="mt-6">
+            <CalendarioMes referencia={data} contagem={contagemDe(porDia)} aoEscolher={abrirDia} />
+            <Text className="mt-4 font-sans text-ui-sm text-texto-3">
+              Toque num dia para ver os horários dele.
+            </Text>
+          </View>
+        ) : modo === 'semana' ? (
+          <VistaDaSemana
+            dias={diasEntre(periodo.de, periodo.ate)}
+            porDia={porDia}
+            aoAbrirDia={abrirDia}
+            aoAbrir={abrir}
           />
         ) : totalAtendimentos === 0 ? (
           <EstadoVazio
@@ -237,33 +400,36 @@ export default function AgendaDoDia() {
                   <Text className="w-14 pt-4 font-sans-semibold text-ui text-texto">
                     {bloco.hora}
                   </Text>
-                  <Pressable
-                    onPress={() => abrir(bloco.item)}
-                    accessibilityRole="button"
-                    accessibilityLabel={`${bloco.hora}, ${bloco.item.clienteNome ?? ''}, ${bloco.item.servicoNome ?? ''}`}
-                    className={cn(
-                      'flex-1 flex-row items-center gap-3 rounded-[3px] border border-borda bg-superficie px-5 py-4',
-                      bloco.item.status === 'AGENDADO' && 'border-l-2 border-l-latao',
-                      bloco.item.status !== 'AGENDADO' && 'opacity-60'
-                    )}
-                    style={({ pressed }) => (pressed ? { opacity: 0.75 } : null)}
-                  >
-                    <View className="flex-1 gap-1">
-                      <Text className="font-display text-ds-20 text-texto" numberOfLines={1}>
-                        {bloco.item.clienteNome}
-                      </Text>
-                      <Text className="font-sans text-ui-sm text-texto-2" numberOfLines={1}>
-                        {bloco.item.servicoNome ?? ''}, {formatDuracao(bloco.item.duracaoMinutos)}
-                      </Text>
-                      {bloco.item.primeiraVisita && bloco.item.status === 'AGENDADO' ? (
-                        <Selo>Primeira visita</Selo>
-                      ) : null}
-                      {bloco.item.status && bloco.item.status !== 'AGENDADO' ? (
-                        <Selo apagado>{ROTULO_STATUS[bloco.item.status]}</Selo>
-                      ) : null}
-                    </View>
-                    <Text className="font-sans text-ds-24 text-texto-3">›</Text>
-                  </Pressable>
+                  <View className="flex-1">
+                    <Pressable
+                      onPress={() => abrir(bloco.item)}
+                      accessibilityRole="button"
+                      accessibilityLabel={`${bloco.hora}, ${bloco.item.clienteNome ?? ''}, ${bloco.item.servicoNome ?? ''}`}
+                      className={cn(
+                        'flex-row items-center gap-3 rounded-[3px] border border-borda bg-superficie px-5 py-4',
+                        bloco.item.status === 'AGENDADO' && 'border-l-2 border-l-latao',
+                        bloco.item.status !== 'AGENDADO' && 'opacity-60'
+                      )}
+                      style={({ pressed }) => (pressed ? { opacity: 0.75 } : null)}
+                    >
+                      <View className="flex-1 gap-1">
+                        <Text className="font-display text-ds-20 text-texto" numberOfLines={1}>
+                          {bloco.item.clienteNome}
+                        </Text>
+                        <Text className="font-sans text-ui-sm text-texto-2" numberOfLines={1}>
+                          {bloco.item.servicoNome ?? ''}, {formatDuracao(bloco.item.duracaoMinutos)}
+                        </Text>
+                        {bloco.item.primeiraVisita && bloco.item.status === 'AGENDADO' ? (
+                          <Selo>Primeira visita</Selo>
+                        ) : null}
+                        {bloco.item.status && bloco.item.status !== 'AGENDADO' ? (
+                          <Selo apagado>{ROTULO_STATUS[bloco.item.status]}</Selo>
+                        ) : null}
+                      </View>
+                      <Text className="font-sans text-ds-24 text-texto-3">›</Text>
+                    </Pressable>
+                    <Baixa item={bloco.item} />
+                  </View>
                 </View>
               ) : (
                 <View key={bloco.chave} className="flex-row gap-3">
@@ -280,7 +446,7 @@ export default function AgendaDoDia() {
           </View>
         )}
 
-        {cancelados.length > 0 ? (
+        {modo === 'dia' && cancelados.length > 0 ? (
           <Text className="mt-6 font-sans text-ui-sm text-texto-3">
             {cancelados.length === 1
               ? '1 horário cancelado neste dia.'
@@ -288,7 +454,143 @@ export default function AgendaDoDia() {
           </Text>
         ) : null}
       </View>
+
+      <Modal
+        visible={escolhendo}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setEscolhendo(false)}
+      >
+        <View className="flex-1 items-center justify-center bg-black/70 px-4">
+          {/* tocar fora fecha, como em qualquer seletor de data */}
+          <Pressable
+            accessibilityLabel="Fechar o calendário"
+            onPress={() => setEscolhendo(false)}
+            className="absolute inset-0"
+          />
+          <View
+            accessibilityViewIsModal
+            className="w-full max-w-[420px] rounded-[6px] border border-borda bg-superficie px-5 pb-4 pt-5"
+          >
+            <ScrollView>
+              <Text accessibilityRole="header" className="font-display text-d-23 text-texto">
+                Escolher data
+              </Text>
+              <View className="mt-4 flex-row items-center justify-between">
+                <Seta
+                  direcao={-1}
+                  aoTocar={() => setMesDoSeletor(andarPeriodo('mes', mesDoSeletor, -1))}
+                  rotulo="Mês anterior no calendário"
+                />
+                <Text className="font-sans-semibold text-ui-lg text-texto">
+                  {mesSeletor.rotulo}
+                </Text>
+                <Seta
+                  direcao={1}
+                  aoTocar={() => setMesDoSeletor(andarPeriodo('mes', mesDoSeletor, 1))}
+                  rotulo="Próximo mês no calendário"
+                />
+              </View>
+              <View className="mt-3">
+                <CalendarioMes
+                  referencia={mesDoSeletor}
+                  contagem={contagemSeletor}
+                  selecionado={data}
+                  aoEscolher={abrirDia}
+                  compacto
+                />
+              </View>
+              <View className="mt-3 flex-row justify-between">
+                <BotaoAtelie
+                  variante="texto"
+                  titulo="Hoje"
+                  onPress={() => abrirDia(hojeCalendarDate())}
+                />
+                <BotaoAtelie
+                  variante="texto"
+                  titulo="Fechar"
+                  onPress={() => setEscolhendo(false)}
+                />
+              </View>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
     </TelaRolavel>
+  );
+}
+
+/** A semana em lista: cada dia com os horarios dele, compactos, e a baixa ali mesmo. */
+function VistaDaSemana({
+  dias,
+  porDia,
+  aoAbrirDia,
+  aoAbrir,
+}: {
+  dias: CalendarDate[];
+  porDia: Map<CalendarDate, Agendamento[]>;
+  aoAbrirDia: (dia: CalendarDate) => void;
+  aoAbrir: (item: Agendamento) => void;
+}) {
+  return (
+    <View className="mt-6">
+      {dias.map((dia) => {
+        const lista = (porDia.get(dia) ?? [])
+          .filter((a) => a.status !== 'CANCELADO')
+          .sort((a, b) => Date.parse(a.inicio ?? '') - Date.parse(b.inicio ?? ''));
+        const d = parseCalendarDate(dia);
+        const ehHoje = isHoje(dia);
+        return (
+          <View key={dia} className="border-b border-borda py-4">
+            <Pressable
+              onPress={() => aoAbrirDia(dia)}
+              accessibilityRole="button"
+              accessibilityLabel={`Abrir ${diaPorExtenso(dia)}`}
+              className="flex-row items-baseline justify-between"
+            >
+              <Text className={cn('font-display text-ds-20', ehHoje ? 'text-latao' : 'text-texto')}>
+                {d ? `${nomeDiaSemana(d.getDay() as DiaSemana)}, ${d.getDate()}` : dia}
+                {ehHoje ? ' (hoje)' : ''}
+              </Text>
+              <Text className="font-sans text-ui-sm text-texto-3">
+                {lista.length === 0
+                  ? 'livre'
+                  : `${lista.length} ${lista.length === 1 ? 'horário' : 'horários'}`}
+              </Text>
+            </Pressable>
+            {lista.map((a) => (
+              <View key={a.id} className="mt-2 flex-row items-center gap-3">
+                <Pressable
+                  onPress={() => aoAbrir(a)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${formatHora(a.inicio)}, ${a.clienteNome ?? ''}, ${a.servicoNome ?? ''}`}
+                  className={cn(
+                    'flex-1 flex-row items-center gap-3 py-1',
+                    a.status !== 'AGENDADO' && 'opacity-60'
+                  )}
+                >
+                  <Text className="w-12 font-sans-semibold text-ui text-texto">
+                    {formatHora(a.inicio)}
+                  </Text>
+                  <View className="flex-1">
+                    <Text className="font-sans-medium text-ui text-texto" numberOfLines={1}>
+                      {a.clienteNome}
+                    </Text>
+                    <Text className="font-sans text-ui-sm text-texto-3" numberOfLines={1}>
+                      {a.servicoNome}
+                      {a.status !== 'AGENDADO' && a.status
+                        ? `, ${ROTULO_STATUS[a.status].toLowerCase()}`
+                        : ''}
+                    </Text>
+                  </View>
+                </Pressable>
+                <Baixa item={a} compacto />
+              </View>
+            ))}
+          </View>
+        );
+      })}
+    </View>
   );
 }
 
