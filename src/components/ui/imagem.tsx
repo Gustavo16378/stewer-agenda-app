@@ -15,6 +15,7 @@
 import { Image } from 'expo-image';
 import { Text, View, type ImageSourcePropType } from 'react-native';
 
+import { useFotoDeUsuario } from '@/api/hooks';
 import { cn } from '@/lib/cn';
 
 const PLACEHOLDER = require('@/assets/images/photo-placeholder.png') as number;
@@ -92,5 +93,41 @@ export function AvatarIniciais({
         {iniciais}
       </Text>
     </View>
+  );
+}
+
+/**
+ * Avatar de uma pessoa: a foto de perfil quando ela tem (`fotoVersao`), as iniciais
+ * enquanto carrega ou quando nao tem. A versao na chave do cache faz a foto nova
+ * aparecer assim que alguem troca.
+ */
+export function AvatarPessoa({
+  usuarioId,
+  fotoVersao,
+  nome,
+  tamanho = 42,
+  fonteReserva,
+  className,
+}: {
+  usuarioId: string | undefined;
+  fotoVersao: string | null | undefined;
+  nome: string | undefined | null;
+  tamanho?: number;
+  /** Foto local para quando a pessoa nao subiu uma (o retrato do Stewer, por exemplo). */
+  fonteReserva?: ImageSourcePropType | null;
+  className?: string;
+}) {
+  const foto = useFotoDeUsuario(usuarioId, fotoVersao);
+  const fonte = foto.data?.dataUrl ? { uri: foto.data.dataUrl } : (fonteReserva ?? null);
+  if (!fonte) return <AvatarIniciais nome={nome} tamanho={tamanho} className={className} />;
+  return (
+    <Image
+      source={fonte}
+      style={{ width: tamanho, height: tamanho, borderRadius: tamanho }}
+      contentFit="cover"
+      contentPosition="top"
+      transition={200}
+      accessibilityLabel={nome ? `Foto de ${nome}` : 'Foto'}
+    />
   );
 }

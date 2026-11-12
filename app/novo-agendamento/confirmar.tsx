@@ -31,10 +31,11 @@ import { useCriarAgendamento, useProfissionais, useRemarcar, useServicos } from 
 import { useAuth } from '@/auth/auth-context';
 import { BotaoAtelie } from '@/components/atelie/base';
 import { CabecalhoDoFluxo } from '@/components/atelie/fluxo';
+import { useRetratoDoProfissional } from '@/components/atelie/retrato';
 import { Campo } from '@/components/ui/campo';
 import { Carregando, EstadoErro } from '@/components/ui/estados';
 import { TelaRolavel } from '@/components/ui/tela';
-import { fotoDoProfissional, LOCAL } from '@/content/atelie';
+import { LOCAL } from '@/content/atelie';
 import {
   calendarDateDoInstante,
   diaPorExtenso,
@@ -155,7 +156,7 @@ export default function Confirmacao() {
   }
 
   const diaEscolhido = calendarDateDoInstante(inicio);
-  const foto = profissional ? fotoDoProfissional(profissional) : null;
+  const foto = useRetratoDoProfissional(profissional);
 
   return (
     <TelaRolavel>

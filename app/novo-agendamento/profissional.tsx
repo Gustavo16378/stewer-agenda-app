@@ -25,11 +25,11 @@ import { useProfissionais } from '@/api/hooks';
 import type { Profissional } from '@/api/types';
 import { BotaoAtelie } from '@/components/atelie/base';
 import { CabecalhoDoFluxo } from '@/components/atelie/fluxo';
+import { useRetratoDoProfissional } from '@/components/atelie/retrato';
 import { CabecalhoVoltar } from '@/components/ui/cabecalho';
 import { Carregando, EstadoErro, EstadoVazio } from '@/components/ui/estados';
 import { iniciaisDe } from '@/components/ui/imagem';
 import { TelaRolavel } from '@/components/ui/tela';
-import { fotoDoProfissional } from '@/content/atelie';
 import { cn } from '@/lib/cn';
 import { useFluxoDeAgendamento } from '@/lib/fluxo-agendamento';
 
@@ -154,7 +154,7 @@ function CardProfissional({
   selecionado: boolean;
   aoTocar: () => void;
 }) {
-  const foto = fotoDoProfissional(profissional);
+  const foto = useRetratoDoProfissional(profissional);
   return (
     <Pressable
       accessibilityRole="button"

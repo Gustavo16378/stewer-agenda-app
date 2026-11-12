@@ -9,16 +9,18 @@
  * com um profissional so, ele nao muda nada na reserva.
  */
 import { useRouter } from 'expo-router';
-import { Pressable, Text, View } from 'react-native';
+import { useState } from 'react';
+import { ActivityIndicator, Platform, Pressable, Text, View } from 'react-native';
 
 import { useAuth } from '@/auth/auth-context';
 import { AcaoLinha, Botao } from '@/components/ui/botao';
 import { CabecalhoVoltar } from '@/components/ui/cabecalho';
-import { AvatarIniciais } from '@/components/ui/imagem';
+import { AvatarPessoa } from '@/components/ui/imagem';
 import { Interruptor } from '@/components/ui/interruptor';
 import { TelaRolavel } from '@/components/ui/tela';
 import { LabelCaps, Titulo } from '@/components/ui/texto';
 import { formatMesAnoLongoCaps } from '@/lib/datetime';
+import { escolherFoto, type OrigemDaFoto } from '@/lib/foto';
 import { abrirPaginaDoSite } from '@/lib/site';
 import { formatTelefone } from '@/lib/telefone';
 import { useTema } from '@/theme/theme-context';
@@ -56,6 +58,75 @@ function LinhaAcao({ rotulo, aoTocar }: { rotulo: string; aoTocar: () => void })
   );
 }
 
+/**
+ * A foto da conta: tocar abre a galeria (ou a camera, no celular), a foto e recortada
+ * em quadrado e reduzida para 512 px antes de subir.
+ */
+function FotoDaConta() {
+  const { usuario, trocarFoto } = useAuth();
+  const [ocupado, setOcupado] = useState(false);
+  const [erro, setErro] = useState<string | null>(null);
+
+  async function trocar(origem: OrigemDaFoto) {
+    setErro(null);
+    setOcupado(true);
+    try {
+      const base64 = await escolherFoto(origem, { lado: 512, qualidade: 0.8, quadrada: true });
+      if (base64) await trocarFoto({ tipoConteudo: 'image/jpeg', conteudoBase64: base64 });
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : 'Não deu para trocar a foto.');
+    } finally {
+      setOcupado(false);
+    }
+  }
+
+  return (
+    <View className="items-center gap-2">
+      <Pressable
+        onPress={() => void trocar('galeria')}
+        accessibilityRole="button"
+        accessibilityLabel={
+          usuario?.fotoVersao ? 'Trocar foto de perfil' : 'Adicionar foto de perfil'
+        }
+        disabled={ocupado}
+        style={({ pressed }) => (pressed ? { opacity: 0.8 } : null)}
+      >
+        <AvatarPessoa
+          usuarioId={usuario?.id}
+          fotoVersao={usuario?.fotoVersao}
+          nome={usuario?.nome}
+          tamanho={72}
+        />
+        <View className="absolute -bottom-1 -right-1 h-7 w-7 items-center justify-center rounded-full border-2 border-fundo bg-latao">
+          {ocupado ? (
+            <ActivityIndicator size="small" color="#0c0c0c" />
+          ) : (
+            <Text className="font-sans-semibold text-ui text-fundo">+</Text>
+          )}
+        </View>
+      </Pressable>
+      <View className="flex-row gap-3">
+        {Platform.OS === 'web' ? null : (
+          <Pressable onPress={() => void trocar('camera')} accessibilityRole="button" hitSlop={8}>
+            <Text className="font-sans-medium text-ui-xs text-latao">Câmera</Text>
+          </Pressable>
+        )}
+        {usuario?.fotoVersao ? (
+          <Pressable
+            onPress={() => void trocarFoto(null)}
+            accessibilityRole="button"
+            accessibilityLabel="Tirar foto de perfil"
+            hitSlop={8}
+          >
+            <Text className="font-sans-medium text-ui-xs text-texto-3">Tirar</Text>
+          </Pressable>
+        ) : null}
+      </View>
+      {erro ? <Text className="font-sans text-ui-xs text-cadeira">{erro}</Text> : null}
+    </View>
+  );
+}
+
 export default function Conta({ comVoltar = false }: { comVoltar?: boolean }) {
   const router = useRouter();
   const { usuario, sair } = useAuth();
@@ -72,8 +143,8 @@ export default function Conta({ comVoltar = false }: { comVoltar?: boolean }) {
     <TelaRolavel insetInferior={false}>
       {comVoltar ? <CabecalhoVoltar /> : null}
       <View className={comVoltar ? 'pt-6' : 'pt-[44px]'}>
-        <View className="flex-row items-center gap-5">
-          <AvatarIniciais nome={usuario?.nome} tamanho={58} />
+        <View className="flex-row items-start gap-5">
+          <FotoDaConta />
           <View className="flex-1 gap-2">
             <Titulo className="text-ds-30" numberOfLines={2}>
               {usuario?.nome ?? ''}

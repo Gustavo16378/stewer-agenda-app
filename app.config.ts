@@ -35,6 +35,16 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     'expo-router',
     'expo-secure-store',
     ['expo-notifications', { color: '#C9A96A' }],
+    [
+      'expo-image-picker',
+      {
+        photosPermission:
+          'O app usa suas fotos para guardar o antes e o depois dos atendimentos na ficha do cliente.',
+        cameraPermission:
+          'O app usa a câmera para fotografar o antes e o depois dos atendimentos na ficha do cliente.',
+        microphonePermission: false,
+      },
+    ],
     'expo-font',
     [
       'expo-splash-screen',
