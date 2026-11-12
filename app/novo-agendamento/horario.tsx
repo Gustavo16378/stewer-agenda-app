@@ -3,7 +3,8 @@
  *
  * Uma faixa de dias que rola de lado (os proximos 60, o limite que a API aceita para
  * marcar) no lugar da grade do mes: no celular cabe no polegar e o dia escolhido fica
- * sempre a vista. O primeiro dia em que o profissional atende ja vem escolhido, entao a
+ * sempre a vista. O primeiro dia em que o profissional atende e ainda tem horario livre
+ * ja vem escolhido (dia cheio, ou hoje depois do ultimo horario, e pulado), entao a
  * pessoa ve horarios assim que a tela abre. Os horarios vem agrupados por periodo
  * (manha, tarde, noite) em botoes grandes, e a faixa presa embaixo resume a escolha.
  *
@@ -17,8 +18,8 @@
  *   - o slot escolhido segue para a confirmacao como o ISO cru que a API devolveu.
  *   - "hoje", "passado" e "dia da semana" sao todos calculados no calendario LOCAL.
  */
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { format } from 'date-fns/format';
+import { ptBR } from 'date-fns/locale/pt-BR';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
@@ -145,8 +146,13 @@ export default function DataEHorario() {
   };
 
   const [escolhido, setEscolhido] = useState<CalendarDate | null>(null);
-  // sem escolha, o primeiro dia em que ele atende (assim que a grade chega)
-  const primeiroLivre = grade.data ? (dias.find(diaDisponivel) ?? null) : null;
+  // Dias em que ele atende mas que ja estao cheios (ou hoje, depois do ultimo horario):
+  // sem escolha da pessoa, a tela pula para o proximo, ate achar um com horario.
+  const [cheios, setCheios] = useState<ReadonlySet<CalendarDate>>(new Set());
+  // sem escolha, o primeiro dia em que ele atende e ainda tem horario
+  const primeiroLivre = grade.data
+    ? (dias.find((d) => diaDisponivel(d) && !cheios.has(d)) ?? null)
+    : null;
   const diaSelecionado = escolhido ?? primeiroLivre;
 
   const [slot, setSlot] = useState<HorarioLivre | null>(null);
@@ -171,6 +177,14 @@ export default function DataEHorario() {
       return { ...p, itens };
     }).filter((g) => g.itens.length > 0);
   }, [horarios.data]);
+
+  // mesma regra da tela: dia sem nenhum horario para mostrar e pulado (so enquanto a
+  // pessoa nao escolheu um dia por conta propria)
+  useEffect(() => {
+    if (escolhido || !diaSelecionado || !horarios.data || horarios.isFetching) return;
+    if (grupos.length > 0 || cheios.size >= 21) return;
+    setCheios((antes) => new Set(antes).add(diaSelecionado));
+  }, [escolhido, diaSelecionado, horarios.data, horarios.isFetching, grupos.length, cheios.size]);
 
   function continuar() {
     if (!slot?.inicio) return;

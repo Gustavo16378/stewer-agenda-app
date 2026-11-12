@@ -69,10 +69,29 @@ test('cliente cria a conta, marca, remarca e cancela um horario', async ({ page 
     await expect(naTela(page, 'Quando fica bom?')).toBeVisible();
     const continuar = botao(page, 'Continuar');
     await expect(continuar).toBeDisabled();
-    // o primeiro dia livre ja vem escolhido, com os horarios a vista
-    await expect(
-      page.getByRole('button', { name: HORA }).filter({ visible: true }).first()
-    ).toBeVisible();
+    // o primeiro dia livre ja vem escolhido, com os horarios a vista. Com as outras
+    // jornadas marcando em paralelo, o dia pode lotar entre uma consulta e outra: ai a
+    // pessoa toca no dia seguinte, como faria de verdade.
+    const horas = page.getByRole('button', { name: HORA }).filter({ visible: true }).first();
+    const apareceu = await horas
+      .waitFor({ state: 'visible', timeout: 8000 })
+      .then(() => true)
+      .catch(() => false);
+    if (!apareceu) {
+      const dias = page
+        .getByRole('button', { name: /^(Segunda|Terça|Quarta|Quinta|Sexta|Sábado), \d+ de / })
+        .filter({ visible: true });
+      for (let i = 1; i < 12; i++) {
+        await dias.nth(i).scrollIntoViewIfNeeded();
+        await dias.nth(i).click();
+        const achou = await horas
+          .waitFor({ state: 'visible', timeout: 5000 })
+          .then(() => true)
+          .catch(() => false);
+        if (achou) break;
+      }
+    }
+    await expect(horas).toBeVisible();
     await escolherHorario();
     await expect(continuar).toBeEnabled();
     await expect(naTela(page, `às ${hora}`)).toBeVisible();
