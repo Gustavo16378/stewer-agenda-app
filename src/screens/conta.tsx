@@ -12,13 +12,14 @@ import { useRouter } from 'expo-router';
 import { Pressable, Text, View } from 'react-native';
 
 import { useAuth } from '@/auth/auth-context';
-import { Botao } from '@/components/ui/botao';
+import { AcaoLinha, Botao } from '@/components/ui/botao';
 import { CabecalhoVoltar } from '@/components/ui/cabecalho';
 import { AvatarIniciais } from '@/components/ui/imagem';
 import { Interruptor } from '@/components/ui/interruptor';
 import { TelaRolavel } from '@/components/ui/tela';
 import { LabelCaps, Titulo } from '@/components/ui/texto';
 import { formatMesAnoLongoCaps } from '@/lib/datetime';
+import { abrirPaginaDoSite } from '@/lib/site';
 import { formatTelefone } from '@/lib/telefone';
 import { useTema } from '@/theme/theme-context';
 
@@ -120,6 +121,19 @@ export default function Conta({ comVoltar = false }: { comVoltar?: boolean }) {
           titulo="SAIR DA CONTA"
           onPress={() => void aoSair()}
         />
+
+        <View className="mt-8 items-center gap-4">
+          {usuario?.role === 'CLIENTE' ? (
+            <AcaoLinha
+              titulo="EXCLUIR MINHA CONTA"
+              onPress={() => router.push('/conta/excluir' as never)}
+            />
+          ) : null}
+          <View className="flex-row gap-6">
+            <AcaoLinha titulo="TERMOS" onPress={() => abrirPaginaDoSite('/termos')} />
+            <AcaoLinha titulo="PRIVACIDADE" onPress={() => abrirPaginaDoSite('/privacidade')} />
+          </View>
+        </View>
       </View>
     </TelaRolavel>
   );
