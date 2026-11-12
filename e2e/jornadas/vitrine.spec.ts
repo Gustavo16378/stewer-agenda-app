@@ -7,7 +7,7 @@ import { expect, test } from '@playwright/test';
 
 import { ehCelular, entrar, naTela, novoCliente, registrar, semRolagemLateral } from '../apoio';
 
-test('inicio conta quem e o Stewer e leva ate a Boss House', async ({ page, request }, info) => {
+test('inicio conta quem e o Stewer e leva ate o studio dele', async ({ page, request }, info) => {
   const cliente = await novoCliente(request, 'Vitrine');
   await entrar(page, cliente.email, cliente.senha);
 
@@ -15,10 +15,10 @@ test('inicio conta quem e o Stewer e leva ate a Boss House', async ({ page, requ
   await expect(naTela(page, 'Quem é Stewer')).toBeVisible();
   await expect(naTela(page, 'O trabalho')).toBeVisible();
 
-  const mapa = page.getByRole('link', { name: /Abrir Boss House Barbearia no mapa/ });
+  const mapa = page.getByRole('link', { name: /Abrir Conciso no mapa/ });
   await mapa.scrollIntoViewIfNeeded();
   await expect(mapa).toBeVisible();
-  await expect(naTela(page, /Q\. ACNE 1/)).toBeVisible();
+  await expect(naTela(page, /204 Sul, Alameda 10/)).toBeVisible();
   await semRolagemLateral(page);
   await registrar(page, info, '01 onde atende');
 });

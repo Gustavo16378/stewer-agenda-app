@@ -84,7 +84,7 @@ test('cliente cria a conta, marca, remarca e cancela um horario', async ({ page 
   await test.step('passo 4: revisa o ticket e confirma', async () => {
     await expect(naTela(page, 'Tudo certo?')).toBeVisible();
     await expect(naTela(page, new RegExp(`^${hora} às`))).toBeVisible();
-    await expect(naTela(page, 'Boss House Barbearia')).toBeVisible();
+    await expect(naTela(page, 'Conciso')).toBeVisible();
     await registrar(page, info, '07 confirmar');
     // se outra pessoa (outra jornada em paralelo) levou o horario, o app avisa e a
     // pessoa volta para escolher outro: e exatamente o caminho que testamos aqui

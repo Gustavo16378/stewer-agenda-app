@@ -1,5 +1,5 @@
 /**
- * Onde o Stewer atende: o mapa da Boss House nas cores do app, com o S da marca marcando
+ * Onde o Stewer atende: o mapa do studio nas cores do app, com o S da marca marcando
  * o endereco e um pulso discreto em volta (uma unica animacao, que para para quem pede
  * menos movimento). Tocar no mapa abre o app de mapas do aparelho com a rota.
  *
@@ -87,7 +87,7 @@ export function MapaDoAtelie() {
             style={StyleSheet.absoluteFill}
             contentFit="cover"
             transition={250}
-            accessibilityLabel="Mapa das ruas em volta da Boss House, no Plano Diretor Norte"
+            accessibilityLabel={`Mapa das ruas em volta do ${LOCAL.nome}, na 204 Sul`}
           />
           {/* escurece as bordas para o mapa assentar no fundo da tela */}
           <LinearGradient
@@ -112,7 +112,7 @@ export function MapaDoAtelie() {
           />
           <Pino />
           <View className="absolute left-3 top-3 rounded-[3px] bg-fundo/80 px-3 py-[6px]">
-            <Text className="font-sans-medium text-ui-xs text-texto">Palmas, Tocantins</Text>
+            <Text className="font-sans-medium text-ui-xs text-texto">{LOCAL.regiao}</Text>
           </View>
           <Text
             className="absolute bottom-2 right-3 rounded-[2px] bg-fundo/80 px-[6px] py-[2px] font-sans text-texto-2"
@@ -125,6 +125,7 @@ export function MapaDoAtelie() {
 
       <View className="mt-6 gap-1">
         <Text className="font-display text-ds-24 text-texto">{LOCAL.nome}</Text>
+        <Text className="font-sans-medium text-ui-sm text-latao">{LOCAL.descricao}</Text>
         <Paragrafo>{LOCAL.endereco}</Paragrafo>
         <Paragrafo className="text-texto-3">{LOCAL.horario}</Paragrafo>
       </View>

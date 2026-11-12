@@ -27,7 +27,7 @@ import { PORTFOLIO, SOBRE } from '@/content/atelie';
 import { useLayoutLargo } from '@/lib/responsivo';
 import { useTema } from '@/theme/theme-context';
 
-// O Stewer cortando na Boss House: a foto que diz o que o app agenda.
+// O Stewer cortando: a foto que diz o que o app agenda.
 const FOTO = PORTFOLIO[1]!;
 
 function Marca() {

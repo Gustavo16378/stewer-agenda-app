@@ -1,5 +1,5 @@
 """
-Gera o mapa da Boss House Barbearia nas cores do app (claro e escuro).
+Gera o mapa do studio do Stewer (Conciso, 204 Sul) nas cores do app (claro e escuro).
 
 Baixa poucos tiles do OpenStreetMap UMA vez, monta a regiao em volta do endereco, tira
 a cor e repinta em duas tintas da paleta (carvao/areia no escuro, tinta/papel no
@@ -18,7 +18,7 @@ from pathlib import Path
 
 from PIL import Image, ImageOps
 
-LAT, LON = -10.18256053, -48.32910908  # Q. ACNE 1, Rua NE 3, 15 -- Palmas, TO
+LAT, LON = -10.195029, -48.328703  # Conciso: 204 Sul, Alameda 10, Galeria Encore 21 -- Palmas, TO
 ZOOM = 17
 LARGURA, ALTURA = 1200, 760  # 2x da maior largura em que o mapa aparece
 TILE = 256

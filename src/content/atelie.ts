@@ -33,7 +33,7 @@ export const FOTOS = {
 export const PORTFOLIO: FotoAtelie[] = [
   {
     fonte: require('../../assets/images/atelie/corte-4.jpg'),
-    descricao: 'Stewer finalizando um corte na Boss House',
+    descricao: 'Stewer finalizando um corte',
     proporcao: 909 / 1200,
   },
   {
@@ -76,18 +76,27 @@ export const SOBRE = {
   ],
   citacao: 'Sua aparência é o primeiro discurso que você faz, antes mesmo de abrir a boca.',
   numeros: [
-    { valor: '800+', legenda: 'clientes por ano' },
-    { valor: '10+', legenda: 'anos de cadeira' },
+    { valor: '1.000+', legenda: 'clientes por ano' },
+    { valor: '10+', legenda: 'anos de experiência' },
   ],
 };
 
 export const LEMA = 'Masculinidade com propósito';
 
+/**
+ * Onde o Stewer atende hoje: o Conciso, o studio dele na 204 Sul. Mesmos dados que ele
+ * mantem no painel do site (stewergabriel.com/admin, "Contatos e mapa"); mudando la,
+ * mude aqui e rode `python3 scripts/make-map.py` para redesenhar o mapa.
+ */
 export const LOCAL = {
-  nome: 'Boss House Barbearia',
-  endereco: 'Q. ACNE 1, Rua NE 3, nº 15, Plano Diretor Norte, Palmas',
+  nome: 'Conciso',
+  descricao: 'Studio de imagem masculina',
+  endereco: '204 Sul, Alameda 10, QI 5, Sala 05, Galeria Encore 21, Palmas',
+  regiao: 'Plano Diretor Sul, Palmas',
   horario: 'Segunda a sábado, das 9h às 19h',
-  mapa: 'https://www.google.com/maps/search/?api=1&query=-10.18256053,-48.32910908',
+  latitude: -10.195029,
+  longitude: -48.328703,
+  mapa: 'https://www.google.com/maps/search/?api=1&query=-10.195029,-48.328703',
   whatsapp: 'https://wa.me/5563985116783?text=Ol%C3%A1%20Stewer%2C%20vim%20pelo%20app.',
   instagram: 'https://instagram.com/stewer.gabriel',
 };
