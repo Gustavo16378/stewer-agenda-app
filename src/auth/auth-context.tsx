@@ -40,6 +40,7 @@ import {
   type SessaoGuardada,
 } from '@/api/session-store';
 import type { Role, TokenResponse, Usuario } from '@/api/types';
+import { esquecerEsteAparelho, registrarNotificacoes } from '@/lib/notificacoes';
 
 export type StatusAuth = 'carregando' | 'autenticado' | 'deslogado';
 
@@ -80,6 +81,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (deslogando.current) return;
     deslogando.current = true;
     try {
+      await esquecerEsteAparelho();
       aplicarSessao(null);
       setUsuario(null);
       setStatus('deslogado');
@@ -90,6 +92,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       deslogando.current = false;
     }
   }, [aplicarSessao, queryClient]);
+
+  // Logado: este aparelho passa a receber os avisos da agenda (no-op na web).
+  useEffect(() => {
+    if (status === 'autenticado') void registrarNotificacoes();
+  }, [status]);
 
   // O middleware do client chama isto quando a API responde 401.
   useEffect(() => {

@@ -54,3 +54,14 @@ jest.mock('react-native-reanimated', () => {
   Reanimated.default.call = () => undefined;
   return Reanimated;
 });
+
+// Notificacoes: sem modulo nativo nos testes; o app trata ausencia como "sem push".
+jest.mock('expo-notifications', () => ({
+  setNotificationHandler: jest.fn(),
+  setNotificationChannelAsync: jest.fn(),
+  getPermissionsAsync: jest.fn(async () => ({ granted: false })),
+  requestPermissionsAsync: jest.fn(async () => ({ granted: false })),
+  getExpoPushTokenAsync: jest.fn(),
+  AndroidImportance: { HIGH: 4 },
+}));
+jest.mock('expo-device', () => ({ isDevice: false }));

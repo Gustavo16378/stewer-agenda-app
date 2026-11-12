@@ -370,6 +370,96 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/auth/eu/dispositivos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Registra o celular para receber notificacoes da agenda */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["DispositivoRequest"];
+                };
+            };
+            responses: {
+                /** @description Registrado */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/eu/dispositivos/remover": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Para de mandar notificacoes para este celular (ao sair da conta) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["DispositivoRequest"];
+                };
+            };
+            responses: {
+                /** @description Removido */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/auth/eu/excluir": {
         parameters: {
             query?: never;
@@ -1930,6 +2020,10 @@ export interface components {
              * @example 18:00
              */
             horaFim?: string;
+        };
+        DispositivoRequest: {
+            /** @description Token do Expo Push (ExponentPushToken[...]) */
+            token: string;
         };
         /** @description Resposta de erro padronizada */
         Erro: {

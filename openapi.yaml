@@ -241,6 +241,16 @@ components:
           externalDocs:
             description: As defined by 'partial-time' in RFC3339
             url: https://www.rfc-editor.org/rfc/rfc3339.html#section-5.6
+    DispositivoRequest:
+      type: object
+      required:
+      - token
+      properties:
+        token:
+          type: string
+          maxLength: 255
+          pattern: \S
+          description: "Token do Expo Push (ExponentPushToken[...])"
     Erro:
       type: object
       description: Resposta de erro padronizada
@@ -879,6 +889,42 @@ paths:
                 $ref: "#/components/schemas/TokenResponse"
         "409":
           description: E-mail ja usado por outra conta
+        "400":
+          description: Bad Request
+      security:
+      - bearerAuth: []
+  /auth/eu/dispositivos:
+    post:
+      summary: Registra o celular para receber notificacoes da agenda
+      tags:
+      - Auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DispositivoRequest"
+        required: true
+      responses:
+        "204":
+          description: Registrado
+        "400":
+          description: Bad Request
+      security:
+      - bearerAuth: []
+  /auth/eu/dispositivos/remover:
+    post:
+      summary: Para de mandar notificacoes para este celular (ao sair da conta)
+      tags:
+      - Auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DispositivoRequest"
+        required: true
+      responses:
+        "204":
+          description: Removido
         "400":
           description: Bad Request
       security:
