@@ -114,7 +114,10 @@ export function MapaDoAtelie() {
           <View className="absolute left-3 top-3 rounded-[3px] bg-fundo/80 px-3 py-[6px]">
             <Text className="font-sans-medium text-ui-xs text-texto">Palmas, Tocantins</Text>
           </View>
-          <Text className="absolute bottom-2 right-3 font-sans text-[10px] text-texto-3">
+          <Text
+            className="absolute bottom-2 right-3 rounded-[2px] bg-fundo/80 px-[6px] py-[2px] font-sans text-texto-2"
+            style={{ fontSize: 11, lineHeight: 14 }}
+          >
             © colaboradores do OpenStreetMap
           </Text>
         </View>
