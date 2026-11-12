@@ -12,6 +12,10 @@ module.exports = defineConfig([
       'coverage/*',
       '.expo/*',
       'node_modules/*',
+      // relatorio e prints do Playwright (o relatorio html traz um bundle enorme)
+      'e2e/relatorio/*',
+      'e2e/.resultados/*',
+      'scripts/e2e/capturas/*',
       // gerado por `npm run api:types`, nao editar nem lintar
       'src/api/schema.d.ts',
       // gerado pelo Expo em `expo start`/`export`, ja esta no .gitignore

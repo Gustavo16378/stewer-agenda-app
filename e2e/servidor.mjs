@@ -1,6 +1,8 @@
 /**
  * Servidor estático mínimo para o export web do Expo, com fallback SPA para index.html.
- * Só para o smoke local — não é infra de produção.
+ * Só para os testes E2E (o Playwright sobe este arquivo); não é infra de produção.
+ *
+ *   node e2e/servidor.mjs [pasta=dist] [porta=4173]
  */
 import { readFile, stat } from 'node:fs/promises';
 import { createServer } from 'node:http';
@@ -12,6 +14,12 @@ const TIPOS = {
   '.css': 'text/css',
   '.json': 'application/json',
   '.png': 'image/png',
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.webp': 'image/webp',
+  '.svg': 'image/svg+xml',
+  '.woff': 'font/woff',
+  '.woff2': 'font/woff2',
   '.ttf': 'font/ttf',
   '.ico': 'image/x-icon',
   '.map': 'application/json',
@@ -42,4 +50,15 @@ export function servir(raiz, porta) {
   });
 
   return new Promise((resolve) => servidor.listen(porta, () => resolve(servidor)));
+}
+
+// rodado direto pela linha de comando (webServer do Playwright)
+if (
+  process.argv[1] &&
+  import.meta.url.endsWith(process.argv[1].replace(/\\/g, '/').split('/').pop())
+) {
+  const raiz = process.argv[2] ?? 'dist';
+  const porta = Number(process.argv[3] ?? 4173);
+  await servir(raiz, porta);
+  console.warn(`servindo ${raiz} em http://localhost:${porta}`);
 }

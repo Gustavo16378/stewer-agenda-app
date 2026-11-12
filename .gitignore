@@ -55,3 +55,7 @@ CLAUDE.md
 
 # configurações pessoais do editor
 .vscode/settings.json
+
+# relatorios e prints dos testes E2E (Playwright)
+e2e/relatorio/
+e2e/.resultados/
