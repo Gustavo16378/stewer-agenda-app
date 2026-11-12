@@ -40,3 +40,24 @@ test('telefone ganha a mascara enquanto digita', async ({ page }) => {
   await tel.pressSequentially('63985116783');
   await expect(tel).toHaveValue('(63) 9 8511-6783');
 });
+
+test('cliente informa o aniversario ao criar a conta e ve em Editar dados', async ({ page }) => {
+  const email = `niver-${Date.now()}-${Math.random().toString(36).slice(2, 6)}@exemplo.dev`;
+  await page.goto('/criar-conta');
+  await expect(naTela(page, 'Sua primeira vez.')).toBeVisible();
+  await page.getByLabel('Nome').fill('Aniversariante Teste');
+  await page.getByLabel('E-mail').fill(email);
+  const nascimento = page.getByLabel('Data de nascimento');
+  await nascimento.pressSequentially('20111994');
+  await expect(nascimento).toHaveValue('20/11/1994');
+  await page.getByLabel('Senha', { exact: true }).fill('segredo-123');
+  await page.getByRole('button', { name: 'Criar conta' }).filter({ visible: true }).last().click();
+  await expect(
+    page.getByRole('tab', { name: 'Perfil' }).filter({ visible: true }).first()
+  ).toBeVisible();
+
+  await page.goto('/conta/dados');
+  await expect(page.getByLabel('Data de nascimento').filter({ visible: true })).toHaveValue(
+    '20/11/1994'
+  );
+});
