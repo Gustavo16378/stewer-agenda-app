@@ -25,6 +25,17 @@ module.exports = defineConfig([
   {
     rules: {
       'no-console': ['warn', { allow: ['warn', 'error'] }],
+      // o Metro nao descarta o que nao e usado: importar do pacote inteiro poe o
+      // date-fns todo (com todas as linguas) no app da web. Cada funcao pelo caminho dela.
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            { name: 'date-fns', message: "Importe a funcao pelo caminho: 'date-fns/format'." },
+            { name: 'date-fns/locale', message: "Use 'date-fns/locale/pt-BR'." },
+          ],
+        },
+      ],
       'import/order': [
         'warn',
         {

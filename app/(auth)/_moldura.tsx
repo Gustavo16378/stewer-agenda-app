@@ -82,7 +82,8 @@ export function MolduraAcesso({
               style={StyleSheet.absoluteFill}
               contentFit="cover"
               contentPosition="top"
-              transition={300}
+              // a foto e o maior elemento da tela: carrega primeiro e aparece sem esmaecer
+              priority="high"
             />
             {/* a borda esquerda da foto se dissolve no escuro */}
             <LinearGradient
@@ -141,7 +142,8 @@ export function MolduraAcesso({
             style={StyleSheet.absoluteFill}
             contentFit="cover"
             contentPosition={{ top: '18%' }}
-            transition={300}
+            // a foto e o maior elemento da tela: carrega primeiro e aparece sem esmaecer
+            priority="high"
           />
           <LinearGradient
             colors={[

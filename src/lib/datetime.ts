@@ -38,8 +38,10 @@
  * comportamento correto para um instante: o atendimento acontece na hora que
  * acontece, independente de onde o cliente esteja olhando.
  */
-import { format, isValid, parseISO } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { format } from 'date-fns/format';
+import { isValid } from 'date-fns/isValid';
+import { ptBR } from 'date-fns/locale/pt-BR';
+import { parseISO } from 'date-fns/parseISO';
 
 // ---------------------------------------------------------------------------
 // Tipos
