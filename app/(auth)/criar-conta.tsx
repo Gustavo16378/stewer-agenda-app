@@ -17,10 +17,9 @@ import { rotaInicialDoPapel, useAuth } from '@/auth/auth-context';
 import { AvisoLegal } from '@/components/ui/aviso-legal';
 import { Botao } from '@/components/ui/botao';
 import { Campo } from '@/components/ui/campo';
-import { TelaRolavel } from '@/components/ui/tela';
-import { LabelCaps, Titulo } from '@/components/ui/texto';
 
 import { AbasAcesso } from './_abas';
+import { MolduraAcesso } from './_moldura';
 
 const SENHA_MIN = 8;
 
@@ -58,17 +57,15 @@ export default function CriarConta() {
   }
 
   return (
-    <TelaRolavel larguraMaxima={440}>
-      <LabelCaps papel="tela" className="mt-12">
-        O ATELIÊ, NO SEU TEMPO
-      </LabelCaps>
-      <Titulo className="mt-[14px] text-d-31">Criar conta.</Titulo>
-
+    <MolduraAcesso
+      titulo="Sua primeira vez."
+      subtitulo="Crie a conta e marque o horário em menos de um minuto."
+    >
       <AbasAcesso ativa="criar-conta" />
 
       <Campo
-        className="mt-9"
-        rotulo="NOME"
+        className="mt-8"
+        rotulo="Nome"
         value={nome}
         onChangeText={setNome}
         placeholder="Seu nome completo"
@@ -79,8 +76,8 @@ export default function CriarConta() {
       />
 
       <Campo
-        className="mt-[22px]"
-        rotulo="E-MAIL"
+        className="mt-5"
+        rotulo="E-mail"
         value={email}
         onChangeText={setEmail}
         placeholder="seunome@email.com"
@@ -92,21 +89,21 @@ export default function CriarConta() {
       />
 
       <Campo
-        className="mt-[22px]"
-        rotulo="TELEFONE"
+        className="mt-5"
+        rotulo="WhatsApp"
         value={telefone}
         onChangeText={setTelefone}
-        placeholder="+55 (11) 90000-0000"
+        placeholder="(63) 9 0000-0000"
         keyboardType="phone-pad"
         autoComplete="tel"
         maxLength={30}
-        ajuda="Opcional."
+        ajuda="Opcional. Só para o Stewer falar com você sobre o horário."
         erro={erro?.violacaoDe('telefone')}
       />
 
       <Campo
-        className="mt-[22px]"
-        rotulo="SENHA"
+        className="mt-5"
+        rotulo="Senha"
         value={senha}
         onChangeText={setSenha}
         placeholder="Mínimo de 8 caracteres"
@@ -120,18 +117,18 @@ export default function CriarConta() {
       />
 
       {erro && !erro.temViolacoes ? (
-        <Text className="mt-4 font-sans text-help text-red-500">{erro.message}</Text>
+        <Text className="mt-4 font-sans text-ui-sm text-cadeira">{erro.message}</Text>
       ) : null}
 
       <Botao
-        className="mt-[34px]"
-        titulo="CRIAR CONTA"
+        className="mt-8"
+        titulo="Criar conta"
         carregando={enviando}
         disabled={!podeEnviar}
         onPress={() => void aoCriar()}
       />
 
       <AvisoLegal />
-    </TelaRolavel>
+    </MolduraAcesso>
   );
 }
