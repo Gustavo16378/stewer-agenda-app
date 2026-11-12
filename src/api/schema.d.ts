@@ -13,7 +13,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Cliente reserva um horario para si */
+        /**
+         * Reserva um horario
+         * @description CLIENTE reserva para si. PROFISSIONAL (na propria agenda) e ADMIN marcam para o cliente informado em clienteId.
+         */
         post: {
             parameters: {
                 query?: never;
@@ -55,7 +58,7 @@ export interface paths {
                     };
                     content?: never;
                 };
-                /** @description Horario no passado ou fora da grade */
+                /** @description Horario no passado, fora da grade, alem dos limites do cliente ou clienteId ausente */
                 422: {
                     headers: {
                         [name: string]: unknown;
@@ -83,7 +86,7 @@ export interface paths {
                 query: {
                     /** @description Dia a consultar, no formato YYYY-MM-DD */
                     data: components["schemas"]["LocalDate"];
-                    /** @description Obrigatorio para ADMIN; ignorado para PROFISSIONAL */
+                    /** @description ADMIN: agenda de quem ver (omitido, a propria ficha). Ignorado para PROFISSIONAL */
                     profissionalId?: components["schemas"]["UUID"];
                 };
                 header?: never;
@@ -155,6 +158,76 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/agendamentos/{id}/horario": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Remarca para outro horario (e, opcionalmente, outro profissional) */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: components["schemas"]["UUID"];
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["RemarcarRequest"];
+                };
+            };
+            responses: {
+                /** @description Agendamento remarcado */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Agendamento"];
+                    };
+                };
+                /** @description Sem permissao sobre este agendamento */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Agendamento nao encontrado */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Novo horario ocupado ou agendamento ja encerrado */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Novo horario no passado ou fora da grade */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
         trace?: never;
     };
     "/agendamentos/{id}/status": {
@@ -248,7 +321,100 @@ export interface paths {
                 };
             };
         };
-        put?: never;
+        /**
+         * Corrige nome, e-mail e telefone do usuario logado
+         * @description Devolve um token novo: nome e e-mail viajam no token.
+         */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["AtualizarPerfilRequest"];
+                };
+            };
+            responses: {
+                /** @description Dados atualizados, com token novo */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TokenResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description E-mail ja usado por outra conta */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/eu/senha": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Troca a senha, exigindo a atual */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["TrocarSenhaRequest"];
+                };
+            };
+            responses: {
+                /** @description Senha trocada */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Senha atual incorreta */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
         post?: never;
         delete?: never;
         options?: never;
@@ -544,6 +710,45 @@ export interface paths {
                 };
             };
         };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/ping": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Responde 200 sem tocar no banco
+         * @description Usado como health check do Render e pelo ping que impede a instancia gratuita de dormir. Nao abre conexao com o banco de proposito: o compute do Neon precisa poder dormir.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description A API esta de pe */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": string;
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1014,6 +1219,8 @@ export interface paths {
                      * @example 2026-03-02
                      */
                     data: components["schemas"]["LocalDate"];
+                    /** @description Ao remarcar: o agendamento que esta sendo movido, para que o horario atual dele conte como livre */
+                    ignorarAgendamentoId?: components["schemas"]["UUID"];
                     /** @description Servico desejado; a duracao dele define o tamanho do slot */
                     servicoId: components["schemas"]["UUID"];
                 };
@@ -1273,6 +1480,47 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/usuarios": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Busca pessoas por nome ou e-mail, de qualquer papel */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description Trecho do nome ou do e-mail */
+                    busca?: string;
+                    pagina?: number;
+                    tamanho?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Usuario"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1308,6 +1556,8 @@ export interface components {
             inicio: components["schemas"]["OffsetDateTime"];
             /** @description Recado do cliente para o profissional */
             observacao?: string;
+            /** @description Cliente do agendamento. Obrigatorio para PROFISSIONAL e ADMIN; ignorado quando quem chama e CLIENTE */
+            clienteId?: components["schemas"]["UUID"];
         };
         Anotacao: {
             id?: components["schemas"]["UUID"];
@@ -1323,6 +1573,11 @@ export interface components {
             texto: string;
             /** @description Atendimento a que a anotacao se refere; opcional */
             agendamentoId?: components["schemas"]["UUID"];
+        };
+        AtualizarPerfilRequest: {
+            nome: string;
+            email: string;
+            telefone?: string;
         };
         /** @description Novo status do agendamento */
         AtualizarStatusRequest: {
@@ -1520,6 +1775,16 @@ export interface components {
              */
             tenantSlug?: string;
         };
+        /** @description Novo horario do agendamento */
+        RemarcarRequest: {
+            /**
+             * @description Novo inicio em ISO-8601 com offset
+             * @example 2026-03-02T10:00:00Z
+             */
+            inicio: components["schemas"]["OffsetDateTime"];
+            /** @description Outro profissional para atender; omitido, continua o mesmo */
+            profissionalId?: components["schemas"]["UUID"];
+        };
         /** @enum {string} */
         Role: "CLIENTE" | "PROFISSIONAL" | "ADMIN";
         Servico: {
@@ -1580,6 +1845,10 @@ export interface components {
             expiraEmSegundos?: number;
             usuario?: components["schemas"]["Usuario"];
         };
+        TrocarSenhaRequest: {
+            senhaAtual: string;
+            novaSenha: string;
+        };
         /** Format: uuid */
         UUID: string;
         Usuario: {
@@ -1589,6 +1858,11 @@ export interface components {
             email?: string;
             telefone?: string;
             role?: components["schemas"]["Role"];
+            /**
+             * @description Quando a conta foi criada
+             * @example 2022-03-10T12:15:50-04:00
+             */
+            criadoEm?: components["schemas"]["OffsetDateTime"];
         };
     };
     responses: never;

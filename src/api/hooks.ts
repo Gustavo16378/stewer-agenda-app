@@ -34,6 +34,7 @@ import type {
   Servico,
   ServicoRequest,
   StatusAgendamento,
+  Usuario,
 } from './types';
 
 const { chaves } = q;
@@ -101,6 +102,21 @@ export function useMeuProfissional() {
   );
 
   return { ...lista, profissional: meu };
+}
+
+/** Pessoas do estabelecimento, buscadas por nome ou e-mail (so ADMIN). */
+export function usePessoas(busca: string, habilitado = true) {
+  return useQuery<Usuario[], ApiError>({
+    queryKey: chaves.pessoas(busca),
+    queryFn: () => q.buscarPessoas(busca),
+    enabled: habilitado,
+  });
+}
+
+export function useTrocarSenha() {
+  return useMutation<void, ApiError, { senhaAtual: string; novaSenha: string }>({
+    mutationFn: (body) => q.trocarSenha(body),
+  });
 }
 
 export function useSalvarProfissional() {
@@ -237,14 +253,38 @@ export function useAtualizarStatus() {
   });
 }
 
+/** Remarca e atualiza o detalhe e as listas, como a mudanca de status. */
+export function useRemarcar() {
+  const qc = useQueryClient();
+  return useMutation<
+    Agendamento,
+    ApiError,
+    { id: string; inicio: string; profissionalId?: string }
+  >({
+    mutationFn: ({ id, inicio, profissionalId }) =>
+      q.remarcar(id, { inicio, ...(profissionalId ? { profissionalId } : {}) }),
+    onSuccess: (atualizado) => {
+      if (atualizado.id) qc.setQueryData(chaves.agendamento(atualizado.id), atualizado);
+      void qc.invalidateQueries({ queryKey: ['agendamentos'] });
+      void qc.invalidateQueries({ queryKey: ['horarios-livres'] });
+    },
+  });
+}
+
 export function useHorariosLivres(
   profissionalId: string | undefined,
   data: CalendarDate | undefined,
-  servicoId: string | undefined
+  servicoId: string | undefined,
+  ignorarAgendamentoId?: string
 ) {
   return useQuery<HorariosLivres, ApiError>({
-    queryKey: chaves.horariosLivres(profissionalId ?? '', data ?? '', servicoId ?? ''),
-    queryFn: () => q.buscarHorariosLivres(profissionalId!, data!, servicoId!),
+    queryKey: chaves.horariosLivres(
+      profissionalId ?? '',
+      data ?? '',
+      servicoId ?? '',
+      ignorarAgendamentoId
+    ),
+    queryFn: () => q.buscarHorariosLivres(profissionalId!, data!, servicoId!, ignorarAgendamentoId),
     enabled: !!profissionalId && !!data && !!servicoId,
   });
 }

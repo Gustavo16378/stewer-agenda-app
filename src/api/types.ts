@@ -13,6 +13,7 @@ export type Agendamento = Schemas['Agendamento'];
 export type AgendamentoRequest = Schemas['AgendamentoRequest'];
 export type Anotacao = Schemas['Anotacao'];
 export type AnotacaoRequest = Schemas['AnotacaoRequest'];
+export type AtualizarPerfilRequest = Schemas['AtualizarPerfilRequest'];
 export type AtualizarStatusRequest = Schemas['AtualizarStatusRequest'];
 export type Bloqueio = Schemas['Bloqueio'];
 export type BloqueioRequest = Schemas['BloqueioRequest'];
@@ -28,11 +29,13 @@ export type LoginRequest = Schemas['LoginRequest'];
 export type Profissional = Schemas['Profissional'];
 export type ProfissionalRequest = Schemas['ProfissionalRequest'];
 export type RegistrarRequest = Schemas['RegistrarRequest'];
+export type RemarcarRequest = Schemas['RemarcarRequest'];
 export type Role = Schemas['Role'];
 export type Servico = Schemas['Servico'];
 export type ServicoRequest = Schemas['ServicoRequest'];
 export type StatusAgendamento = Schemas['StatusAgendamento'];
 export type TokenResponse = Schemas['TokenResponse'];
+export type TrocarSenhaRequest = Schemas['TrocarSenhaRequest'];
 export type Usuario = Schemas['Usuario'];
 
 /** Os papeis, como valores, para montar guardas e menus. */

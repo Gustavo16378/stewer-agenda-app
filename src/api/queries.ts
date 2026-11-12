@@ -21,9 +21,11 @@ import type {
   Periodo,
   Profissional,
   ProfissionalRequest,
+  RemarcarRequest,
   Servico,
   ServicoRequest,
   StatusAgendamento,
+  TrocarSenhaRequest,
   Usuario,
 } from './types';
 
@@ -45,8 +47,14 @@ export const chaves = {
   meusAgendamentos: (periodo: Periodo) => ['agendamentos', 'meus', periodo] as const,
   agendamento: (id: string) => ['agendamento', id] as const,
 
-  horariosLivres: (profissionalId: string, data: CalendarDate, servicoId: string) =>
-    ['horarios-livres', profissionalId, data, servicoId] as const,
+  horariosLivres: (
+    profissionalId: string,
+    data: CalendarDate,
+    servicoId: string,
+    ignorarAgendamentoId?: string
+  ) => ['horarios-livres', profissionalId, data, servicoId, ignorarAgendamentoId ?? ''] as const,
+
+  pessoas: (busca: string) => ['usuarios', { busca }] as const,
 
   clientes: (busca: string) => ['clientes', { busca }] as const,
   cliente: (id: string) => ['cliente', id] as const,
@@ -63,6 +71,17 @@ export const chaves = {
 
 export function buscarEu(): Promise<Usuario> {
   return desembrulha(api.GET('/auth/eu'));
+}
+
+export function trocarSenha(body: TrocarSenhaRequest): Promise<void> {
+  return desembrulha(api.PUT('/auth/eu/senha', { body })) as Promise<void>;
+}
+
+/** Pessoas do estabelecimento (so ADMIN), para escolher quem vira profissional. */
+export function buscarPessoas(busca: string): Promise<Usuario[]> {
+  return desembrulha(
+    api.GET('/usuarios', { params: { query: { ...(busca ? { busca } : {}), tamanho: 30 } } })
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -145,6 +164,10 @@ export function criarAgendamento(body: AgendamentoRequest): Promise<Agendamento>
   return desembrulhaCriado<Agendamento>(api.POST('/agendamentos', { body }));
 }
 
+export function remarcar(id: string, body: RemarcarRequest): Promise<Agendamento> {
+  return desembrulha(api.PATCH('/agendamentos/{id}/horario', { params: { path: { id } }, body }));
+}
+
 export function atualizarStatus(id: string, status: StatusAgendamento): Promise<Agendamento> {
   return desembrulha(
     api.PATCH('/agendamentos/{id}/status', { params: { path: { id } }, body: { status } })
@@ -154,11 +177,15 @@ export function atualizarStatus(id: string, status: StatusAgendamento): Promise<
 export function buscarHorariosLivres(
   profissionalId: string,
   data: CalendarDate,
-  servicoId: string
+  servicoId: string,
+  ignorarAgendamentoId?: string
 ): Promise<HorariosLivres> {
   return desembrulha(
     api.GET('/profissionais/{profissionalId}/horarios-livres', {
-      params: { path: { profissionalId }, query: { data, servicoId } },
+      params: {
+        path: { profissionalId },
+        query: { data, servicoId, ...(ignorarAgendamentoId ? { ignorarAgendamentoId } : {}) },
+      },
     })
   );
 }
