@@ -42,6 +42,8 @@ import {
 import type { Role, TokenResponse, Usuario } from '@/api/types';
 import { esquecerEsteAparelho, registrarNotificacoes } from '@/lib/notificacoes';
 
+import { papelDoToken } from './papel-do-token';
+
 export type StatusAuth = 'carregando' | 'autenticado' | 'deslogado';
 
 interface AuthContextValue {
@@ -144,7 +146,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const eu = await desembrulha(api.GET('/auth/eu'));
         if (cancelado) return;
-        if (guardada.usuario?.role && eu.role && eu.role !== guardada.usuario.role) {
+        const papelNoToken = papelDoToken(guardada.token) ?? guardada.usuario?.role;
+        if (papelNoToken && eu.role && eu.role !== papelNoToken) {
           // Ganhou ou perdeu acesso (admin, profissional) desde o login. O papel vai no
           // token, e o token velho seria recusado na area nova: entra de novo e pronto.
           await apagarSessao();
