@@ -26,7 +26,7 @@
  */
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { Modal, ScrollView, Text, View } from 'react-native';
+import { Linking, Modal, ScrollView, Text, View } from 'react-native';
 
 import {
   useAnotacoes,
@@ -34,24 +34,34 @@ import {
   useCliente,
   useCriarAnotacao,
   useEditarAnotacao,
+  useAuditoria,
   useMeuProfissional,
 } from '@/api/hooks';
+import { ROTULO_STATUS } from '@/api/types';
 import { useAuth } from '@/auth/auth-context';
+import { GuardaDePapel } from '@/auth/guarda';
+import { BotaoAtelie, TituloSecao } from '@/components/atelie/base';
+import { FotosDoCliente } from '@/components/ficha/Fotos';
+import { LinhaDoTempo } from '@/components/ficha/LinhaDoTempo';
+import { NumerosDoCliente } from '@/components/ficha/Numeros';
 import { AcaoLinha, Botao } from '@/components/ui/botao';
 import { CabecalhoVoltar } from '@/components/ui/cabecalho';
 import { Campo } from '@/components/ui/campo';
 import { Carregando, EstadoErro, EstadoVazio } from '@/components/ui/estados';
-import { AvatarIniciais } from '@/components/ui/imagem';
+import { AvatarPessoa } from '@/components/ui/imagem';
 import { TelaRolavel } from '@/components/ui/tela';
 import { LabelCaps, Titulo } from '@/components/ui/texto';
+import { aniversario, linkWhatsApp, MENSAGENS } from '@/lib/carteira';
+import { cn } from '@/lib/cn';
 import { confirmar } from '@/lib/confirmar';
 import { formatDiaMesCurtoCaps, formatMesAnoLongoCaps, parseInstant } from '@/lib/datetime';
 import { formatCentavos } from '@/lib/money';
 import { PAINEL_CENTRALIZADO } from '@/lib/responsivo';
+import { formatTelefone } from '@/lib/telefone';
 
 const ANOTACAO_MAX = 8000;
 
-export default function FichaDoCliente() {
+function FichaDoCliente() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { role } = useAuth();
@@ -75,6 +85,30 @@ export default function FichaDoCliente() {
         ),
     [cliente.data]
   );
+  const historico = useMemo(
+    () =>
+      (cliente.data?.agendamentos ?? [])
+        .filter((a) => a.status !== 'AGENDADO')
+        .sort(
+          (a, b) =>
+            (parseInstant(b.inicio)?.getTime() ?? 0) - (parseInstant(a.inicio)?.getTime() ?? 0)
+        ),
+    [cliente.data]
+  );
+  const linhaDoTempo = useAuditoria({ clienteId: id ?? '' });
+  const eventos = linhaDoTempo.data?.pages.flat() ?? [];
+  const ficha = cliente.data?.ficha;
+  const temPerfil = !!(
+    ficha?.formatoRosto ||
+    ficha?.cabelo ||
+    ficha?.barba ||
+    ficha?.estilo ||
+    ficha?.manter ||
+    ficha?.evitar
+  );
+  const niver = aniversario(ficha?.dataNascimento);
+  const primeiro = (cliente.data?.nome ?? '').split(' ')[0] ?? '';
+  const whatsapp = linkWhatsApp(cliente.data?.telefone, MENSAGENS.contato(primeiro));
   const ultimaAnotacao = anotacoes.data?.[0];
   // Admin com ficha tambem anota; sem ficha a API recusa e a tela mostra o motivo.
   const podeAnotar = role === 'PROFISSIONAL' || role === 'ADMIN';
@@ -137,7 +171,12 @@ export default function FichaDoCliente() {
       ) : (
         <View className="pt-[30px]">
           <View className="flex-row items-center gap-5">
-            <AvatarIniciais nome={cliente.data.nome} tamanho={54} />
+            <AvatarPessoa
+              usuarioId={cliente.data.id}
+              fotoVersao={cliente.data.fotoVersao}
+              nome={cliente.data.nome}
+              tamanho={64}
+            />
             <View className="flex-1 gap-2">
               <Titulo className="text-ds-30" numberOfLines={2}>
                 {cliente.data.nome}
@@ -149,7 +188,65 @@ export default function FichaDoCliente() {
             </View>
           </View>
 
-          <View className="mt-8 rounded-[3px] border-l-2 border-latao bg-superficie p-6">
+          {/* contato: um toque e abre a conversa */}
+          <View className="mt-6 flex-row flex-wrap gap-2">
+            {whatsapp ? (
+              <BotaoAtelie
+                variante="contorno"
+                titulo={`WhatsApp ${formatTelefone(cliente.data.telefone)}`}
+                onPress={() => void Linking.openURL(whatsapp)}
+              />
+            ) : (
+              <Text className="font-sans text-ui-sm text-texto-3">Sem telefone cadastrado</Text>
+            )}
+          </View>
+          <Text className="mt-2 font-sans text-ui-sm text-texto-3">{cliente.data.email}</Text>
+
+          {/* etiquetas, origem e aniversario */}
+          <View className="mt-5 flex-row flex-wrap gap-2">
+            {niver ? (
+              <Selo destaque={niver.ehEsteMes}>
+                {niver.ehHoje ? 'Faz aniversário hoje' : `Aniversário ${niver.dia}`}
+              </Selo>
+            ) : null}
+            {ficha?.origem ? <Selo>{`Veio por ${ficha.origem}`}</Selo> : null}
+            {(ficha?.etiquetas ?? []).map((e) => (
+              <Selo key={e}>{e}</Selo>
+            ))}
+          </View>
+
+          <TituloSecao className="mt-10">Números</TituloSecao>
+          <NumerosDoCliente m={cliente.data.metricas} />
+
+          <TituloSecao
+            className="mt-12"
+            acao={
+              <BotaoAtelie
+                variante="texto"
+                titulo={temPerfil ? 'Editar ficha' : 'Preencher ficha'}
+                onPress={() => router.push({ pathname: '/cliente/ficha', params: { id } } as never)}
+              />
+            }
+          >
+            Visagismo
+          </TituloSecao>
+          {temPerfil ? (
+            <View className="mt-4 gap-3">
+              <LinhaPerfil rotulo="Rosto" valor={ficha?.formatoRosto} />
+              <LinhaPerfil rotulo="Cabelo" valor={ficha?.cabelo} />
+              <LinhaPerfil rotulo="Barba" valor={ficha?.barba} />
+              <LinhaPerfil rotulo="Estilo" valor={ficha?.estilo} />
+              <LinhaPerfil rotulo="Manter" valor={ficha?.manter} />
+              <LinhaPerfil rotulo="Evitar" valor={ficha?.evitar} alerta />
+            </View>
+          ) : (
+            <Text className="mt-4 font-sans text-ui text-texto-3">
+              Formato do rosto, cabelo, barba e o que manter ou evitar. Preencha na primeira
+              consultoria e todo atendimento começa daqui.
+            </Text>
+          )}
+
+          <View className="mt-6 rounded-[3px] border-l-2 border-latao bg-superficie p-6">
             <View className="flex-row items-center justify-between">
               <LabelCaps papel="campo">Anotações de visagismo</LabelCaps>
               {podeAnotar ? <AcaoLinha titulo="Editar" destaque onPress={abrirEditor} /> : null}
@@ -188,38 +285,65 @@ export default function FichaDoCliente() {
             )}
           </View>
 
-          <LabelCaps papel="secao" className="mt-10">
-            Histórico de visitas
-          </LabelCaps>
-          {visitas.length === 0 ? (
-            <Text className="mt-4 font-sans text-help text-ink/42">
-              Nenhuma visita concluída ainda.
-            </Text>
+          <TituloSecao className="mt-12">Antes e depois</TituloSecao>
+          <FotosDoCliente clienteId={id ?? ''} />
+
+          <TituloSecao className="mt-12">Histórico</TituloSecao>
+          {historico.length === 0 ? (
+            <Text className="mt-4 font-sans text-ui text-texto-3">Nenhum atendimento ainda.</Text>
           ) : (
             <View className="mt-2">
-              {visitas.map((a) => (
+              {historico.map((a) => (
                 <View
                   key={a.id}
-                  className="flex-row items-center gap-[18px] border-b border-divider py-[18px]"
+                  className="flex-row items-center gap-4 border-b border-borda/70 py-4"
                 >
-                  <LabelCaps papel="meta" className="w-14 text-caps-sm tracking-tab">
-                    {formatDiaMesCurtoCaps(a.inicio)}
-                  </LabelCaps>
-                  <Text className="flex-1 font-sans text-row text-text-strong" numberOfLines={1}>
+                  <Text className="w-16 font-sans-medium text-ui-sm text-texto-3">
+                    {formatDiaMesCurtoCaps(a.inicio).toLowerCase()}
+                  </Text>
+                  <Text
+                    className={cn(
+                      'flex-1 font-sans text-ui',
+                      a.status === 'CONCLUIDO' ? 'text-texto' : 'text-texto-3 line-through'
+                    )}
+                    numberOfLines={1}
+                  >
                     {a.servicoNome}
                   </Text>
-                  <Text className="font-sans text-chip text-text-muted">
-                    {formatCentavos(a.precoCentavos)}
+                  <Text className="font-sans text-ui-sm text-texto-2">
+                    {a.status === 'CONCLUIDO'
+                      ? formatCentavos(a.precoCentavos)
+                      : a.status
+                        ? ROTULO_STATUS[a.status]
+                        : ''}
                   </Text>
                 </View>
               ))}
             </View>
           )}
 
-          <Botao
-            className="mt-[26px]"
-            variante="fantasma"
-            titulo="Novo agendamento para este cliente"
+          <TituloSecao className="mt-12">Linha do tempo</TituloSecao>
+          {linhaDoTempo.isLoading ? (
+            <Carregando className="py-6" />
+          ) : eventos.length === 0 ? (
+            <Text className="mt-4 font-sans text-ui text-texto-3">Nada registrado ainda.</Text>
+          ) : (
+            <View className="mt-5">
+              <LinhaDoTempo eventos={eventos} />
+              {linhaDoTempo.hasNextPage ? (
+                <BotaoAtelie
+                  variante="texto"
+                  titulo="Ver mais"
+                  carregando={linhaDoTempo.isFetchingNextPage}
+                  onPress={() => void linhaDoTempo.fetchNextPage()}
+                />
+              ) : null}
+            </View>
+          )}
+
+          <BotaoAtelie
+            className="mt-10"
+            titulo="Marcar horário para este cliente"
             onPress={() =>
               router.push({
                 pathname: '/novo-agendamento/servico',
@@ -277,5 +401,46 @@ export default function FichaDoCliente() {
         </View>
       </Modal>
     </TelaRolavel>
+  );
+}
+
+function Selo({ children, destaque }: { children: string; destaque?: boolean }) {
+  return (
+    <View className={cn('rounded-full px-3 py-[6px]', destaque ? 'bg-latao' : 'bg-superficie')}>
+      <Text className={cn('font-sans-medium text-ui-sm', destaque ? 'text-fundo' : 'text-texto-2')}>
+        {children}
+      </Text>
+    </View>
+  );
+}
+
+function LinhaPerfil({
+  rotulo,
+  valor,
+  alerta,
+}: {
+  rotulo: string;
+  valor?: string | null;
+  alerta?: boolean;
+}) {
+  if (!valor) return null;
+  return (
+    <View className="flex-row gap-4">
+      <Text
+        className={cn('w-16 font-sans-medium text-ui-sm', alerta ? 'text-cadeira' : 'text-latao')}
+      >
+        {rotulo}
+      </Text>
+      <Text className="flex-1 font-sans text-ui text-texto">{valor}</Text>
+    </View>
+  );
+}
+
+/** Direto pelo link ou depois de recarregar: so mostra a tela com a sessao ja restaurada. */
+export default function RotaFichaDoCliente() {
+  return (
+    <GuardaDePapel permitidos={['PROFISSIONAL', 'ADMIN']}>
+      <FichaDoCliente />
+    </GuardaDePapel>
   );
 }

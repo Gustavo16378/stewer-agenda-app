@@ -45,6 +45,8 @@ jest.mock('@/api/hooks', () => ({
     refetch: jest.fn(),
   }),
   useDisponibilidadesDe: () => ({ grades: [], carregando: false, erro: null }),
+  useAniversariantes: () => ({ data: [], isLoading: false, error: null }),
+  useSumidos: () => ({ data: [], isLoading: false, error: null }),
   useTodosClientes: () => ({
     data: [],
     isLoading: false,

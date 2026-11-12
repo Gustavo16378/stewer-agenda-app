@@ -30,7 +30,7 @@
  */
 import { useRouter } from 'expo-router';
 import { useMemo } from 'react';
-import { RefreshControl, Text, View } from 'react-native';
+import { Pressable, RefreshControl, Text, View } from 'react-native';
 
 import {
   useAgendaDeVariosDias,
@@ -40,6 +40,7 @@ import {
 } from '@/api/hooks';
 import type { Agendamento } from '@/api/types';
 import { NumeroAnimado } from '@/components/atelie/NumeroAnimado';
+import { Relacionamento } from '@/components/ficha/Relacionamento';
 import { AcaoLinha } from '@/components/ui/botao';
 import { Carregando, EstadoErro } from '@/components/ui/estados';
 import { TelaRolavel } from '@/components/ui/tela';
@@ -261,6 +262,24 @@ export default function VisaoGeral() {
             </View>
           </>
         )}
+
+        <Relacionamento />
+
+        <Pressable
+          onPress={() => router.push('/auditoria' as never)}
+          accessibilityRole="link"
+          accessibilityLabel="Abrir a auditoria"
+          className="mt-14 flex-row items-center justify-between rounded-[3px] border border-borda bg-superficie px-5 py-5"
+          style={({ pressed }) => (pressed ? { opacity: 0.8 } : null)}
+        >
+          <View className="flex-1">
+            <Text className="font-display text-ds-20 text-texto">Auditoria</Text>
+            <Text className="font-sans text-ui-sm text-texto-3">
+              Quem fez o quê e quando, em tudo do estúdio
+            </Text>
+          </View>
+          <Text className="font-sans text-ds-24 text-latao">›</Text>
+        </Pressable>
       </View>
     </TelaRolavel>
   );
