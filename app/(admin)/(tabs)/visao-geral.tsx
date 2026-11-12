@@ -46,6 +46,7 @@ import {
 } from '@/api/hooks';
 import type { Agendamento } from '@/api/types';
 import { useAuth } from '@/auth/auth-context';
+import { Baixa } from '@/components/agenda/Baixa';
 import { NumeroAnimado } from '@/components/atelie/NumeroAnimado';
 import { Relacionamento } from '@/components/ficha/Relacionamento';
 import { GeometriaDoRosto, MARCAS_RETRATO } from '@/components/marca/Geometria';
@@ -154,33 +155,43 @@ function Hoje({ lista, aoAbrir }: { lista: Agendamento[]; aoAbrir: (id: string) 
       </Text>
       <View className="mt-3">
         {lista.slice(0, 6).map((a) => {
-          const passou = Date.parse(a.fim ?? '') < agora;
+          const passou = Date.parse(a.fim ?? '') < agora && a.status !== 'AGENDADO';
           return (
-            <Pressable
+            <View
               key={a.id}
-              onPress={() => a.id && aoAbrir(a.id)}
-              accessibilityRole="button"
-              accessibilityLabel={`${formatHora(a.inicio)}, ${a.clienteNome ?? 'cliente'}, ${a.servicoNome ?? ''}`}
               className={cn(
-                'flex-row items-center gap-4 border-b border-borda py-4',
+                'flex-row items-center gap-2 border-b border-borda',
                 passou && 'opacity-50'
               )}
-              style={({ pressed }) => (pressed ? { opacity: 0.6 } : null)}
             >
-              <Text className="w-16 font-display text-ds-20 text-latao">
-                {formatHora(a.inicio)}
-              </Text>
-              <View className="flex-1">
-                <Text className="font-sans-medium text-ui text-texto" numberOfLines={1}>
-                  {a.clienteNome}
+              <Pressable
+                onPress={() => a.id && aoAbrir(a.id)}
+                accessibilityRole="button"
+                accessibilityLabel={`${formatHora(a.inicio)}, ${a.clienteNome ?? 'cliente'}, ${a.servicoNome ?? ''}`}
+                className="flex-1 flex-row items-center gap-4 py-4"
+                style={({ pressed }) => (pressed ? { opacity: 0.6 } : null)}
+              >
+                <Text className="w-16 font-display text-ds-20 text-latao">
+                  {formatHora(a.inicio)}
                 </Text>
-                <Text className="font-sans text-ui-sm text-texto-3" numberOfLines={1}>
-                  {a.servicoNome}
-                  {a.primeiraVisita ? ', primeira vez' : ''}
-                </Text>
-              </View>
-              <Text className="font-sans text-ds-20 text-texto-3">›</Text>
-            </Pressable>
+                <View className="flex-1">
+                  <Text className="font-sans-medium text-ui text-texto" numberOfLines={1}>
+                    {a.clienteNome}
+                  </Text>
+                  <Text className="font-sans text-ui-sm text-texto-3" numberOfLines={1}>
+                    {a.servicoNome}
+                    {a.status === 'CONCLUIDO'
+                      ? ', atendido'
+                      : a.status === 'NAO_COMPARECEU'
+                        ? ', faltou'
+                        : ''}
+                    {a.primeiraVisita && a.status === 'AGENDADO' ? ', primeira vez' : ''}
+                  </Text>
+                </View>
+              </Pressable>
+              {/* deu a hora e ainda esta marcado: a baixa fica ali mesmo */}
+              <Baixa item={a} compacto />
+            </View>
           );
         })}
       </View>
@@ -433,6 +444,14 @@ export default function VisaoGeral() {
         <View className="mt-4 flex-row flex-wrap" style={{ marginHorizontal: -4 }}>
           <Atalho
             largura={largo ? '25%' : '50%'}
+            titulo="Financeiro"
+            texto="Faturado, a receber e gráficos"
+            icone={<IconeDaAba rota="financeiro" cor={cores.gold} />}
+            aoTocar={() => router.push('/financeiro' as never)}
+            rotulo="Abrir o financeiro"
+          />
+          <Atalho
+            largura={largo ? '25%' : '50%'}
             titulo="Estúdio"
             texto="Retrato, fotos, endereço e contatos"
             icone={<IconeDaAba rota="estudio" cor={cores.gold} />}
@@ -460,6 +479,13 @@ export default function VisaoGeral() {
             texto="stewergabriel.com"
             icone={<IconeDaAba rota="inicio" cor={cores.gold} />}
             aoTocar={() => void Linking.openURL(SITE_DO_STEWER)}
+          />
+          <Atalho
+            largura={largo ? '25%' : '50%'}
+            titulo="Agenda do mês"
+            texto="Semana, mês e escolher data"
+            icone={<IconeDaAba rota="agenda" cor={cores.gold} />}
+            aoTocar={() => router.push('/agenda' as never)}
           />
         </View>
       </View>
