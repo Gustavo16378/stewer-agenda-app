@@ -295,5 +295,6 @@ eas build --profile preview --platform android
 ```
 
 Ícone, ícone adaptativo do Android, splash e favicon em `assets/images/` saem de
-`python3 scripts/make-brand-assets.py`: o monograma SG no losango dourado, o mesmo do topo
-da tela de login.
+`python3 scripts/make-brand-assets.py`: o "S" do Stewer, a mesma logo do site
+stewergabriel.com. A abertura animada (o S tracado em dourado, o nome subindo e a cortina)
+e a mesma do site, em `src/components/marca/Abertura.tsx`.

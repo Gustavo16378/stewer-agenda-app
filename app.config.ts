@@ -2,8 +2,7 @@ import type { ConfigContext, ExpoConfig } from 'expo/config';
 
 /**
  * Config do app. Icone, icone adaptativo, splash e favicon saem de
- * `python3 scripts/make-brand-assets.py`: o monograma SG no losango dourado, igual ao
- * topo da tela de login.
+ * `python3 scripts/make-brand-assets.py`: o "S" do Stewer, a mesma logo do site.
  */
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
