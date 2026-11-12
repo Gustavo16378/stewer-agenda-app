@@ -1,6 +1,6 @@
 /** Editar nome, e-mail e telefone da propria conta. */
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Text } from 'react-native';
 
 import { ApiError } from '@/api/errors';
@@ -19,6 +19,17 @@ export default function EditarDados() {
   const [telefone, setTelefone] = useState(usuario?.telefone ?? '');
   const [erro, setErro] = useState<ApiError | null>(null);
   const [enviando, setEnviando] = useState(false);
+
+  // Abrindo a tela direto pelo endereco (F5 no navegador), a sessao ainda esta carregando
+  // quando o formulario nasce: preenche uma vez, quando o usuario chegar.
+  const preenchido = useRef(!!usuario);
+  useEffect(() => {
+    if (preenchido.current || !usuario) return;
+    preenchido.current = true;
+    setNome(usuario.nome ?? '');
+    setEmail(usuario.email ?? '');
+    setTelefone(usuario.telefone ?? '');
+  }, [usuario]);
 
   const podeSalvar = nome.trim().length > 0 && email.trim().length > 0 && !enviando;
 
