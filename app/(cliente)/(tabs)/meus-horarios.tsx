@@ -48,17 +48,19 @@ function CardProximo({ item, aoAbrir }: { item: Agendamento; aoAbrir: () => void
         </LabelCaps>
       </View>
       <View className="w-px self-stretch bg-divider-card" />
+      {/* O status sobe para cima do titulo: na lateral ele roubava a largura e cortava
+          nome de servico e de profissional cedo demais ("Corte + Vis..."). */}
       <View className="flex-1 gap-[7px]">
-        <Titulo className="text-d-18" numberOfLines={1}>
+        <LabelCaps papel="micro" className="text-gold">
+          {item.status ? ROTULO_STATUS_CAPS[item.status] : ''}
+        </LabelCaps>
+        <Titulo className="text-d-18" numberOfLines={2}>
           {item.servicoNome}
         </Titulo>
-        <LabelCaps papel="meta" className="tracking-chip text-ink/50" numberOfLines={1}>
+        <LabelCaps papel="meta" className="tracking-chip text-ink/50" numberOfLines={2}>
           {formatHora(item.inicio)} · {(item.profissionalNome ?? '').toUpperCase()}
         </LabelCaps>
       </View>
-      <LabelCaps papel="micro" className="self-start text-gold">
-        {item.status ? ROTULO_STATUS_CAPS[item.status] : ''}
-      </LabelCaps>
     </Pressable>
   );
 }
