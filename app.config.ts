@@ -1,8 +1,9 @@
 import type { ConfigContext, ExpoConfig } from 'expo/config';
 
 /**
- * Config do app. Icone e splash sao PLACEHOLDERS gerados por
- * `node scripts/make-placeholder-assets.mjs` — troque por arte final antes de publicar.
+ * Config do app. Icone, icone adaptativo, splash e favicon saem de
+ * `python3 scripts/make-brand-assets.py`: o monograma SG no losango dourado, igual ao
+ * topo da tela de login.
  */
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
@@ -46,13 +47,19 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       },
     ],
   ],
+  // Atualizacao pela nuvem (EAS Update): correcao de tela chega sem nova revisao da loja.
+  // So liga depois do `eas init`, quando EAS_PROJECT_ID existir.
+  runtimeVersion: { policy: 'appVersion' },
+  ...(process.env.EAS_PROJECT_ID
+    ? { updates: { url: `https://u.expo.dev/${process.env.EAS_PROJECT_ID}` } }
+    : {}),
   experiments: {
     typedRoutes: true,
   },
   extra: {
     eas: {
       // preencha com o id do projeto ao rodar `eas init` (nao roda build aqui)
-      projectId: undefined,
+      projectId: process.env.EAS_PROJECT_ID,
     },
   },
 });
