@@ -246,7 +246,7 @@ export default function GestaoDeEquipe() {
       }
     >
       <View className="pt-10">
-        <Titulo className="text-d-29">Equipe</Titulo>
+        <Titulo className="text-ds-38">Equipe</Titulo>
         <LabelCaps papel="meta" className="mt-[14px]">
           {ativos} {ativos === 1 ? 'PROFISSIONAL ATIVO' : 'PROFISSIONAIS ATIVOS'}
         </LabelCaps>

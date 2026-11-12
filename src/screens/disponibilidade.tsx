@@ -423,7 +423,7 @@ export function TelaDisponibilidade({
     >
       {comCabecalhoVoltar ? <CabecalhoVoltar passo="Equipe" /> : null}
       <View className={comCabecalhoVoltar ? 'pt-[30px]' : 'pt-10'}>
-        <Titulo className="text-d-29">Disponibilidade</Titulo>
+        <Titulo className="text-ds-38">Disponibilidade</Titulo>
         <LabelCaps papel="meta" className="mt-[14px]">
           {comCabecalhoVoltar
             ? 'HORÁRIO PADRÃO DE ATENDIMENTO'

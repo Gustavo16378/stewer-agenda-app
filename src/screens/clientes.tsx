@@ -98,7 +98,7 @@ export default function ListaDeClientes() {
         ListHeaderComponent={
           <View>
             <View className="flex-row items-end justify-between">
-              <Titulo className="text-d-29">Clientes</Titulo>
+              <Titulo className="text-ds-38">Clientes</Titulo>
               {completa ? (
                 <LabelCaps papel="meta" className="pb-[6px]">
                   {itens.length} {itens.length === 1 ? 'CLIENTE' : 'CLIENTES'}

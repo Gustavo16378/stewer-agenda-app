@@ -40,7 +40,7 @@ function MenuLateral({ state, descriptors, navigation }: BottomTabBarProps) {
     >
       <View className="mb-14 flex-row items-center gap-4">
         <LogoStewer altura={34} cor={tema === 'dark' ? '#f3f3f3' : '#0A0A0A'} />
-        <View className="gap-1">
+        <View className="gap-1" accessibilityRole="tablist">
           <Text className="font-display text-d-18 text-ink">Stewer Gabriel</Text>
           <Text className="font-sans text-ui-sm text-texto-3">Agenda</Text>
         </View>
@@ -64,8 +64,8 @@ function MenuLateral({ state, descriptors, navigation }: BottomTabBarProps) {
             <Pressable
               key={route.key}
               onPress={aoTocar}
-              accessibilityRole="button"
-              accessibilityState={ativa ? { selected: true } : {}}
+              accessibilityRole="tab"
+              accessibilityState={{ selected: ativa }}
               accessibilityLabel={options.tabBarAccessibilityLabel ?? titulo}
               className="flex-row items-center gap-4 py-[13px]"
               style={({ pressed, hovered }: { pressed: boolean; hovered?: boolean }) =>
@@ -105,7 +105,7 @@ function BarraDeBaixo({ state, descriptors, navigation }: BottomTabBarProps) {
       className="border-t border-borda bg-fundo"
       style={{ paddingBottom: Math.max(insets.bottom, 8) }}
     >
-      <View className="flex-row px-1 pb-1 pt-[10px]">
+      <View className="flex-row px-1 pb-1 pt-[10px]" accessibilityRole="tablist">
         {state.routes.map((route, index) => {
           const { options } = descriptors[route.key]!;
           const ativa = state.index === index;
@@ -128,8 +128,8 @@ function BarraDeBaixo({ state, descriptors, navigation }: BottomTabBarProps) {
               key={route.key}
               onPress={aoTocar}
               onLongPress={() => navigation.emit({ type: 'tabLongPress', target: route.key })}
-              accessibilityRole="button"
-              accessibilityState={ativa ? { selected: true } : {}}
+              accessibilityRole="tab"
+              accessibilityState={{ selected: ativa }}
               accessibilityLabel={options.tabBarAccessibilityLabel ?? titulo}
               className="flex-1 items-center gap-[6px] py-1"
               style={({ pressed }) => (pressed ? { opacity: 0.7 } : null)}

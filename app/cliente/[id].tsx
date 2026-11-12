@@ -139,17 +139,17 @@ export default function FichaDoCliente() {
           <View className="flex-row items-center gap-5">
             <AvatarIniciais nome={cliente.data.nome} tamanho={54} />
             <View className="flex-1 gap-2">
-              <Titulo className="text-d-25" numberOfLines={1}>
+              <Titulo className="text-ds-30" numberOfLines={2}>
                 {cliente.data.nome}
               </Titulo>
-              <LabelCaps papel="micro" className="tracking-wide text-text-muted" numberOfLines={1}>
-                DESDE {formatMesAnoLongoCaps(cliente.data.createdAt)} · {visitas.length}{' '}
-                {visitas.length === 1 ? 'VISITA' : 'VISITAS'}
-              </LabelCaps>
+              <Text className="font-sans text-ui-sm text-texto-3" numberOfLines={1}>
+                Cliente desde {formatMesAnoLongoCaps(cliente.data.createdAt).toLowerCase()},{' '}
+                {visitas.length} {visitas.length === 1 ? 'visita' : 'visitas'}
+              </Text>
             </View>
           </View>
 
-          <View className="mt-[34px] rounded-token bg-surface p-[22px]">
+          <View className="mt-8 rounded-[3px] border-l-2 border-latao bg-superficie p-6">
             <View className="flex-row items-center justify-between">
               <LabelCaps papel="campo">Anotações de visagismo</LabelCaps>
               {podeAnotar ? <AcaoLinha titulo="Editar" destaque onPress={abrirEditor} /> : null}
@@ -162,14 +162,16 @@ export default function FichaDoCliente() {
               </Text>
             ) : (
               <>
-                <Text className="mt-[14px] font-sans text-body leading-[23.4px] text-ink/78">
+                <Text className="mt-3 font-sans text-ui-lg text-texto">
                   {ultimaAnotacao?.texto ?? 'Nenhuma anotação ainda.'}
                 </Text>
                 {ultimaAnotacao ? (
-                  <LabelCaps papel="micro" className="mt-4 text-2xs tracking-wide text-ink/35">
-                    ATUALIZADO EM {formatDiaMesCurtoCaps(ultimaAnotacao.createdAt)}
-                    {ultimaAnotacao.profissionalNome ? ` · ${ultimaAnotacao.profissionalNome}` : ''}
-                  </LabelCaps>
+                  <Text className="mt-4 font-sans text-ui-sm text-texto-3">
+                    Atualizada em {formatDiaMesCurtoCaps(ultimaAnotacao.createdAt).toLowerCase()}
+                    {ultimaAnotacao.profissionalNome
+                      ? ` por ${ultimaAnotacao.profissionalNome}`
+                      : ''}
+                  </Text>
                 ) : null}
                 {(anotacoes.data?.length ?? 0) > 1 ? (
                   <Text className="mt-2 font-sans text-help text-ink/38">

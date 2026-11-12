@@ -26,16 +26,16 @@ import { useTema } from '@/theme/theme-context';
 import { PreferenciaLembrete } from './preferencia-lembrete';
 
 const PAPEL: Record<string, string> = {
-  CLIENTE: 'CLIENTE',
-  PROFISSIONAL: 'PROFISSIONAL',
-  ADMIN: 'ADMINISTRADOR',
+  CLIENTE: 'Cliente',
+  PROFISSIONAL: 'Profissional',
+  ADMIN: 'Administrador',
 };
 
 function LinhaDado({ rotulo, valor }: { rotulo: string; valor: string | undefined }) {
   return (
-    <View className="flex-row items-center justify-between gap-4 border-b border-divider py-[19px]">
-      <Text className="font-sans text-meta text-ink/50">{rotulo}</Text>
-      <Text className="flex-1 text-right font-sans text-body-lg text-text-strong" numberOfLines={1}>
+    <View className="flex-row items-center justify-between gap-4 border-b border-borda/70 py-[18px]">
+      <Text className="font-sans text-ui text-texto-3">{rotulo}</Text>
+      <Text className="flex-1 text-right font-sans-medium text-ui text-texto" numberOfLines={1}>
         {valor || 'Não informado'}
       </Text>
     </View>
@@ -47,11 +47,11 @@ function LinhaAcao({ rotulo, aoTocar }: { rotulo: string; aoTocar: () => void })
     <Pressable
       onPress={aoTocar}
       accessibilityRole="button"
-      className="flex-row items-center justify-between border-b border-divider py-[19px]"
+      className="flex-row items-center justify-between border-b border-borda/70 py-[18px]"
       style={({ pressed }) => (pressed ? { opacity: 0.6 } : null)}
     >
-      <Text className="font-sans text-body-lg text-text-body">{rotulo}</Text>
-      <Text className="font-sans text-icon-sm text-nav-arrow">›</Text>
+      <Text className="font-sans-medium text-ui text-texto">{rotulo}</Text>
+      <Text className="font-sans text-ds-24 text-texto-3">›</Text>
     </Pressable>
   );
 }
@@ -75,13 +75,13 @@ export default function Conta({ comVoltar = false }: { comVoltar?: boolean }) {
         <View className="flex-row items-center gap-5">
           <AvatarIniciais nome={usuario?.nome} tamanho={58} />
           <View className="flex-1 gap-2">
-            <Titulo className="text-d-24" numberOfLines={2}>
+            <Titulo className="text-ds-30" numberOfLines={2}>
               {usuario?.nome ?? ''}
             </Titulo>
-            <LabelCaps papel="micro" className="tracking-button text-text-muted">
+            <Text className="font-sans text-ui-sm text-texto-3">
               {PAPEL[usuario?.role ?? ''] ?? ''}
-              {desde ? ` · DESDE ${desde}` : ''}
-            </LabelCaps>
+              {desde ? ` desde ${desde.toLowerCase()}` : ''}
+            </Text>
           </View>
         </View>
 
@@ -100,15 +100,15 @@ export default function Conta({ comVoltar = false }: { comVoltar?: boolean }) {
         </LabelCaps>
         <View className="mt-[6px]">
           <PreferenciaLembrete />
-          <View className="flex-row items-center justify-between border-b border-divider py-[19px]">
-            <Text className="font-sans text-body-lg text-text-body">Tema escuro</Text>
+          <View className="flex-row items-center justify-between border-b border-borda/70 py-[18px]">
+            <Text className="font-sans-medium text-ui text-texto">Tema escuro</Text>
             <Interruptor
               rotulo="Tema escuro"
               ligado={tema === 'dark'}
               aoMudar={() => alternarTema()}
             />
           </View>
-          <Text className="mt-3 font-sans text-help text-ink/38">
+          <Text className="mt-3 font-sans text-ui-sm text-texto-3">
             {preferencia === 'sistema'
               ? 'Seguindo a aparência do aparelho.'
               : 'Escolha manual. O app deixa de seguir a aparência do aparelho.'}

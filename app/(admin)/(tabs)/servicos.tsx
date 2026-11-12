@@ -135,7 +135,7 @@ export default function GestaoDeServicos() {
     >
       <View className="pt-10">
         <View className="flex-row items-end justify-between">
-          <Titulo className="text-d-29">Serviços</Titulo>
+          <Titulo className="text-ds-38">Serviços</Titulo>
           <Botao
             variante="fantasmaCompacto"
             titulo="Novo serviço"
@@ -178,7 +178,12 @@ export default function GestaoDeServicos() {
                     {s.ativo === false ? ' · INATIVO' : ''}
                   </LabelCaps>
                 </View>
-                <AcaoLinha titulo="Editar" onPress={() => abrirEdicao(s)} className="opacity-100" />
+                <AcaoLinha
+                  titulo="Editar"
+                  accessibilityLabel={`Editar ${s.nome ?? 'serviço'}`}
+                  onPress={() => abrirEdicao(s)}
+                  className="opacity-100"
+                />
               </View>
             ))}
           </View>
@@ -265,7 +270,7 @@ export default function GestaoDeServicos() {
 
                 <Botao
                   className="mt-8"
-                  titulo={form.id ? 'SALVAR' : 'CADASTRAR'}
+                  titulo={form.id ? 'Salvar' : 'Cadastrar'}
                   carregando={salvar.isPending}
                   onPress={enviar}
                 />
