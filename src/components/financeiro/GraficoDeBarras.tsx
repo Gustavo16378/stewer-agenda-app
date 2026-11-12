@@ -31,8 +31,11 @@ export function GraficoDeBarras({ barras }: { barras: Barra[] }) {
   const maximo = Math.max(1, ...barras.map((b) => b.faturado + b.aReceber));
   const espaco = largura / Math.max(1, barras.length);
   const larguraBarra = Math.max(3, Math.min(36, espaco * 0.62));
-  // poucos rotulos quando ha muitas barras (dias de um mes): um a cada N
-  const passoRotulo = Math.ceil(barras.length / 12);
+  // poucos rotulos quando ha muitas barras (dias de um mes): um a cada N, de modo que
+  // cada rotulo tenha uns 30px so dele e apareca inteiro
+  const LARGURA_ROTULO = 30;
+  const cabem = Math.max(1, Math.floor(largura / LARGURA_ROTULO));
+  const passoRotulo = Math.max(1, Math.ceil(barras.length / cabem));
   const melhor = barras.reduce((m, b, i) => (b.faturado > (barras[m]?.faturado ?? -1) ? i : m), 0);
   const total = barras.reduce((s, b) => s + b.faturado, 0);
   const detalhe = escolhida !== null ? barras[escolhida] : null;
@@ -106,17 +109,23 @@ export function GraficoDeBarras({ barras }: { barras: Barra[] }) {
           ))}
         </View>
       </View>
-      <View className="mt-2 flex-row">
-        {barras.map((b, i) => (
-          <Text
-            key={i}
-            style={{ width: espaco }}
-            className="text-center font-sans text-ui-xs text-texto-3"
-            numberOfLines={1}
-          >
-            {i % passoRotulo === 0 ? b.rotulo : ''}
-          </Text>
-        ))}
+      <View className="mt-2" style={{ height: 18 }}>
+        {barras.map((b, i) =>
+          i % passoRotulo === 0 ? (
+            <Text
+              key={i}
+              style={{
+                position: 'absolute',
+                width: LARGURA_ROTULO + 10,
+                left: espaco * i + espaco / 2 - (LARGURA_ROTULO + 10) / 2,
+              }}
+              className="text-center font-sans text-ui-xs text-texto-3"
+              numberOfLines={1}
+            >
+              {b.rotulo}
+            </Text>
+          ) : null
+        )}
       </View>
       <View className="mt-3 min-h-[44px] flex-row items-center gap-4">
         {detalhe ? (
