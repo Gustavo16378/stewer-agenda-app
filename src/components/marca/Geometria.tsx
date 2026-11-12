@@ -196,3 +196,14 @@ export const MARCAS_RETRATO: MarcasDoRosto = {
   queixo: 71,
   meiaLargura: 0.24,
 };
+
+/** O recorte de estudio (stewer-busto.jpg), fundo claro: medido no proprio arquivo. */
+export const MARCAS_BUSTO: MarcasDoRosto = {
+  proporcao: 600 / 750,
+  eixo: 50.8,
+  cabelo: 19.5,
+  sobrancelha: 27,
+  nariz: 37.5,
+  queixo: 47.5,
+  meiaLargura: 0.2,
+};

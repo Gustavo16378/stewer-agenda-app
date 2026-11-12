@@ -27,7 +27,7 @@ import type { Agendamento, Servico } from '@/api/types';
 import { useAuth } from '@/auth/auth-context';
 import { BotaoAtelie, Paragrafo, TituloSecao } from '@/components/atelie/base';
 import { MapaDoAtelie } from '@/components/atelie/MapaDoAtelie';
-import { GeometriaDoRosto, MARCAS_RETRATO } from '@/components/marca/Geometria';
+import { GeometriaDoRosto, MARCAS_BUSTO, MARCAS_RETRATO } from '@/components/marca/Geometria';
 import { LogoStewer } from '@/components/marca/Logo';
 import { FOTOS, LEMA, LOCAL, PORTFOLIO, SOBRE } from '@/content/atelie';
 import {
@@ -39,6 +39,7 @@ import {
 } from '@/lib/datetime';
 import { formatCentavos, formatDuracao } from '@/lib/money';
 import { LARGURA_CONTEUDO, useLayoutLargo } from '@/lib/responsivo';
+import { useTema } from '@/theme/theme-context';
 
 function proximoDaLista(lista: Agendamento[] | undefined): Agendamento | null {
   if (!lista?.length) return null;
@@ -64,6 +65,7 @@ function quantoFalta(iso: string | undefined): string {
 }
 
 function Heroi({ nome }: { nome: string }) {
+  const { tema } = useTema();
   const { width } = useWindowDimensions();
   const largo = useLayoutLargo();
   const insets = useSafeAreaInsets();
@@ -91,7 +93,12 @@ function Heroi({ nome }: { nome: string }) {
   // a moldura de latao deslocada, como uma prova de estudio na parede.
   if (largo) {
     const areaUtil = width - 232;
-    const lado = Math.min(440, Math.round(areaUtil * 0.38));
+    const alto = Math.min(500, Math.round(areaUtil * 0.42));
+    const largoFoto = Math.round(alto * 0.8);
+    // no claro, o retrato de estudio de fundo cinza conversa com o papel; no escuro, o
+    // retrato de fundo preto
+    const foto = tema === 'dark' ? FOTOS.retrato : FOTOS.busto;
+    const marcas = tema === 'dark' ? MARCAS_RETRATO : MARCAS_BUSTO;
     return (
       <View className="bg-fundo px-12 pb-6 pt-12">
         <View
@@ -107,21 +114,24 @@ function Heroi({ nome }: { nome: string }) {
             </Text>
             <Text className="mt-4 font-display-italic text-ds-24 text-latao">{LEMA}</Text>
           </View>
-          <View style={{ width: lado + 16, height: lado + 16 }}>
+          <View style={{ width: largoFoto + 16, height: alto + 16 }}>
             {/* a moldura de latao, deslocada para baixo e para a direita */}
             <View
               className="absolute border border-latao/60"
-              style={{ left: 16, top: 16, width: lado, height: lado }}
+              style={{ left: 16, top: 16, width: largoFoto, height: alto }}
             />
-            <View style={{ width: lado, height: lado }} className="overflow-hidden bg-[#0c0c0c]">
+            <View
+              style={{ width: largoFoto, height: alto }}
+              className="overflow-hidden bg-superficie"
+            >
               <Image
-                source={FOTOS.retrato.fonte}
-                accessibilityLabel={FOTOS.retrato.descricao}
+                source={foto.fonte}
+                accessibilityLabel={foto.descricao}
                 contentFit="cover"
                 style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
                 transition={300}
               />
-              <GeometriaDoRosto marcas={MARCAS_RETRATO} atraso={300} />
+              <GeometriaDoRosto marcas={marcas} atraso={300} />
             </View>
           </View>
         </View>

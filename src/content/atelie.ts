@@ -23,6 +23,12 @@ export const FOTOS = {
     descricao: 'Retrato de Stewer Gabriel',
     proporcao: 1,
   },
+  /** Recorte do retrato de estudio (fundo cinza claro): o heroi no tema claro. */
+  busto: {
+    fonte: require('../../assets/images/atelie/stewer-busto.jpg'),
+    descricao: 'Retrato de Stewer Gabriel no estúdio',
+    proporcao: 600 / 750,
+  },
   perfil: {
     fonte: require('../../assets/images/atelie/stewer-perfil.jpg'),
     descricao: 'Stewer Gabriel de perfil',
