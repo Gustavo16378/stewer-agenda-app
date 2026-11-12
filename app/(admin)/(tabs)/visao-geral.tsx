@@ -28,6 +28,7 @@
  * profissional. Sem ela, quem entra como administrador num aparelho compartilhado
  * fica administrador ate o token vencer.
  */
+import { useRouter } from 'expo-router';
 import { useMemo } from 'react';
 import { RefreshControl, Text, View } from 'react-native';
 
@@ -38,7 +39,6 @@ import {
   useTodosClientes,
 } from '@/api/hooks';
 import type { Agendamento } from '@/api/types';
-import { useAuth } from '@/auth/auth-context';
 import { AcaoLinha } from '@/components/ui/botao';
 import { Carregando, EstadoErro } from '@/components/ui/estados';
 import { TelaRolavel } from '@/components/ui/tela';
@@ -63,7 +63,7 @@ const LETRAS = ['S', 'T', 'Q', 'Q', 'S', 'S', 'D']; // segunda..domingo, como o 
 const conta = (a: Agendamento) => a.status === 'AGENDADO' || a.status === 'CONCLUIDO';
 
 export default function VisaoGeral() {
-  const { sair } = useAuth();
+  const router = useRouter();
   const hoje = hojeCalendarDate();
   const semana = useMemo(() => semanaDe(hoje), [hoje]);
   const agora = new Date();
@@ -141,7 +141,7 @@ export default function VisaoGeral() {
             desenhou saida para este papel, e o ADMIN nao tem aba de perfil. */}
         <View className="flex-row items-center justify-between">
           <LabelCaps papel="tela">VISÃO GERAL</LabelCaps>
-          <AcaoLinha titulo="SAIR" onPress={() => void sair()} />
+          <AcaoLinha titulo="CONTA" onPress={() => router.push('/conta' as never)} />
         </View>
         <Titulo className="mt-3 text-d-29">Esta semana</Titulo>
         <LabelCaps papel="meta" className="mt-[14px]">

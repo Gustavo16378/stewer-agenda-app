@@ -53,6 +53,8 @@ interface AuthContextValue {
     senha: string;
     telefone?: string;
   }) => Promise<Usuario>;
+  /** Corrige nome, e-mail e telefone; a API devolve token novo, que substitui o atual. */
+  atualizarPerfil: (dados: { nome: string; email: string; telefone?: string }) => Promise<Usuario>;
   sair: () => Promise<void>;
 }
 
@@ -162,7 +164,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [aplicarSessao]);
 
   const guardarToken = useCallback(
-    async (resposta: TokenResponse): Promise<Usuario> => {
+    async (resposta: TokenResponse, mesmaPessoa = false): Promise<Usuario> => {
       const token = resposta.token;
       const dono = resposta.usuario;
       if (!token || !dono) {
@@ -178,7 +180,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await gravarSessao(sessao);
       aplicarSessao(sessao);
       // o cache do usuario anterior nao vale para o novo
-      queryClient.clear();
+      if (!mesmaPessoa) queryClient.clear();
       setUsuario(dono);
       setStatus('autenticado');
       return dono;
@@ -217,6 +219,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [guardarToken]
   );
 
+  const atualizarPerfil = useCallback(
+    async (dados: { nome: string; email: string; telefone?: string }) => {
+      const resposta = await desembrulha(
+        api.PUT('/auth/eu', {
+          body: { nome: dados.nome, email: dados.email, telefone: dados.telefone || undefined },
+        })
+      );
+      return guardarToken(resposta, true);
+    },
+    [guardarToken]
+  );
+
   const value = useMemo<AuthContextValue>(
     () => ({
       status,
@@ -224,9 +238,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       role: usuario?.role ?? null,
       entrar,
       registrar,
+      atualizarPerfil,
       sair,
     }),
-    [status, usuario, entrar, registrar, sair]
+    [status, usuario, entrar, registrar, atualizarPerfil, sair]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
@@ -246,7 +261,7 @@ export function rotaInicialDoPapel(role: Role | null | undefined): string {
     case 'PROFISSIONAL':
       return '/(profissional)/(tabs)/agenda';
     case 'ADMIN':
-      return '/(admin)/(tabs)/visao-geral';
+      return '/(admin)/(tabs)/agenda';
     default:
       return '/(auth)/entrar';
   }

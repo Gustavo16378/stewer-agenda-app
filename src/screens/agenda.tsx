@@ -1,5 +1,8 @@
 /**
- * [10 Agenda do dia] — tab AGENDA do PROFISSIONAL.
+ * [10 Agenda do dia] — tab AGENDA do PROFISSIONAL e do ADMIN que tambem atende.
+ *
+ * O ADMIN ve a agenda da propria ficha de profissional. Sem ficha, a tela explica onde
+ * criar em vez de mostrar uma agenda vazia que parece "sem clientes".
  *
  * Layout literal do frame 10: `padding:40px 28px 0`; eyebrow "AGENDA · HOJE" + titulo
  * Playfair 27 ("Terça, 1 de setembro") a esquerda, setas ‹ › (15px) a direita; linha
@@ -22,8 +25,8 @@
  *   TODO(API): "PRIMEIRA VISITA" exigiria um `GET /clientes/{id}` por atendimento ou um
  *   campo `primeiraVisita: boolean` no proprio `Agendamento`.
  *
- * DESVIO: o design nao deu ao profissional nenhuma tab de perfil nem saida. A acao SAIR
- * mora aqui, discreta, no cabecalho — senao o profissional fica preso no app.
+ * DESVIO: o design nao deu a equipe nenhuma tab de perfil. A acao CONTA (dados, senha,
+ * tema, sair) mora aqui, discreta, no cabecalho.
  */
 import { useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
@@ -83,12 +86,14 @@ function montarTimeline(agenda: Agendamento[]): Bloco[] {
 
 export default function AgendaDoDia() {
   const router = useRouter();
-  const { sair } = useAuth();
+  const { role } = useAuth();
   const semear = useSemearAgendamento();
   const [data, setData] = useState<CalendarDate>(() => hojeCalendarDate());
 
-  const agenda = useAgendaDoDia(data);
-  const { profissional } = useMeuProfissional();
+  const { profissional, isLoading: carregandoFicha } = useMeuProfissional();
+  // PROFISSIONAL: a API usa a ficha do token. ADMIN: manda a propria ficha.
+  const agenda = useAgendaDoDia(data, role === 'ADMIN' ? profissional?.id : undefined);
+  const semFicha = role === 'ADMIN' && !carregandoFicha && !profissional;
   const grade = useDisponibilidade(profissional?.id);
 
   const blocos = useMemo(() => montarTimeline(agenda.data ?? []), [agenda.data]);
@@ -135,7 +140,7 @@ export default function AgendaDoDia() {
             nao desenhou saida para este papel; ver cabecalho do arquivo) */}
         <View className="flex-row items-center justify-between">
           <LabelCaps papel="tela">{hoje ? 'AGENDA · HOJE' : 'AGENDA'}</LabelCaps>
-          <AcaoLinha titulo="SAIR" onPress={() => void sair()} />
+          <AcaoLinha titulo="CONTA" onPress={() => router.push('/conta' as never)} />
         </View>
         <View className="flex-row items-end justify-between">
           <View className="flex-1 pr-3">
@@ -168,7 +173,13 @@ export default function AgendaDoDia() {
           {faixaDoDia ? ` · ${faixaDoDia}` : ''}
         </LabelCaps>
 
-        {agenda.isLoading ? (
+        {semFicha ? (
+          <EstadoVazio
+            className="mt-7"
+            titulo="Você ainda não atende."
+            descricao="Para ter agenda, crie a sua ficha em EQUIPE, em ADICIONAR PROFISSIONAL."
+          />
+        ) : agenda.isLoading || carregandoFicha ? (
           <Carregando className="mt-7" />
         ) : agenda.error ? (
           <EstadoErro

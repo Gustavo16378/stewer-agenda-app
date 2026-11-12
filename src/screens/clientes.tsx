@@ -1,5 +1,5 @@
 /**
- * [13 Lista de clientes] — tab CLIENTES do PROFISSIONAL.
+ * [13 Lista de clientes] — tab CLIENTES do PROFISSIONAL e do ADMIN.
  *
  * Layout literal do frame 13: `padding:40px 28px 0`; titulo Playfair 29 "Clientes" com
  * "48 ATIVOS" alinhado embaixo a direita (9px .2em ink@.45); caixa de busca (contorno

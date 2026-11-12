@@ -1,10 +1,9 @@
 /**
- * [15 Dashboard] — o ADMIN precisa conseguir sair da conta.
+ * [15 Dashboard] — o ADMIN precisa chegar na propria conta (e dela, sair).
  *
- * O CLIENTE sai pelo perfil e o PROFISSIONAL pelo cabecalho da agenda. O ADMIN
- * nao tinha caminho nenhum: `grep -rn "sair()" app src` so achava aqueles dois.
- * Num aparelho compartilhado do estudio, quem entrasse como administrador ficava
- * administrador ate o token vencer, oito horas depois.
+ * Num aparelho compartilhado do estudio, quem entrasse como administrador sem caminho
+ * de saida ficava administrador ate o token vencer, oito horas depois. A acao CONTA do
+ * cabecalho leva a tela de conta, que tem SAIR DA CONTA.
  */
 import { fireEvent, render, waitFor } from '@testing-library/react-native';
 import React from 'react';
@@ -13,6 +12,11 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import VisaoGeral from '../visao-geral';
 
 const mockSair = jest.fn();
+const mockPush = jest.fn();
+
+jest.mock('expo-router', () => ({
+  useRouter: () => ({ push: mockPush, replace: jest.fn(), back: jest.fn() }),
+}));
 
 jest.mock('@/auth/auth-context', () => ({
   useAuth: () => ({
@@ -63,19 +67,22 @@ function renderizarTela() {
   );
 }
 
-beforeEach(() => mockSair.mockClear());
+beforeEach(() => {
+  mockSair.mockClear();
+  mockPush.mockClear();
+});
 
-describe('VisaoGeral — saida de conta do ADMIN', () => {
-  it('mostra a acao SAIR', async () => {
+describe('VisaoGeral — caminho para a conta do ADMIN', () => {
+  it('mostra a acao CONTA', async () => {
     const tela = await renderizarTela();
-    expect(tela.getByText('SAIR')).toBeTruthy();
+    expect(tela.getByText('CONTA')).toBeTruthy();
   });
 
-  it('tocar em SAIR encerra a sessao', async () => {
+  it('tocar em CONTA abre a tela de conta', async () => {
     const tela = await renderizarTela();
 
-    fireEvent.press(tela.getByText('SAIR'));
+    fireEvent.press(tela.getByText('CONTA'));
 
-    await waitFor(() => expect(mockSair).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(mockPush).toHaveBeenCalledWith('/conta'));
   });
 });
