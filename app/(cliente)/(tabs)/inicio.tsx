@@ -86,36 +86,44 @@ function Heroi({ nome }: { nome: string }) {
     </>
   );
 
-  // Em tela larga o heroi vira uma faixa de carvao: o retrato com a geometria a direita,
-  // o nome a esquerda, com espaco para respirar. No celular, o retrato e a tela inteira.
+  // Em tela larga o heroi acompanha o tema da tela (papel no claro, carvao no escuro):
+  // o nome grande a esquerda e o retrato emoldurado a direita, com a leitura do rosto e
+  // a moldura de latao deslocada, como uma prova de estudio na parede.
   if (largo) {
     const areaUtil = width - 232;
-    const lado = Math.min(560, Math.round(areaUtil * 0.52));
+    const lado = Math.min(440, Math.round(areaUtil * 0.38));
     return (
-      <View style={{ height: lado }} className="flex-row overflow-hidden bg-[#0c0c0c]">
-        <View className="flex-1 justify-end px-12 pb-12">
-          {marca}
-          <View className="mb-6 h-px w-8 bg-latao" />
-          {saudacaoENome}
-          {/* latao claro fixo: o fundo do heroi e carvao nos dois temas */}
-          <Text className="mt-4 font-display-italic text-ds-20 text-[#C9A96A]">{LEMA}</Text>
-        </View>
-        <View style={{ width: lado, height: lado }}>
-          <Image
-            source={FOTOS.retrato.fonte}
-            accessibilityLabel={FOTOS.retrato.descricao}
-            contentFit="cover"
-            style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
-            transition={300}
-          />
-          <GeometriaDoRosto marcas={MARCAS_RETRATO} atraso={300} />
-          <LinearGradient
-            colors={['rgba(12,12,12,1)', 'rgba(12,12,12,0)']}
-            start={{ x: 0, y: 0.5 }}
-            end={{ x: 0.3, y: 0.5 }}
-            style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
-            pointerEvents="none"
-          />
+      <View className="bg-fundo px-12 pb-6 pt-12">
+        <View
+          className="flex-row items-center gap-12"
+          style={{ width: '100%', maxWidth: 1040, alignSelf: 'center' }}
+        >
+          <View className="flex-1">
+            {/* a marca ja esta no menu lateral; aqui so o traco de latao */}
+            <View className="mb-6 h-px w-8 bg-latao" />
+            <Text className="font-sans text-ui-lg text-texto-2">{saudacao()},</Text>
+            <Text className="font-display text-[64px] leading-[70px] text-texto" numberOfLines={1}>
+              {nome}.
+            </Text>
+            <Text className="mt-4 font-display-italic text-ds-24 text-latao">{LEMA}</Text>
+          </View>
+          <View style={{ width: lado + 16, height: lado + 16 }}>
+            {/* a moldura de latao, deslocada para baixo e para a direita */}
+            <View
+              className="absolute border border-latao/60"
+              style={{ left: 16, top: 16, width: lado, height: lado }}
+            />
+            <View style={{ width: lado, height: lado }} className="overflow-hidden bg-[#0c0c0c]">
+              <Image
+                source={FOTOS.retrato.fonte}
+                accessibilityLabel={FOTOS.retrato.descricao}
+                contentFit="cover"
+                style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
+                transition={300}
+              />
+              <GeometriaDoRosto marcas={MARCAS_RETRATO} atraso={300} />
+            </View>
+          </View>
         </View>
       </View>
     );
