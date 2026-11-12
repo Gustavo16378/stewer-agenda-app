@@ -49,7 +49,7 @@ if (existsSync(ORIGEM)) {
 // 2. Previa do link. Sem isto o WhatsApp mostrava so o endereco, sem imagem nem texto:
 // o export do Expo sai com <title> vazio e lang="en". A imagem e gerada por
 // scripts/make-og-image.py e vai junto em public/og.jpg.
-const SITE = (process.env.SITE_URL ?? 'https://stewer-agenda-app.pages.dev').replace(/\/$/, '');
+const SITE = (process.env.SITE_URL ?? 'https://agenda.stewergabriel.com').replace(/\/$/, '');
 const TITULO = 'Stewer Gabriel | Agende seu horário';
 const DESCRICAO =
   'Visagismo, corte e consultoria de imagem masculina com Stewer Gabriel, em Palmas. Escolha o serviço, o dia e o horário em menos de um minuto.';
