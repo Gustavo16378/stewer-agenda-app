@@ -34,6 +34,8 @@ import {
   useSalvarProfissional,
 } from '@/api/hooks';
 import type { Profissional } from '@/api/types';
+import { useRetratoDoProfissional } from '@/components/atelie/retrato';
+import { Administradores } from '@/components/equipe/Administradores';
 import { AcaoLinha, Botao } from '@/components/ui/botao';
 import { Campo } from '@/components/ui/campo';
 import { Carregando, EstadoErro } from '@/components/ui/estados';
@@ -42,7 +44,6 @@ import { Interruptor } from '@/components/ui/interruptor';
 import { Divisor } from '@/components/ui/superficies';
 import { TelaRolavel } from '@/components/ui/tela';
 import { LabelCaps, Titulo } from '@/components/ui/texto';
-import { fotoDoProfissional } from '@/content/atelie';
 import { cn } from '@/lib/cn';
 import { confirmar } from '@/lib/confirmar';
 import {
@@ -271,13 +272,7 @@ export default function GestaoDeEquipe() {
               )}
             >
               <View className="flex-row items-center gap-[18px]">
-                <SlotImagem
-                  uri={p.fotoUrl}
-                  fonte={fotoDoProfissional(p)}
-                  altura={64}
-                  className="w-16 rounded-token"
-                  acessibilidade={`Foto de ${p.nome ?? 'profissional'}`}
-                />
+                <RetratoNaEquipe profissional={p} />
                 <View className="flex-1 gap-2">
                   <Titulo className="text-d-20" numberOfLines={1}>
                     {p.nome}
@@ -325,6 +320,8 @@ export default function GestaoDeEquipe() {
         <Text className="mt-5 text-center font-sans text-help leading-[18.7px] text-ink/38">
           O convite dá acesso ao painel do profissional,{'\n'}com agenda e clientes próprios.
         </Text>
+
+        <Administradores />
       </View>
 
       <Modal visible={!!form} transparent animationType="fade" onRequestClose={() => setForm(null)}>
@@ -429,5 +426,18 @@ export default function GestaoDeEquipe() {
         </View>
       </Modal>
     </TelaRolavel>
+  );
+}
+
+function RetratoNaEquipe({ profissional }: { profissional: Profissional }) {
+  const retrato = useRetratoDoProfissional(profissional);
+  return (
+    <SlotImagem
+      uri={profissional.fotoUrl}
+      fonte={retrato}
+      altura={64}
+      className="w-16 rounded-token"
+      acessibilidade={`Foto de ${profissional.nome ?? 'profissional'}`}
+    />
   );
 }

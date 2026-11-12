@@ -59,6 +59,8 @@ interface AuthContextValue {
   redefinirSenha: (dados: { email: string; codigo: string; novaSenha: string }) => Promise<Usuario>;
   /** Liga ou desliga o lembrete por e-mail e atualiza o usuario em memoria. */
   salvarPreferencias: (dados: { lembreteEmail: boolean }) => Promise<Usuario>;
+  /** Troca a foto de perfil (JPEG em base64, ja reduzido) ou tira, com `null`. */
+  trocarFoto: (foto: { tipoConteudo: string; conteudoBase64: string } | null) => Promise<Usuario>;
   /** Corrige nome, e-mail e telefone; a API devolve token novo, que substitui o atual. */
   atualizarPerfil: (dados: { nome: string; email: string; telefone?: string }) => Promise<Usuario>;
   sair: () => Promise<void>;
@@ -142,6 +144,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const eu = await desembrulha(api.GET('/auth/eu'));
         if (cancelado) return;
+        if (guardada.usuario?.role && eu.role && eu.role !== guardada.usuario.role) {
+          // Ganhou ou perdeu acesso (admin, profissional) desde o login. O papel vai no
+          // token, e o token velho seria recusado na area nova: entra de novo e pronto.
+          await apagarSessao();
+          aplicarSessao(null);
+          setUsuario(null);
+          setStatus('deslogado');
+          return;
+        }
         setUsuario(eu);
         setStatus('autenticado');
         // o papel pode ter mudado desde o login; guarda a versao nova
@@ -270,6 +281,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [aplicarSessao]
   );
 
+  const trocarFoto = useCallback(
+    async (foto: { tipoConteudo: string; conteudoBase64: string } | null) => {
+      const atualizado = await desembrulha(
+        foto ? api.PUT('/auth/eu/foto', { body: foto }) : api.DELETE('/auth/eu/foto')
+      );
+      const sessao = lerSessaoAtiva();
+      if (sessao) {
+        const nova = { ...sessao, usuario: atualizado };
+        await gravarSessao(nova);
+        aplicarSessao(nova);
+      }
+      setUsuario(atualizado);
+      return atualizado;
+    },
+    [aplicarSessao]
+  );
+
   const value = useMemo<AuthContextValue>(
     () => ({
       status,
@@ -279,10 +307,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       registrar,
       redefinirSenha,
       salvarPreferencias,
+      trocarFoto,
       atualizarPerfil,
       sair,
     }),
-    [status, usuario, entrar, registrar, redefinirSenha, salvarPreferencias, atualizarPerfil, sair]
+    [
+      status,
+      usuario,
+      entrar,
+      registrar,
+      redefinirSenha,
+      salvarPreferencias,
+      trocarFoto,
+      atualizarPerfil,
+      sair,
+    ]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

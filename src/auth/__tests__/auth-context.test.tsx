@@ -161,15 +161,29 @@ describe('restauracao ao abrir o app', () => {
     await sessionStore.gravarSessao({
       token: 'jwt-guardado',
       expiraEm: umaHora(),
+      usuario: { ...USUARIO, nome: 'Nome antigo' },
+    });
+    mockDesembrulha.mockResolvedValue({ ...USUARIO, nome: 'Nome novo' });
+
+    await montar();
+
+    await waitFor(async () =>
+      expect((await sessionStore.lerSessao())?.usuario?.nome).toBe('Nome novo')
+    );
+  });
+
+  it('papel mudou desde o login (ganhou acesso de admin): pede para entrar de novo', async () => {
+    await sessionStore.gravarSessao({
+      token: 'jwt-guardado',
+      expiraEm: umaHora(),
       usuario: { ...USUARIO, role: 'CLIENTE' as const },
     });
-    mockDesembrulha.mockResolvedValue({ ...USUARIO, role: 'PROFISSIONAL' as const });
+    mockDesembrulha.mockResolvedValue({ ...USUARIO, role: 'ADMIN' as const });
 
     const tela = await montar();
 
-    await waitFor(() =>
-      expect(tela.getByTestId('estado')).toHaveTextContent('autenticado|PROFISSIONAL')
-    );
+    await waitFor(() => expect(tela.getByTestId('estado')).toHaveTextContent('deslogado|-'));
+    expect(await sessionStore.lerSessao()).toBeNull();
   });
 });
 
