@@ -35,6 +35,8 @@ const MAPAS = {
 };
 /** Altura do recorte: o mapa e uma janela pequena, nao a tela inteira. */
 const ALTURA = { celular: 210, largo: 300 };
+const MAPA_W = 1600;
+const MAPA_H = 1000;
 const OURO = '#C9A96A';
 
 function Pulso() {
@@ -87,16 +89,18 @@ export function MapaDoAtelie() {
         style={({ pressed }) => (pressed ? { opacity: 0.92 } : null)}
       >
         <View style={{ height: largo ? ALTURA.largo : ALTURA.celular }}>
-          {/* tamanho natural, centralizado: os nomes das ruas no tamanho em que o mapa foi
-              desenhado, sem esticar a imagem e sem embaçar */}
-          <Image
-            source={MAPAS[tema]}
-            style={StyleSheet.absoluteFill}
-            contentFit="none"
-            contentPosition="center"
-            transition={250}
-            accessibilityLabel={`Mapa das ruas em volta do ${LOCAL.nome}, na 204 Sul`}
-          />
+          {/* Tamanho natural (1600x1000), centralizado e recortado pela janela: os nomes
+              das ruas ficam no tamanho em que o mapa foi desenhado, sem esticar nem amassar.
+              Medidas explicitas em vez de contentFit="none", que no navegador esticava. */}
+          <View style={estilos.mapa} pointerEvents="none">
+            <Image
+              source={MAPAS[tema]}
+              style={{ width: MAPA_W, height: MAPA_H }}
+              contentFit="fill"
+              transition={250}
+              accessibilityLabel={`Mapa das ruas em volta do ${LOCAL.nome}, na 204 Sul`}
+            />
+          </View>
           {/* escurece as bordas para o mapa assentar no fundo da tela */}
           <LinearGradient
             colors={
@@ -154,6 +158,15 @@ export function MapaDoAtelie() {
 
 const TAM = 34;
 const estilos = StyleSheet.create({
+  mapa: {
+    position: 'absolute',
+    left: '50%',
+    top: '50%',
+    width: MAPA_W,
+    height: MAPA_H,
+    marginLeft: -MAPA_W / 2,
+    marginTop: -MAPA_H / 2,
+  },
   // o centro do pino (a ponta de baixo do losango) cai no centro da imagem
   pino: {
     position: 'absolute',
