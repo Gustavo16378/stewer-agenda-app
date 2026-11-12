@@ -1,44 +1,200 @@
 name: CI
 
+# A esteira do app, em filas separadas para cada coisa aparecer com o proprio nome no PR:
+#
+#   qualidade ─┬─> build web ─┬─> E2E iphone
+#   unitarios ─┘   api (jar) ─┼─> E2E android
+#                             ├─> E2E desktop
+#                             └─> E2E safari (WebKit, o motor do iPhone)
+#
+# Os E2E sobem a stewer-agenda-api de verdade (perfil dev, com o seed) num PostgreSQL do
+# proprio runner e usam o app exatamente como ele vai para o Cloudflare Pages.
 on:
   push:
     branches: [main]
   pull_request:
     branches: [main]
+  workflow_dispatch:
+
+# um push novo no mesmo PR cancela a rodada anterior
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  # o app recusa subir sem esta variavel (src/api/config.ts); nos E2E ela e a API local
+  EXPO_PUBLIC_API_URL: http://localhost:8080
 
 jobs:
   qualidade:
-    name: Typecheck, lint e testes
+    name: Typecheck e lint
     runs-on: ubuntu-latest
-
-    # EXPO_PUBLIC_API_URL e lida em tempo de build por src/api/config.ts, que
-    # recusa subir sem ela. O valor aqui nao chama ninguem -- nenhum teste faz
-    # requisicao de verdade -- mas precisa existir para o bundle resolver.
-    env:
-      EXPO_PUBLIC_API_URL: http://localhost:8080
-
     steps:
       - uses: actions/checkout@v4
-
-      - name: Node
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: '22'
           cache: npm
-
-      - name: Instalar dependencias
-        # `npm ci` e nao `npm install`: respeita o package-lock e falha se ele
-        # estiver fora de sincronia com o package.json.
-        run: npm ci
-
+      # `npm ci` e nao `npm install`: falha se o lock estiver fora de sincronia
+      - run: npm ci
       - name: Typecheck
         run: npm run typecheck
-
-      - name: Lint
+      - name: Lint (ESLint + Prettier)
         run: npm run lint
 
-      - name: Testes
-        # O TZ dos workers e fixado em America/Sao_Paulo por jest.global-setup,
-        # entao os casos de borda de fuso valem igual aqui e na maquina de
-        # quem desenvolve -- um runner em UTC nao esconde regressao.
-        run: npm test -- --ci
+  unitarios:
+    name: Testes unitarios
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Jest com cobertura
+        # o fuso dos workers e travado em America/Sao_Paulo (jest.global-setup): os casos
+        # de borda de fuso valem igual aqui e na maquina de quem desenvolve
+        run: npm test -- --ci --coverage --coverageReporters=json-summary --coverageReporters=text-summary --coverageReporters=lcov
+      - name: Resumo da cobertura
+        if: always()
+        run: |
+          node -e '
+            const t = require("./coverage/coverage-summary.json").total;
+            const linha = (n, k) => `| ${n} | ${t[k].pct}% | ${t[k].covered}/${t[k].total} |`;
+            console.log(["### Cobertura dos testes unitarios", "", "| | % | cobertos |", "|---|---|---|",
+              linha("Linhas","lines"), linha("Funcoes","functions"), linha("Ramos","branches")].join("\n"));
+          ' >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cobertura
+          path: coverage/lcov-report
+          retention-days: 14
+
+  build-web:
+    name: Build web (export do Expo)
+    needs: [qualidade, unitarios]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Export web
+        run: npm run build
+      - name: Tamanho do bundle
+        run: |
+          echo "### Bundle web" >> "$GITHUB_STEP_SUMMARY"
+          du -sh dist | awk '{print "- dist inteiro: " $1}' >> "$GITHUB_STEP_SUMMARY"
+          du -ch dist/_expo/static/js/web/*.js | tail -1 | awk '{print "- JavaScript: " $1}' >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: web-dist
+          path: dist
+          retention-days: 3
+
+  api:
+    name: API para os E2E (jar, perfil dev)
+    runs-on: ubuntu-latest
+    steps:
+      # a API e um repositorio publico irmao; os E2E usam a main dela
+      - uses: actions/checkout@v4
+        with:
+          repository: Gustavo16378/stewer-agenda-api
+          path: api
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: temurin
+          cache: maven
+          cache-dependency-path: api/pom.xml
+      - name: Empacota com o perfil dev
+        # o perfil dev e resolvido em tempo de build: e ele que inclui o seed
+        # (db/seed) nas migrations e liga o mailer de mentira
+        working-directory: api
+        run: ./mvnw -B -q package -DskipTests -Dquarkus.profile=dev
+      - uses: actions/upload-artifact@v4
+        with:
+          name: api-jar
+          path: api/target/quarkus-app
+          retention-days: 3
+
+  e2e:
+    name: E2E ${{ matrix.aparelho }}
+    needs: [build-web, api]
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        aparelho: [iphone, android, desktop, safari]
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: stewer_agenda
+          POSTGRES_USER: stewer
+          POSTGRES_PASSWORD: stewer
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U stewer -d stewer_agenda"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: temurin
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          name: web-dist
+          path: dist
+      - uses: actions/download-artifact@v4
+        with:
+          name: api-jar
+          path: api
+      - name: Sobe a API
+        env:
+          QUARKUS_PROFILE: dev
+          CORS_HABILITADO: 'true'
+          CORS_ORIGINS: http://localhost:4173
+        run: |
+          nohup java -jar api/quarkus-run.jar > api.log 2>&1 &
+          for i in $(seq 1 60); do
+            curl -sf http://localhost:8080/ping && exit 0
+            sleep 2
+          done
+          cat api.log
+          exit 1
+      - name: Navegador
+        run: npx playwright install --with-deps ${{ matrix.aparelho == 'safari' && 'webkit' || 'chromium' }}
+      - name: Jornadas
+        env:
+          E2E_WEBKIT: ${{ matrix.aparelho == 'safari' && '1' || '' }}
+        run: npx playwright test --project=${{ matrix.aparelho }}
+      - name: Log da API
+        if: failure()
+        run: tail -200 api.log
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: e2e-${{ matrix.aparelho }}
+          # relatorio html com um print por passo, e o trace de quem falhou
+          path: |
+            e2e/relatorio
+            e2e/.resultados
+          retention-days: 14
