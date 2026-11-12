@@ -201,3 +201,64 @@ jobs:
             e2e/relatorio
             e2e/.resultados
           retention-days: 14
+
+  lighthouse:
+    name: Lighthouse ${{ matrix.tela }}
+    needs: [build-web, api]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        tela: [celular, computador]
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: stewer_agenda
+          POSTGRES_USER: stewer
+          POSTGRES_PASSWORD: stewer
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U stewer -d stewer_agenda"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+      - uses: actions/setup-java@v5
+        with:
+          java-version: '21'
+          distribution: temurin
+      - uses: actions/download-artifact@v5
+        with:
+          name: web-dist
+          path: dist
+      - uses: actions/download-artifact@v5
+        with:
+          name: api-jar
+          path: api
+      - name: Sobe a API e o app
+        env:
+          QUARKUS_PROFILE: dev
+          CORS_HABILITADO: 'true'
+          CORS_ORIGINS: http://localhost:4173
+        run: |
+          export JWT_SECRET="$(openssl rand -base64 48)"
+          nohup java -jar api/quarkus-run.jar > api.log 2>&1 &
+          nohup node e2e/servidor.mjs dist 4173 > web.log 2>&1 &
+          for i in $(seq 1 60); do
+            curl -sf http://localhost:8080/ping && curl -sf http://localhost:4173/entrar >/dev/null && exit 0
+            sleep 2
+          done
+          cat api.log web.log
+          exit 1
+      - uses: treosh/lighthouse-ci-action@v12
+        with:
+          configPath: lighthouse/${{ matrix.tela }}.json
+          uploadArtifacts: true
+          temporaryPublicStorage: true
