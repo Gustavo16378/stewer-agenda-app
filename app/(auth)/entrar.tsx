@@ -14,7 +14,8 @@ import { Text, View } from 'react-native';
 
 import { ApiError } from '@/api/errors';
 import { rotaInicialDoPapel, useAuth } from '@/auth/auth-context';
-import { Botao } from '@/components/ui/botao';
+import { AvisoLegal } from '@/components/ui/aviso-legal';
+import { AcaoLinha, Botao } from '@/components/ui/botao';
 import { Campo } from '@/components/ui/campo';
 import { Losango } from '@/components/ui/losango';
 import { TelaRolavel } from '@/components/ui/tela';
@@ -102,14 +103,19 @@ export default function Entrar() {
         onPress={() => void aoEntrar()}
       />
 
-      <Text className="mt-[18px] text-center font-sans text-help text-ink/42">
-        Use o e-mail e a senha do seu cadastro no ateliê.
-      </Text>
+      <View className="mt-[18px] items-center">
+        <AcaoLinha
+          titulo="ESQUECI MINHA SENHA"
+          onPress={() =>
+            router.push({
+              pathname: '/(auth)/esqueci-senha',
+              params: email.trim() ? { email: email.trim() } : {},
+            } as never)
+          }
+        />
+      </View>
 
-      <Text className="mt-10 text-center font-sans text-help leading-[18.7px] text-ink/38">
-        Ao continuar, você aceita os <Text className="text-ink/60">Termos de uso</Text> e a{' '}
-        <Text className="text-ink/60">Política de privacidade</Text>.
-      </Text>
+      <AvisoLegal />
     </TelaRolavel>
   );
 }

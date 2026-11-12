@@ -27,6 +27,7 @@ import {
   definirSessaoAtiva,
   desembrulha,
   desembrulhaCriado,
+  lerSessaoAtiva,
 } from '@/api/client';
 import { TENANT_SLUG } from '@/api/config';
 import { comoApiError } from '@/api/errors';
@@ -53,6 +54,10 @@ interface AuthContextValue {
     senha: string;
     telefone?: string;
   }) => Promise<Usuario>;
+  /** Troca a senha com o codigo do e-mail; a API ja devolve a sessao aberta. */
+  redefinirSenha: (dados: { email: string; codigo: string; novaSenha: string }) => Promise<Usuario>;
+  /** Liga ou desliga o lembrete por e-mail e atualiza o usuario em memoria. */
+  salvarPreferencias: (dados: { lembreteEmail: boolean }) => Promise<Usuario>;
   /** Corrige nome, e-mail e telefone; a API devolve token novo, que substitui o atual. */
   atualizarPerfil: (dados: { nome: string; email: string; telefone?: string }) => Promise<Usuario>;
   sair: () => Promise<void>;
@@ -231,6 +236,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [guardarToken]
   );
 
+  const redefinirSenha = useCallback(
+    async (dados: { email: string; codigo: string; novaSenha: string }) => {
+      const resposta = await desembrulha(
+        api.POST('/auth/senha/redefinir', {
+          body: { ...dados, ...(TENANT_SLUG ? { tenantSlug: TENANT_SLUG } : {}) },
+        })
+      );
+      return guardarToken(resposta);
+    },
+    [guardarToken]
+  );
+
+  const salvarPreferencias = useCallback(
+    async (dados: { lembreteEmail: boolean }) => {
+      const atualizado = await desembrulha(api.PUT('/auth/eu/preferencias', { body: dados }));
+      const sessao = lerSessaoAtiva();
+      if (sessao) {
+        const nova = { ...sessao, usuario: atualizado };
+        await gravarSessao(nova);
+        aplicarSessao(nova);
+      }
+      setUsuario(atualizado);
+      return atualizado;
+    },
+    [aplicarSessao]
+  );
+
   const value = useMemo<AuthContextValue>(
     () => ({
       status,
@@ -238,10 +270,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       role: usuario?.role ?? null,
       entrar,
       registrar,
+      redefinirSenha,
+      salvarPreferencias,
       atualizarPerfil,
       sair,
     }),
-    [status, usuario, entrar, registrar, atualizarPerfil, sair]
+    [status, usuario, entrar, registrar, redefinirSenha, salvarPreferencias, atualizarPerfil, sair]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
