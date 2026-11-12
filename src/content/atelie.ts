@@ -89,6 +89,9 @@ export const SOBRE = {
 
 export const LEMA = 'Masculinidade com propósito';
 
+/** O site dele: portfolio, cursos e a historia. O app nao repete; aponta para la. */
+export const SITE_DO_STEWER = 'https://stewergabriel.com';
+
 /**
  * Onde o Stewer atende hoje: o Conciso, o studio dele na 204 Sul. Mesmos dados que ele
  * mantem no painel do site (stewergabriel.com/admin, "Contatos e mapa"); mudando la,

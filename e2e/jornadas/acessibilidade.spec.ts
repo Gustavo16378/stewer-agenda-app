@@ -32,7 +32,7 @@ test('login e criar conta', async ({ page }) => {
 test('inicio e fluxo de agendamento', async ({ page, request }) => {
   const cliente = await novoCliente(request, 'Axe');
   await entrar(page, cliente.email, cliente.senha);
-  await expect(naTela(page, 'Quem é Stewer')).toBeVisible();
+  await expect(naTela(page, 'Onde atende')).toBeVisible();
   await auditar(page, 'inicio');
   await page.goto('/novo-agendamento/servico');
   await expect(naTela(page, 'O que vamos fazer?')).toBeVisible();

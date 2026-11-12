@@ -12,13 +12,24 @@ test('inicio conta quem e o Stewer e leva ate o studio dele', async ({ page, req
   await entrar(page, cliente.email, cliente.senha);
 
   await expect(page.getByRole('img', { name: 'Retrato de Stewer Gabriel' }).first()).toBeVisible();
-  await expect(naTela(page, 'Quem é Stewer')).toBeVisible();
-  await expect(naTela(page, 'O trabalho')).toBeVisible();
+  // o app nao repete o site: um convite leva para stewergabriel.com
+  await expect(
+    page.getByRole('link', { name: 'Conhecer o trabalho do Stewer no site' })
+  ).toBeVisible();
 
   const mapa = page.getByRole('link', { name: /Abrir Conciso no mapa/ });
   await mapa.scrollIntoViewIfNeeded();
   await expect(mapa).toBeVisible();
   await expect(naTela(page, /204 Sul, Alameda 10/)).toBeVisible();
+  // o mapa aparece no tamanho natural, sem esticar nem amassar
+  const imagem = page
+    .getByRole('img', { name: /Mapa das ruas/ })
+    .filter({ visible: true })
+    .first();
+  await expect(imagem).toBeVisible();
+  const caixa = (await imagem.boundingBox())!;
+  expect(Math.round(caixa.width)).toBe(1600);
+  expect(Math.round(caixa.height)).toBe(1000);
   await semRolagemLateral(page);
   await registrar(page, info, '01 onde atende');
 });

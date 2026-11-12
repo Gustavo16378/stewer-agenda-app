@@ -11,7 +11,6 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { useMemo, type ReactNode } from 'react';
 import {
-  FlatList,
   Linking,
   Pressable,
   RefreshControl,
@@ -29,7 +28,7 @@ import { BotaoAtelie, Paragrafo, TituloSecao } from '@/components/atelie/base';
 import { MapaDoAtelie } from '@/components/atelie/MapaDoAtelie';
 import { GeometriaDoRosto, MARCAS_BUSTO, MARCAS_RETRATO } from '@/components/marca/Geometria';
 import { LogoStewer } from '@/components/marca/Logo';
-import { FOTOS, LEMA, LOCAL, PORTFOLIO, SOBRE } from '@/content/atelie';
+import { FOTOS, LEMA, LOCAL, SITE_DO_STEWER } from '@/content/atelie';
 import {
   formatDiaSemanaDiaMes,
   formatHora,
@@ -255,15 +254,12 @@ function LinhaServico({ servico, aoEscolher }: { servico: Servico; aoEscolher: (
 export default function InicioCliente() {
   const router = useRouter();
   const { usuario } = useAuth();
-  const { width } = useWindowDimensions();
   const largo = useLayoutLargo();
   const semear = useSemearAgendamento();
 
   const futuros = useMeusAgendamentos('futuros');
   const servicos = useServicos(false);
   const proximo = useMemo(() => proximoDaLista(futuros.data), [futuros.data]);
-
-  const larguraFoto = largo ? 260 : Math.round(width * 0.64);
 
   function abrirDetalhe(item: Agendamento) {
     semear(item);
@@ -349,68 +345,31 @@ export default function InicioCliente() {
           ))}
         </View>
 
-        <TituloSecao className="mt-16">Quem é Stewer</TituloSecao>
-        <View className={largo ? 'mt-8 flex-row gap-10' : 'mt-8'}>
-          <View style={largo ? { width: 280 } : undefined} className="self-start">
-            {/* moldura deslocada em latao, a mesma do site */}
-            <View
-              className="absolute border border-latao/40"
-              style={{ top: 14, left: 14, right: -14, bottom: -14 }}
-            />
-            <Image
-              source={FOTOS.perfil.fonte}
-              accessibilityLabel={FOTOS.perfil.descricao}
-              contentFit="cover"
-              contentPosition="top"
-              style={{ width: largo ? 280 : width * 0.68, aspectRatio: 3 / 4 }}
-              transition={300}
-            />
-          </View>
-          <View className={largo ? 'flex-1' : 'mt-12'}>
-            <Text className="font-display text-ds-24 text-texto">{SOBRE.titulo}</Text>
-            {SOBRE.paragrafos.map((p) => (
-              <Paragrafo key={p} className="mt-4">
-                {p}
-              </Paragrafo>
-            ))}
-            <View className="mt-7 border-l-2 border-latao pl-5">
-              <Text className="font-display-italic text-ds-20 text-texto">{SOBRE.citacao}</Text>
-            </View>
-            <View className="mt-8 flex-row gap-10">
-              {SOBRE.numeros.map((n) => (
-                <View key={n.legenda}>
-                  <Text className="font-display text-ds-38 text-latao">{n.valor}</Text>
-                  <Text className="font-sans text-ui-sm text-texto-3">{n.legenda}</Text>
-                </View>
-              ))}
-            </View>
-          </View>
-        </View>
-
-        <TituloSecao className="mt-16">O trabalho</TituloSecao>
-      </View>
-
-      <FlatList
-        className="mt-6"
-        data={PORTFOLIO}
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        snapToInterval={larguraFoto + 12}
-        decelerationRate="fast"
-        contentContainerStyle={{ paddingHorizontal: 24, gap: 12 }}
-        keyExtractor={(f) => f.descricao}
-        renderItem={({ item }) => (
+        {/* O app agenda; quem e o Stewer e o trabalho dele ficam no site. Aqui so o
+            convite para conhecer, sem repetir o site. */}
+        <Pressable
+          onPress={() => void Linking.openURL(SITE_DO_STEWER)}
+          accessibilityRole="link"
+          accessibilityLabel="Conhecer o trabalho do Stewer no site"
+          className="mt-16 flex-row items-center gap-4 rounded-[3px] border border-borda bg-superficie p-4"
+          style={({ pressed }) => (pressed ? { opacity: 0.85 } : null)}
+        >
           <Image
-            source={item.fonte}
-            accessibilityLabel={item.descricao}
+            source={FOTOS.perfil.fonte}
+            accessibilityLabel={FOTOS.perfil.descricao}
             contentFit="cover"
-            style={{ width: larguraFoto, aspectRatio: 3 / 4, borderRadius: 3 }}
-            transition={300}
+            contentPosition="top"
+            style={{ width: 56, height: 56, borderRadius: 56 }}
           />
-        )}
-      />
+          <View className="flex-1">
+            <Text className="font-display text-ds-20 text-texto">Conheça o trabalho do Stewer</Text>
+            <Text className="font-sans text-ui-sm text-texto-3">
+              Portfólio, cursos e a história dele em stewergabriel.com
+            </Text>
+          </View>
+          <Text className="font-sans text-ds-24 text-latao">›</Text>
+        </Pressable>
 
-      <View className="px-6">
         <TituloSecao className="mt-16">Onde atende</TituloSecao>
         <View className="mt-6">
           <MapaDoAtelie />
