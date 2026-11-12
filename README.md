@@ -294,6 +294,6 @@ eas init          # preenche extra.eas.projectId no app.config.ts
 eas build --profile preview --platform android
 ```
 
-Ícone e splash em `assets/images/` são **placeholders** gerados por
-`node scripts/make-placeholder-assets.mjs` (o losango dourado da marca sobre o preto do
-design). Troque por arte final antes de publicar.
+Ícone, ícone adaptativo do Android, splash e favicon em `assets/images/` saem de
+`python3 scripts/make-brand-assets.py`: o monograma SG no losango dourado, o mesmo do topo
+da tela de login.
