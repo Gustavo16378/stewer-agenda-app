@@ -11,6 +11,7 @@ import {
   faixasSobrepoem,
   faixaValida,
   formatDataBr,
+  diaPorExtenso,
   formatDiaCalendarioCaps,
   formatDiaCurtoCaps,
   formatDiaMesCurto,
@@ -103,12 +104,12 @@ describe('instantes', () => {
 
   it('formata a faixa completa do card do design', () => {
     expect(formatFaixaAgendamento('2026-09-11T18:30:00Z', '2026-09-11T19:30:00Z')).toBe(
-      'SEX, 11 SET · 15:30 — 16:30'
+      'SEX, 11 SET · 15:30 às 16:30'
     );
   });
 
   it('formata so as horas quando o dia ja esta no cabecalho', () => {
-    expect(formatFaixaHoras('2026-09-11T18:30:00Z', '2026-09-11T19:30:00Z')).toBe('15:30 — 16:30');
+    expect(formatFaixaHoras('2026-09-11T18:30:00Z', '2026-09-11T19:30:00Z')).toBe('15:30 às 16:30');
   });
 
   it('degrada para string vazia em vez de "Invalid Date" na tela', () => {
@@ -214,6 +215,12 @@ describe('datas de calendario — a borda da meia-noite', () => {
 
   it('formatMesAno capitaliza o mes como o design ("Setembro 2026")', () => {
     expect(formatMesAno(new Date(2026, 8, 1))).toBe('Setembro 2026');
+  });
+
+  it('diaPorExtenso escreve o dia escolhido por extenso, sem o "-feira"', () => {
+    expect(diaPorExtenso('2026-11-13')).toBe('Sexta, 13 de novembro');
+    expect(diaPorExtenso('2026-11-15')).toBe('Domingo, 15 de novembro');
+    expect(diaPorExtenso('nao-e-data')).toBe('');
   });
 
   it('formatDiaCalendarioCaps da o carimbo do frame 06 ("SEXTA, 11 SET")', () => {
@@ -405,12 +412,12 @@ describe('linha DATA e HORÁRIO da confirmacao (tela 07)', () => {
   });
 
   it('deriva o fim da faixa pela duracao do servico', () => {
-    expect(formatFaixaPorDuracao('2026-09-11T18:30:00Z', 60)).toBe('15:30 — 16:30');
-    expect(formatFaixaPorDuracao('2026-09-11T18:30:00Z', 90)).toBe('15:30 — 17:00');
+    expect(formatFaixaPorDuracao('2026-09-11T18:30:00Z', 60)).toBe('15:30 às 16:30');
+    expect(formatFaixaPorDuracao('2026-09-11T18:30:00Z', 90)).toBe('15:30 às 17:00');
   });
 
   it('atravessa a meia-noite sem inventar hora', () => {
-    expect(formatFaixaPorDuracao('2026-09-12T02:30:00Z', 60)).toBe('23:30 — 00:30');
+    expect(formatFaixaPorDuracao('2026-09-12T02:30:00Z', 60)).toBe('23:30 às 00:30');
   });
 
   it('sem duracao legivel mostra so a hora de inicio, em vez de mentir um fim', () => {
@@ -490,8 +497,8 @@ describe('formatos pontuais do design', () => {
     expect(semanaDe('2026-08-31')[0]).toBe('2026-08-31');
   });
 
-  it('"31 AGO — 06 SET"', () => {
-    expect(formatFaixaDiasCaps('2026-08-31', '2026-09-06')).toBe('31 AGO — 06 SET');
+  it('"31 AGO A 06 SET"', () => {
+    expect(formatFaixaDiasCaps('2026-08-31', '2026-09-06')).toBe('31 AGO A 06 SET');
   });
 
   it('parseDataBr le o que o profissional digita e rejeita lixo', () => {

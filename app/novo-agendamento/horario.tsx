@@ -1,83 +1,134 @@
 /**
- * [06 Data e horário] — PASSO 03 DE 04. O frame 19 e esta MESMA tela no tema claro:
- * os tokens trocam sozinhos, nao ha codigo separado.
+ * Passo 3 de 4 do agendamento: dia e horario (redesenho, nov/2026).
  *
- * Layout literal do frame 06: `padding:30px 28px 0`, titulo Playfair 29px, navegacao de
- * mes (‹ Setembro 2026 ›) em `margin-top:26px`, cabecalho D S T Q Q S S (8.5px .14em
- * ink@.38), grade de celulas de 40px com `gap:2px`, eyebrow "HORÁRIOS · SEXTA, 11 SET"
- * em `margin-top:26px`, chips de horario em 3 colunas com `gap:10px`, botao CONTINUAR.
+ * Uma faixa de dias que rola de lado (os proximos 60, o limite que a API aceita para
+ * marcar) no lugar da grade do mes: no celular cabe no polegar e o dia escolhido fica
+ * sempre a vista. O primeiro dia em que o profissional atende ja vem escolhido, entao a
+ * pessoa ve horarios assim que a tela abre. Os horarios vem agrupados por periodo
+ * (manha, tarde, noite) em botoes grandes, e a faixa presa embaixo resume a escolha.
  *
  * Dados:
- *   grade    <- GET /profissionais/{id}/disponibilidade  (quais dias da semana atendem;
- *               e o que pinta domingo e segunda em ink@.25 no frame)
+ *   grade    <- GET /profissionais/{id}/disponibilidade  (quais dias da semana atendem)
  *   horarios <- GET /profissionais/{id}/horarios-livres?data=&servicoId=
  *
- * DATAS — o cuidado desta tela:
+ * DATAS -- o cuidado desta tela:
  *   - `?data=` e o DIA DE CALENDARIO LOCAL (toCalendarDate); nunca toISOString().slice.
  *   - os slots chegam como INSTANTES e sao exibidos no fuso do aparelho (formatHora);
  *   - o slot escolhido segue para a confirmacao como o ISO cru que a API devolveu.
  *   - "hoje", "passado" e "dia da semana" sao todos calculados no calendario LOCAL.
- *
- * O design mostra dois chips apagados (11:00, 18:30) sem borda: horarios que nao estao
- * livres. `horarios-livres` so devolve os livres e descarta silenciosamente os que ja
- * passaram no dia de hoje — nao ha como saber o MOTIVO de um horario faltar, entao a
- * tela mostra so os livres em vez de pintar chips apagados com uma explicacao inventada.
  */
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useMemo, useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { useEffect, useMemo, useState } from 'react';
+import { Pressable, ScrollView, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useDisponibilidade, useHorariosLivres } from '@/api/hooks';
 import type { HorarioLivre } from '@/api/types';
-import { Botao } from '@/components/ui/botao';
-import { CabecalhoVoltar } from '@/components/ui/cabecalho';
+import { BarraDeResumo, CabecalhoDoFluxo } from '@/components/atelie/fluxo';
 import { Carregando, EstadoErro, EstadoVazio } from '@/components/ui/estados';
-import { TelaRolavel } from '@/components/ui/tela';
-import { LabelCaps, Titulo } from '@/components/ui/texto';
 import { cn } from '@/lib/cn';
 import {
-  DIAS_SEMANA,
+  diaPorExtenso,
   diaSemanaDe,
-  formatDiaCalendarioCaps,
   formatHora,
-  formatMesAno,
-  gradeDoMes,
   hojeCalendarDate,
-  inicialDiaSemana,
   parseCalendarDate,
+  parseInstant,
+  somaDias,
   type CalendarDate,
 } from '@/lib/datetime';
 import { useFluxoDeAgendamento } from '@/lib/fluxo-agendamento';
+import { useLayoutLargo } from '@/lib/responsivo';
 
-/** Largura de 1/7 para a grade: RN nao tem `display:grid`. */
-const COLUNA = { flexBasis: '14.2857%' as const, maxWidth: '14.2857%' as const };
+/** A API aceita marcar com ate 60 dias de antecedencia (LimitesDeReserva). */
+const DIAS_A_FRENTE = 60;
+
+const PERIODOS = [
+  { nome: 'Manhã', ate: 12 },
+  { nome: 'Tarde', ate: 18 },
+  { nome: 'Noite', ate: 24 },
+] as const;
+
+const SEMANA_CURTA = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+const semanaCurta = (d: Date) => SEMANA_CURTA[d.getDay()] ?? '';
+
+function ChipDia({
+  dia,
+  disponivel,
+  selecionado,
+  mostraMes,
+  aoTocar,
+}: {
+  dia: CalendarDate;
+  disponivel: boolean;
+  selecionado: boolean;
+  mostraMes: boolean;
+  aoTocar: () => void;
+}) {
+  const d = parseCalendarDate(dia) ?? new Date();
+  return (
+    <View className="items-center">
+      <Text className="h-5 font-sans-medium text-ui-xs text-latao">
+        {mostraMes ? format(d, 'MMM', { locale: ptBR }).replace('.', '') : ''}
+      </Text>
+      <Pressable
+        disabled={!disponivel}
+        onPress={aoTocar}
+        accessibilityRole="button"
+        accessibilityState={{ disabled: !disponivel, selected: selecionado }}
+        accessibilityLabel={diaPorExtenso(dia)}
+        className={cn(
+          'h-[78px] w-[58px] items-center justify-center gap-1 rounded-[3px] border',
+          selecionado
+            ? 'border-latao bg-latao'
+            : disponivel
+              ? 'border-borda bg-superficie'
+              : 'border-transparent'
+        )}
+      >
+        <Text
+          className={cn(
+            'font-sans-medium text-ui-xs',
+            selecionado ? 'text-fundo' : disponivel ? 'text-texto-3' : 'text-texto-3/45'
+          )}
+        >
+          {semanaCurta(d)}
+        </Text>
+        <Text
+          className={cn(
+            'font-display text-ds-24',
+            selecionado ? 'text-fundo' : disponivel ? 'text-texto' : 'text-texto-3/45'
+          )}
+        >
+          {d.getDate()}
+        </Text>
+      </Pressable>
+    </View>
+  );
+}
 
 export default function DataEHorario() {
   const router = useRouter();
+  const largo = useLayoutLargo();
+  const insets = useSafeAreaInsets();
   const { servicoId, profissionalId } = useLocalSearchParams<{
     servicoId?: string;
     profissionalId?: string;
   }>();
-  const { extras, agendamentoId, remarcando } = useFluxoDeAgendamento();
+  const { extras, agendamentoId, remarcando, eyebrow } = useFluxoDeAgendamento();
 
   const hoje = hojeCalendarDate();
-  const hojeDate = parseCalendarDate(hoje) ?? new Date();
-
-  // o mes visivel e um par (ano, mes0); comeca no mes de hoje
-  const [mes, setMes] = useState({ ano: hojeDate.getFullYear(), mes0: hojeDate.getMonth() });
-  const [diaSelecionado, setDiaSelecionado] = useState<CalendarDate | null>(null);
-  const [slot, setSlot] = useState<HorarioLivre | null>(null);
-
-  const grade = useDisponibilidade(profissionalId);
-  // Remarcando, o horario atual conta como livre: da para mover meia hora para frente.
-  const horarios = useHorariosLivres(
-    profissionalId,
-    diaSelecionado ?? undefined,
-    servicoId,
-    agendamentoId
+  const dias = useMemo(
+    () =>
+      Array.from({ length: DIAS_A_FRENTE }, (_, i) => somaDias(hoje, i)).filter(
+        (d): d is CalendarDate => !!d
+      ),
+    [hoje]
   );
 
-  // dias da semana em que o profissional atende, segundo a grade
+  const grade = useDisponibilidade(profissionalId);
   const diasAtendidos = useMemo(() => {
     const set = new Set<number>();
     for (const faixa of grade.data ?? []) {
@@ -86,30 +137,40 @@ export default function DataEHorario() {
     return set;
   }, [grade.data]);
 
-  const celulas = useMemo(() => gradeDoMes(mes.ano, mes.mes0), [mes]);
-  const mesVisivel = new Date(mes.ano, mes.mes0, 1);
-  const mesAtualOuFuturo =
-    mes.ano > hojeDate.getFullYear() ||
-    (mes.ano === hojeDate.getFullYear() && mes.mes0 > hojeDate.getMonth());
-
-  function mudarMes(delta: number) {
-    const d = new Date(mes.ano, mes.mes0 + delta, 1);
-    setMes({ ano: d.getFullYear(), mes0: d.getMonth() });
-  }
-
-  function diaDisponivel(dia: CalendarDate): boolean {
-    // passado (comparacao de dias de calendario, string YYYY-MM-DD ordena certo)
-    if (dia < hoje) return false;
-    const ds = diaSemanaDe(dia);
+  const diaDisponivel = (dia: CalendarDate): boolean => {
     // sem grade carregada ainda, nao bloqueia: o backend e quem decide
     if (grade.data === undefined) return true;
+    const ds = diaSemanaDe(dia);
     return ds !== null && diasAtendidos.has(ds);
-  }
+  };
 
-  function escolherDia(dia: CalendarDate) {
-    setDiaSelecionado(dia);
-    setSlot(null);
-  }
+  const [escolhido, setEscolhido] = useState<CalendarDate | null>(null);
+  // sem escolha, o primeiro dia em que ele atende (assim que a grade chega)
+  const primeiroLivre = grade.data ? (dias.find(diaDisponivel) ?? null) : null;
+  const diaSelecionado = escolhido ?? primeiroLivre;
+
+  const [slot, setSlot] = useState<HorarioLivre | null>(null);
+  useEffect(() => setSlot(null), [diaSelecionado]);
+
+  const horarios = useHorariosLivres(
+    profissionalId,
+    diaSelecionado ?? undefined,
+    servicoId,
+    agendamentoId
+  );
+
+  const grupos = useMemo(() => {
+    const lista = horarios.data?.horarios ?? [];
+    let de = 0;
+    return PERIODOS.map((p) => {
+      const itens = lista.filter((h) => {
+        const hora = parseInstant(h.inicio)?.getHours() ?? 0;
+        return hora >= de && hora < p.ate;
+      });
+      de = p.ate;
+      return { ...p, itens };
+    }).filter((g) => g.itens.length > 0);
+  }, [horarios.data]);
 
   function continuar() {
     if (!slot?.inicio) return;
@@ -125,170 +186,124 @@ export default function DataEHorario() {
     } as never);
   }
 
-  const listaHorarios = horarios.data?.horarios ?? [];
+  const colunas = largo ? 5 : 4;
 
   return (
-    <TelaRolavel>
-      <CabecalhoVoltar passo={remarcando ? 'REMARCAR' : 'PASSO 03 DE 04'} />
-
-      <View className="pt-[30px]">
-        <Titulo className="text-d-29">Data e horário</Titulo>
-
-        {/* navegacao de mes: ‹ e › sao texto no design, nao icone */}
-        <View className="mt-[26px] flex-row items-center justify-between">
-          <Pressable
-            onPress={() => mudarMes(-1)}
-            disabled={!mesAtualOuFuturo}
-            hitSlop={12}
-            accessibilityRole="button"
-            accessibilityLabel="Mês anterior"
-            className="px-[6px]"
-          >
-            <Text
-              className={cn(
-                'font-sans text-icon',
-                mesAtualOuFuturo ? 'text-nav-arrow' : 'text-text-dim'
-              )}
-            >
-              ‹
-            </Text>
-          </Pressable>
-          <Titulo className="text-d-18">{formatMesAno(mesVisivel)}</Titulo>
-          <Pressable
-            onPress={() => mudarMes(1)}
-            hitSlop={12}
-            accessibilityRole="button"
-            accessibilityLabel="Próximo mês"
-            className="px-[6px]"
-          >
-            <Text className="font-sans text-icon text-nav-arrow">›</Text>
-          </Pressable>
-        </View>
-
-        {/* cabecalho D S T Q Q S S */}
-        <View className="mt-[18px] flex-row">
-          {DIAS_SEMANA.map((d) => (
-            <View key={d} style={COLUNA} className="items-center py-[6px]">
-              <Text className="font-sans-semibold text-caps-xs tracking-tab text-ink/38">
-                {inicialDiaSemana(d)}
-              </Text>
-            </View>
-          ))}
-        </View>
-
-        {/* celulas do mes */}
-        <View className="mt-1 flex-row flex-wrap">
-          {celulas.map((dia, i) => {
-            if (!dia) return <View key={`vazio-${i}`} style={COLUNA} className="h-10" />;
-            const numero = String(parseCalendarDate(dia)?.getDate() ?? '');
-            const disponivel = diaDisponivel(dia);
-            const selecionado = dia === diaSelecionado;
-            const ehHoje = dia === hoje;
-            return (
-              <View key={dia} style={COLUNA} className="p-px">
-                <Pressable
-                  disabled={!disponivel}
-                  onPress={() => escolherDia(dia)}
-                  accessibilityRole="button"
-                  accessibilityState={{ disabled: !disponivel, selected: selecionado }}
-                  accessibilityLabel={`Dia ${numero}`}
-                  className={cn(
-                    'h-10 items-center justify-center gap-[3px] rounded-token',
-                    selecionado && 'border border-gold-border'
-                  )}
-                >
-                  <Text
-                    className={cn(
-                      'text-body',
-                      selecionado
-                        ? 'font-sans-semibold text-gold'
-                        : disponivel
-                          ? 'font-sans text-day'
-                          : 'font-sans text-text-disabled'
-                    )}
-                  >
-                    {numero}
-                  </Text>
-                  {/* o pontinho dourado de 3px marca o dia de hoje */}
-                  {ehHoje && !selecionado ? (
-                    <View className="h-[3px] w-[3px] rounded-full bg-gold" />
-                  ) : null}
-                </Pressable>
-              </View>
-            );
-          })}
-        </View>
-
-        {grade.error ? (
-          <EstadoErro
-            className="mt-6"
-            erro={grade.error}
-            aoTentarDeNovo={() => void grade.refetch()}
+    <View className="flex-1 bg-fundo" style={{ paddingTop: insets.top }}>
+      <ScrollView
+        className="flex-1"
+        contentContainerStyle={[
+          { paddingBottom: 40 },
+          largo && { width: '100%', maxWidth: 760, alignSelf: 'center', paddingTop: 24 },
+        ]}
+      >
+        <View className="px-7">
+          <CabecalhoDoFluxo
+            passo={remarcando ? undefined : 3}
+            contexto={eyebrow}
+            titulo="Quando fica bom?"
           />
-        ) : null}
+        </View>
 
-        {diaSelecionado ? (
-          <>
-            <LabelCaps papel="secao" className="mt-[26px]">
-              HORÁRIOS · {formatDiaCalendarioCaps(diaSelecionado)}
-            </LabelCaps>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          className="mt-7"
+          contentContainerClassName="gap-2 px-7"
+          accessibilityLabel="Dias"
+        >
+          {dias.map((dia, i) => (
+            <ChipDia
+              key={dia}
+              dia={dia}
+              disponivel={diaDisponivel(dia)}
+              selecionado={dia === diaSelecionado}
+              mostraMes={i === 0 || parseCalendarDate(dia)?.getDate() === 1}
+              aoTocar={() => setEscolhido(dia)}
+            />
+          ))}
+        </ScrollView>
 
-            {horarios.isLoading ? (
-              <Carregando className="py-8" />
-            ) : horarios.error ? (
-              <EstadoErro
-                className="py-4"
-                erro={horarios.error}
-                aoTentarDeNovo={() => void horarios.refetch()}
-              />
-            ) : listaHorarios.length === 0 ? (
-              <EstadoVazio
-                className="py-8"
-                titulo="Sem horários neste dia."
-                descricao="O profissional não atende ou a agenda já está cheia. Escolha outra data."
-              />
-            ) : (
-              <View className="mt-4 flex-row flex-wrap" style={{ marginHorizontal: -5 }}>
-                {listaHorarios.map((h) => {
-                  const ativo = slot?.inicio === h.inicio;
-                  return (
-                    <View
-                      key={h.inicio}
-                      style={{ flexBasis: '33.3333%', maxWidth: '33.3333%' }}
-                      className="px-[5px] pb-[10px]"
-                    >
-                      <Pressable
-                        onPress={() => setSlot(h)}
-                        accessibilityRole="button"
-                        accessibilityState={{ selected: ativo }}
-                        className={cn(
-                          'items-center rounded-token border py-[13px]',
-                          ativo ? 'border-gold-border' : 'border-field-border'
-                        )}
-                      >
-                        <Text
-                          className={cn(
-                            'text-chip tracking-brand',
-                            ativo ? 'font-sans-semibold text-gold' : 'font-sans-medium text-ink'
-                          )}
-                        >
-                          {formatHora(h.inicio)}
-                        </Text>
-                      </Pressable>
+        <View className="px-7">
+          {grade.error ? (
+            <EstadoErro
+              className="mt-6"
+              erro={grade.error}
+              aoTentarDeNovo={() => void grade.refetch()}
+            />
+          ) : null}
+
+          {diaSelecionado ? (
+            <>
+              <Text className="mt-8 font-display text-ds-24 text-texto">
+                {diaPorExtenso(diaSelecionado)}
+              </Text>
+              {horarios.isLoading ? (
+                <Carregando className="py-10" />
+              ) : horarios.error ? (
+                <EstadoErro
+                  className="py-4"
+                  erro={horarios.error}
+                  aoTentarDeNovo={() => void horarios.refetch()}
+                />
+              ) : grupos.length === 0 ? (
+                <EstadoVazio
+                  className="py-8"
+                  titulo="Dia cheio."
+                  descricao="Não sobrou horário neste dia. Escolha outro na faixa acima."
+                />
+              ) : (
+                grupos.map((g) => (
+                  <View key={g.nome} className="mt-6">
+                    <Text className="font-sans-medium text-ui-sm text-texto-3">{g.nome}</Text>
+                    <View className="mt-3 flex-row flex-wrap" style={{ marginHorizontal: -4 }}>
+                      {g.itens.map((h) => {
+                        const ativo = slot?.inicio === h.inicio;
+                        return (
+                          <View
+                            key={h.inicio}
+                            style={{ width: `${100 / colunas}%` }}
+                            className="p-1"
+                          >
+                            <Pressable
+                              onPress={() => setSlot(h)}
+                              accessibilityRole="button"
+                              accessibilityState={{ selected: ativo }}
+                              className={cn(
+                                'items-center rounded-[3px] border py-[14px]',
+                                ativo ? 'border-latao bg-latao' : 'border-borda bg-superficie'
+                              )}
+                            >
+                              <Text
+                                className={cn(
+                                  'font-sans-semibold text-ui-lg',
+                                  ativo ? 'text-fundo' : 'text-texto'
+                                )}
+                              >
+                                {formatHora(h.inicio)}
+                              </Text>
+                            </Pressable>
+                          </View>
+                        );
+                      })}
                     </View>
-                  );
-                })}
-              </View>
-            )}
-          </>
-        ) : (
-          <Text className="mt-[26px] font-sans text-help text-ink/42">
-            Escolha um dia para ver os horários livres.
-          </Text>
-        )}
+                  </View>
+                ))
+              )}
+            </>
+          ) : grade.isLoading ? (
+            <Carregando className="py-10" />
+          ) : null}
+        </View>
+      </ScrollView>
 
-        <Botao className="mt-[26px]" titulo="CONTINUAR" disabled={!slot} onPress={continuar} />
-      </View>
-    </TelaRolavel>
+      <BarraDeResumo
+        linha1={slot ? `às ${formatHora(slot.inicio)}` : 'Escolha um horário'}
+        linha2={diaSelecionado ? diaPorExtenso(diaSelecionado) : undefined}
+        titulo="Continuar"
+        ativo={!!slot}
+        aoTocar={continuar}
+      />
+    </View>
   );
 }

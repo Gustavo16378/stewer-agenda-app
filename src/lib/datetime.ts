@@ -149,7 +149,7 @@ export function formatFaixaAgendamento(
   const hi = formatHora(inicio);
   const hf = formatHora(fim);
   if (!dia || !hi) return '';
-  return hf ? `${dia} · ${hi} — ${hf}` : `${dia} · ${hi}`;
+  return hf ? `${dia} · ${hi} às ${hf}` : `${dia} · ${hi}`;
 }
 
 /** "15:30 — 16:30" — so a faixa de horas, para quando o dia ja esta no cabecalho. */
@@ -160,7 +160,7 @@ export function formatFaixaHoras(
   const hi = formatHora(inicio);
   const hf = formatHora(fim);
   if (!hi) return '';
-  return hf ? `${hi} — ${hf}` : hi;
+  return hf ? `${hi} às ${hf}` : hi;
 }
 
 /**
@@ -271,6 +271,15 @@ export function diaDoMes(value: CalendarDate): string {
 export function formatMesAno(date: Date): string {
   const s = format(date, 'MMMM yyyy', { locale: ptBR });
   return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+/** "Quinta, 13 de novembro" -- o dia escolhido no fluxo de agendamento (redesenho). */
+export function diaPorExtenso(value: CalendarDate): string {
+  const d = parseCalendarDate(value);
+  if (!d) return '';
+  const semana = format(d, 'EEEE', { locale: ptBR }).split('-')[0] ?? '';
+  const resto = format(d, "d 'de' MMMM", { locale: ptBR });
+  return `${semana.charAt(0).toUpperCase()}${semana.slice(1)}, ${resto}`;
 }
 
 /**
@@ -529,7 +538,8 @@ export function formatFaixaDiasCaps(inicio: CalendarDate, fim: CalendarDate): st
   const b = parseCalendarDate(fim);
   if (!a || !b) return '';
   const f = (d: Date) => format(d, 'dd MMM', { locale: ptBR }).replace(/\./g, '').toUpperCase();
-  return `${f(a)} — ${f(b)}`;
+  // "A" em caixa alta como o resto: o rotulo vira frase na tela ("31 ago a 06 set")
+  return `${f(a)} A ${f(b)}`;
 }
 
 /** "DD/MM/AAAA" digitado -> dia de calendario. `null` se nao for data valida. */

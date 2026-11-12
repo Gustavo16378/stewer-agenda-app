@@ -21,6 +21,7 @@
  * LACUNA de design: nao ha tela de sucesso. Confirmado, o app volta para MEUS HORÁRIOS,
  * onde o agendamento novo aparece em PRÓXIMOS.
  */
+import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { Text, View } from 'react-native';
@@ -28,21 +29,21 @@ import { Text, View } from 'react-native';
 import { ApiError } from '@/api/errors';
 import { useCriarAgendamento, useProfissionais, useRemarcar, useServicos } from '@/api/hooks';
 import { useAuth } from '@/auth/auth-context';
-import { AcaoLinha, Botao } from '@/components/ui/botao';
-import { CabecalhoVoltar } from '@/components/ui/cabecalho';
+import { BotaoAtelie } from '@/components/atelie/base';
+import { CabecalhoDoFluxo } from '@/components/atelie/fluxo';
 import { Campo } from '@/components/ui/campo';
 import { Carregando, EstadoErro } from '@/components/ui/estados';
-import { Card, DivisorCard } from '@/components/ui/superficies';
 import { TelaRolavel } from '@/components/ui/tela';
-import { LabelCaps, Titulo } from '@/components/ui/texto';
+import { fotoDoProfissional, LOCAL } from '@/content/atelie';
 import {
   calendarDateDoInstante,
+  diaPorExtenso,
   formatDiaSemanaDiaMes,
   formatFaixaHoras,
   formatFaixaPorDuracao,
 } from '@/lib/datetime';
 import { useFluxoDeAgendamento } from '@/lib/fluxo-agendamento';
-import { formatCentavos } from '@/lib/money';
+import { formatCentavos, formatDuracao } from '@/lib/money';
 
 const OBSERVACAO_MAX = 2000;
 
@@ -111,7 +112,15 @@ export default function Confirmacao() {
   function aoTerminar(id: string | undefined, inicioFinal?: string) {
     if (role === 'CLIENTE') {
       router.dismissAll?.();
-      router.replace('/(cliente)/(tabs)/meus-horarios' as never);
+      router.replace({
+        pathname: '/novo-agendamento/pronto',
+        params: {
+          inicio: inicioFinal ?? inicio ?? '',
+          servico: servico?.nome ?? '',
+          profissional: profissional?.nome ?? '',
+          ...(remarcando ? { remarcado: '1' } : {}),
+        },
+      } as never);
       return;
     }
     router.dismissAll?.();
@@ -145,14 +154,18 @@ export default function Confirmacao() {
     );
   }
 
+  const diaEscolhido = calendarDateDoInstante(inicio);
+  const foto = profissional ? fotoDoProfissional(profissional) : null;
+
   return (
     <TelaRolavel>
-      <CabecalhoVoltar passo={remarcando ? 'REMARCAR' : 'PASSO 04 DE 04'} />
+      <CabecalhoDoFluxo
+        passo={remarcando ? undefined : 4}
+        contexto={eyebrow}
+        titulo={remarcando ? 'Novo horário' : 'Tudo certo?'}
+      />
 
-      <View className="pt-[34px]">
-        <LabelCaps papel="tela">{eyebrow}</LabelCaps>
-        <Titulo className="mt-3 text-d-29">Confirme os detalhes</Titulo>
-
+      <View>
         {carregando ? (
           <Carregando className="mt-8" />
         ) : erroCarga ? (
@@ -178,54 +191,52 @@ export default function Confirmacao() {
           />
         ) : (
           <>
-            <Card className="mt-8 gap-[22px] px-[26px] py-7">
-              {clienteNome ? (
-                <View className="gap-2">
-                  <LabelCaps papel="campo">CLIENTE</LabelCaps>
-                  <Text className="font-sans text-row-lg text-text-strong">{clienteNome}</Text>
-                </View>
-              ) : null}
-
-              <View className="gap-2">
-                <LabelCaps papel="campo">SERVIÇO</LabelCaps>
-                <Titulo className="text-d-21">{servico?.nome ?? '—'}</Titulo>
+            {/* o "ticket": quando em destaque, depois o que, com quem, onde e quanto */}
+            <View className="mt-8 rounded-[3px] border border-l-2 border-borda border-l-latao bg-superficie">
+              <View className="gap-1 p-6">
+                <Text className="font-display text-ds-30 text-texto">
+                  {diaEscolhido ? diaPorExtenso(diaEscolhido) : formatDiaSemanaDiaMes(inicio)}
+                </Text>
+                <Text className="font-sans-semibold text-ui-lg text-latao">{horario}</Text>
               </View>
-
-              <View className="gap-2">
-                <LabelCaps papel="campo">PROFISSIONAL</LabelCaps>
-                <Text className="font-sans text-row-lg text-text-strong">
-                  {profissional?.nome ?? '—'}
+              <View className="h-px bg-borda" />
+              <View className="gap-5 p-6">
+                {clienteNome ? <LinhaTicket rotulo="Cliente" valor={clienteNome} /> : null}
+                <LinhaTicket
+                  rotulo="Serviço"
+                  valor={servico?.nome ?? ''}
+                  detalhe={formatDuracao(servico?.duracaoMinutos)}
+                />
+                <View className="flex-row items-center gap-3">
+                  {foto ? (
+                    <Image
+                      source={foto}
+                      style={{ width: 40, height: 40, borderRadius: 40 }}
+                      contentFit="cover"
+                      contentPosition="top"
+                      accessibilityIgnoresInvertColors
+                    />
+                  ) : null}
+                  <LinhaTicket rotulo="Com" valor={profissional?.nome ?? ''} />
+                </View>
+                <LinhaTicket rotulo="Onde" valor={LOCAL.nome} detalhe={LOCAL.endereco} />
+              </View>
+              <View className="h-px bg-borda" />
+              <View className="flex-row items-baseline justify-between p-6">
+                <Text className="font-sans text-ui text-texto-2">Valor, pago no local</Text>
+                <Text className="font-display text-ds-30 text-texto">
+                  {formatCentavos(servico?.precoCentavos)}
                 </Text>
               </View>
-
-              <View className="flex-row gap-6">
-                <View className="flex-1 gap-2">
-                  <LabelCaps papel="campo">DATA</LabelCaps>
-                  <Text className="font-sans text-row-lg text-text-strong">
-                    {formatDiaSemanaDiaMes(inicio)}
-                  </Text>
-                </View>
-                <View className="gap-2">
-                  <LabelCaps papel="campo">HORÁRIO</LabelCaps>
-                  <Text className="font-sans text-row-lg text-text-strong">{horario}</Text>
-                </View>
-              </View>
-
-              <DivisorCard />
-
-              <View className="flex-row items-end justify-between">
-                <LabelCaps papel="campo">VALOR</LabelCaps>
-                <Titulo className="text-d-24">{formatCentavos(servico?.precoCentavos)}</Titulo>
-              </View>
-            </Card>
+            </View>
 
             {remarcando ? null : (
               <Campo
                 className="mt-6"
-                rotulo="OBSERVAÇÃO"
+                rotulo="Recado para o Stewer"
                 value={observacao}
                 onChangeText={setObservacao}
-                placeholder="Um recado para o profissional (opcional)"
+                placeholder="Algo que ele deva saber antes (opcional)"
                 multiline
                 numberOfLines={3}
                 maxLength={OBSERVACAO_MAX}
@@ -234,35 +245,53 @@ export default function Confirmacao() {
               />
             )}
 
-            <Text className="mt-5 font-sans text-help-lg leading-[19.55px] text-ink/42">
+            <Text className="mt-5 font-sans text-ui-sm text-texto-3">
               {remarcando
                 ? 'O horário antigo fica livre para outra pessoa assim que você confirmar.'
                 : 'Se não puder vir, cancele ou remarque pelo app para liberar o horário.'}
             </Text>
 
             {erroEnvio && !erroEnvio.temViolacoes ? (
-              <Text className="mt-4 font-sans text-help text-red-500">
+              <Text className="mt-4 font-sans text-ui-sm text-cadeira">
                 {mensagemDoErro(erroEnvio)}
               </Text>
             ) : null}
 
-            <Botao
-              className="mt-[30px]"
-              titulo={remarcando ? 'CONFIRMAR NOVO HORÁRIO' : 'CONFIRMAR AGENDAMENTO'}
+            <BotaoAtelie
+              className="mt-8"
+              titulo={remarcando ? 'Confirmar novo horário' : 'Confirmar horário'}
               carregando={enviando}
               onPress={confirmar}
             />
 
-            <View className="mt-[22px] items-center">
-              <AcaoLinha
-                titulo="ALTERAR DATA OU HORÁRIO"
+            <View className="mt-4 items-center">
+              <BotaoAtelie
+                variante="texto"
+                titulo="Alterar data ou horário"
                 onPress={() => router.back()}
-                className="items-center"
               />
             </View>
           </>
         )}
       </View>
     </TelaRolavel>
+  );
+}
+
+function LinhaTicket({
+  rotulo,
+  valor,
+  detalhe,
+}: {
+  rotulo: string;
+  valor: string;
+  detalhe?: string;
+}) {
+  return (
+    <View className="flex-1 gap-[2px]">
+      <Text className="font-sans text-ui-sm text-texto-3">{rotulo}</Text>
+      <Text className="font-sans-medium text-ui-lg text-texto">{valor}</Text>
+      {detalhe ? <Text className="font-sans text-ui-sm text-texto-2">{detalhe}</Text> : null}
+    </View>
   );
 }

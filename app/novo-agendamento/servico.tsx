@@ -1,5 +1,5 @@
 /**
- * [04 Escolha de serviço] — PASSO 01 DE 04 do wizard de agendamento do cliente.
+ * Passo 1 de 4 do agendamento: o servico. (Redesenho nov/2026; a historia do frame 04 segue abaixo.)
  *
  * Layout literal do frame 04: cabecalho de passo (`padding:20px 28px 0`), corpo com
  * `padding:34px 28px 0`, eyebrow "NOVO AGENDAMENTO", titulo Playfair 29px e a
@@ -24,39 +24,40 @@ import { Pressable, RefreshControl, Text, View } from 'react-native';
 import { useMeuProfissional, useServicos } from '@/api/hooks';
 import type { Servico } from '@/api/types';
 import { useAuth } from '@/auth/auth-context';
-import { CabecalhoVoltar } from '@/components/ui/cabecalho';
+import { CabecalhoDoFluxo } from '@/components/atelie/fluxo';
 import { Carregando, EstadoErro, EstadoVazio } from '@/components/ui/estados';
 import { TelaRolavel } from '@/components/ui/tela';
-import { LabelCaps, Titulo } from '@/components/ui/texto';
 import { useFluxoDeAgendamento } from '@/lib/fluxo-agendamento';
 import { formatCentavos, formatDuracao } from '@/lib/money';
 
 function LinhaServico({ servico, aoEscolher }: { servico: Servico; aoEscolher: () => void }) {
-  // o design escreve a duracao em caps ("90 MIN"); o texto vem de formatDuracao para a
-  // regra de horas viver num lugar so
-  const duracao = formatDuracao(servico.duracaoMinutos).toUpperCase();
+  const duracao = formatDuracao(servico.duracaoMinutos);
   const preco = formatCentavos(servico.precoCentavos);
 
+  // redesenho: nome em Playfair, descricao legivel, duracao e preco alinhados a direita;
+  // o toque acende a linha em couro e a seta de latao anda um pouco
   return (
     <Pressable
       onPress={aoEscolher}
       accessibilityRole="button"
       accessibilityLabel={[servico.nome, duracao, preco].filter(Boolean).join(', ')}
-      className="flex-row items-center justify-between border-b border-divider py-[21px]"
-      style={({ pressed }) => (pressed ? { opacity: 0.6 } : null)}
+      className="-mx-4 flex-row items-center gap-4 rounded-[3px] border-b border-borda/70 px-4 py-6"
+      style={({ pressed, hovered }: { pressed: boolean; hovered?: boolean }) =>
+        pressed || hovered ? { backgroundColor: 'rgba(201,169,106,0.08)' } : null
+      }
     >
-      <View className="flex-1 gap-[7px] pr-4">
-        <Titulo className="text-d-19">{servico.nome}</Titulo>
+      <View className="flex-1 gap-2">
+        <Text className="font-display text-ds-24 text-texto">{servico.nome}</Text>
         {servico.descricao ? (
-          <Text className="font-sans text-help text-text-meta" numberOfLines={2}>
+          <Text className="font-sans text-ui-sm text-texto-2" numberOfLines={2}>
             {servico.descricao}
           </Text>
         ) : null}
-        <LabelCaps papel="meta">{duracao}</LabelCaps>
       </View>
-
-      {/* .85 e o degrau exato do preco no design e nao tem token semantico proprio */}
-      <Text className="font-sans-medium text-body-lg text-ink/85">{preco}</Text>
+      <View className="items-end gap-1">
+        <Text className="font-display text-ds-20 text-latao">{preco}</Text>
+        <Text className="font-sans text-ui-sm text-texto-3">{duracao}</Text>
+      </View>
     </Pressable>
   );
 }
@@ -94,27 +95,29 @@ export default function EscolhaDeServico() {
         />
       }
     >
-      <CabecalhoVoltar passo="PASSO 01 DE 04" />
+      <CabecalhoDoFluxo
+        passo={1}
+        contexto={eyebrow}
+        titulo="O que vamos fazer?"
+        descricao="Escolha o serviço. A duração define o tempo reservado na agenda."
+      />
 
-      <View className="pt-[34px]">
-        <LabelCaps papel="tela">{eyebrow}</LabelCaps>
-        <Titulo className="mt-3 text-d-29">Escolha o serviço</Titulo>
-
+      <View>
         {servicos.isLoading ? (
-          <Carregando className="mt-[26px]" />
+          <Carregando className="mt-8" />
         ) : servicos.error ? (
           <EstadoErro
-            className="mt-[26px]"
+            className="mt-8"
             erro={servicos.error}
             aoTentarDeNovo={() => void servicos.refetch()}
           />
         ) : lista.length === 0 ? (
           <EstadoVazio
-            className="mt-[26px]"
-            eyebrow="SEM SERVIÇOS"
+            className="mt-8"
+            eyebrow="Sem serviços"
             titulo="O catálogo está vazio."
             descricao="Nenhum serviço publicado por enquanto. Tente de novo em instantes."
-            acao={{ titulo: 'TENTAR DE NOVO', aoTocar: () => void servicos.refetch() }}
+            acao={{ titulo: 'Tentar de novo', aoTocar: () => void servicos.refetch() }}
           />
         ) : (
           /* TODO(API): a ordem do design e curada (Análise de Visagismo, Corte Assinatura,
@@ -123,7 +126,7 @@ export default function EscolhaDeServico() {
              `ordem` (int32) no Servico/ServicoRequest — GET /servicos ordenando por ela e
              PUT /servicos/{id} aceitando-a. Ordenar aqui seria chumbar nome de servico na
              tela, entao a vitrine sai em ordem alfabetica. */
-          <View className="mt-[26px]">
+          <View className="mt-8">
             {lista.map((servico) => (
               <LinhaServico
                 key={servico.id ?? servico.nome}

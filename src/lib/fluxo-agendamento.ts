@@ -31,9 +31,9 @@ export function useFluxoDeAgendamento() {
     paraCliente: !!p.clienteId,
     /** Eyebrow das telas do fluxo. */
     eyebrow: p.agendamentoId
-      ? 'REMARCAR'
+      ? 'Remarcar horário'
       : p.clienteNome
-        ? `PARA ${p.clienteNome.toUpperCase()}`
-        : 'NOVO AGENDAMENTO',
+        ? `Para ${p.clienteNome}`
+        : 'Novo agendamento',
   };
 }
