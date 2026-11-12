@@ -22,6 +22,8 @@ import Animated, {
 import Svg, { Path } from 'react-native-svg';
 
 import { LOCAL } from '@/content/atelie';
+import { cn } from '@/lib/cn';
+import { useLayoutLargo } from '@/lib/responsivo';
 import { useTema } from '@/theme/theme-context';
 
 import { BotaoAtelie, Paragrafo } from './base';
@@ -31,7 +33,8 @@ const MAPAS = {
   dark: require('../../../assets/images/atelie/mapa-escuro.jpg'),
   light: require('../../../assets/images/atelie/mapa-claro.jpg'),
 };
-const PROPORCAO = 1200 / 760;
+/** Altura do recorte: o mapa e uma janela pequena, nao a tela inteira. */
+const ALTURA = { celular: 210, largo: 300 };
 const OURO = '#C9A96A';
 
 function Pulso() {
@@ -70,22 +73,27 @@ function Pino() {
 
 export function MapaDoAtelie() {
   const { tema } = useTema();
+  const largo = useLayoutLargo();
   const abrirRota = () => void Linking.openURL(LOCAL.mapa);
 
+  // No celular, mapa em cima e endereco embaixo; em tela larga, lado a lado.
   return (
-    <View>
+    <View className={largo ? 'flex-row items-center gap-8' : undefined}>
       <Pressable
         accessibilityRole="link"
         accessibilityLabel={`Abrir ${LOCAL.nome} no mapa`}
         onPress={abrirRota}
-        className="overflow-hidden rounded-[3px] border border-borda"
+        className={cn('overflow-hidden rounded-[3px] border border-borda', largo && 'flex-[1.3]')}
         style={({ pressed }) => (pressed ? { opacity: 0.92 } : null)}
       >
-        <View style={{ aspectRatio: PROPORCAO }}>
+        <View style={{ height: largo ? ALTURA.largo : ALTURA.celular }}>
+          {/* tamanho natural, centralizado: os nomes das ruas no tamanho em que o mapa foi
+              desenhado, sem esticar a imagem e sem embaçar */}
           <Image
             source={MAPAS[tema]}
             style={StyleSheet.absoluteFill}
-            contentFit="cover"
+            contentFit="none"
+            contentPosition="center"
             transition={250}
             accessibilityLabel={`Mapa das ruas em volta do ${LOCAL.nome}, na 204 Sul`}
           />
@@ -123,20 +131,22 @@ export function MapaDoAtelie() {
         </View>
       </Pressable>
 
-      <View className="mt-6 gap-1">
-        <Text className="font-display text-ds-24 text-texto">{LOCAL.nome}</Text>
-        <Text className="font-sans-medium text-ui-sm text-latao">{LOCAL.descricao}</Text>
-        <Paragrafo>{LOCAL.endereco}</Paragrafo>
-        <Paragrafo className="text-texto-3">{LOCAL.horario}</Paragrafo>
-      </View>
-      <View className="mt-6 flex-row gap-3">
-        <BotaoAtelie className="flex-1" titulo="Como chegar" onPress={abrirRota} />
-        <BotaoAtelie
-          className="flex-1"
-          variante="contorno"
-          titulo="WhatsApp"
-          onPress={() => void Linking.openURL(LOCAL.whatsapp)}
-        />
+      <View className={largo ? 'flex-1' : undefined}>
+        <View className={largo ? 'gap-1' : 'mt-6 gap-1'}>
+          <Text className="font-display text-ds-24 text-texto">{LOCAL.nome}</Text>
+          <Text className="font-sans-medium text-ui-sm text-latao">{LOCAL.descricao}</Text>
+          <Paragrafo>{LOCAL.endereco}</Paragrafo>
+          <Paragrafo className="text-texto-3">{LOCAL.horario}</Paragrafo>
+        </View>
+        <View className="mt-6 flex-row gap-3">
+          <BotaoAtelie className="flex-1" titulo="Como chegar" onPress={abrirRota} />
+          <BotaoAtelie
+            className="flex-1"
+            variante="contorno"
+            titulo="WhatsApp"
+            onPress={() => void Linking.openURL(LOCAL.whatsapp)}
+          />
+        </View>
       </View>
     </View>
   );

@@ -19,8 +19,11 @@ from pathlib import Path
 from PIL import Image, ImageOps
 
 LAT, LON = -10.195029, -48.328703  # Conciso: 204 Sul, Alameda 10, Galeria Encore 21 -- Palmas, TO
-ZOOM = 17
-LARGURA, ALTURA = 1200, 760  # 2x da maior largura em que o mapa aparece
+# Zoom 16 em tamanho natural (1 pixel do mapa = 1 ponto na tela): da para ver a quadra e
+# as avenidas em volta, com os nomes das ruas no tamanho em que o OSM os desenha. O app
+# mostra um recorte do centro (contentFit none), entao a imagem cobre ate telas largas.
+ZOOM = 16
+LARGURA, ALTURA = 1600, 1000
 TILE = 256
 UA = 'stewer-agenda-build/1.0 (gera um mapa estatico uma unica vez)'
 
@@ -50,8 +53,8 @@ def baixar(z, x, y):
 
 def main():
     cx, cy = pixel_global(LAT, LON, ZOOM)
-    # a regiao de tiles que cobre a imagem final (em 1x; o 2x vem do redimensionamento)
-    meia_l, meia_a = LARGURA / 4, ALTURA / 4
+    # a regiao de tiles que cobre a imagem final, em tamanho natural
+    meia_l, meia_a = LARGURA / 2, ALTURA / 2
     x0, x1 = int((cx - meia_l) // TILE), int((cx + meia_l) // TILE)
     y0, y1 = int((cy - meia_a) // TILE), int((cy + meia_a) // TILE)
 
@@ -63,7 +66,6 @@ def main():
     esq = cx - x0 * TILE - meia_l
     topo = cy - y0 * TILE - meia_a
     recorte = mosaico.crop((round(esq), round(topo), round(esq + meia_l * 2), round(topo + meia_a * 2)))
-    recorte = recorte.resize((LARGURA, ALTURA), Image.LANCZOS)
 
     # O OSM e todo claro (quadras bege, ruas brancas). Estica o contraste para as ruas
     # se destacarem das quadras e depois aplica a curva de cada tema.
