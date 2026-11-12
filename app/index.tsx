@@ -8,7 +8,7 @@ import { Redirect } from 'expo-router';
 import { Text, View } from 'react-native';
 
 import { rotaInicialDoPapel, useAuth } from '@/auth/auth-context';
-import { Losango } from '@/components/ui/losango';
+import { LogoStewer } from '@/components/marca/Logo';
 
 export default function Splash() {
   const { status, role } = useAuth();
@@ -20,7 +20,7 @@ export default function Splash() {
   return (
     <View className="flex-1 bg-canvas">
       <View className="absolute inset-0 items-center justify-center gap-[26px]">
-        <Losango tamanho={58} sigla="SG" tamanhoSigla={19} />
+        <LogoStewer altura={64} />
         <Text className="pl-[6.4px] font-display text-d-20 tracking-logo text-ink">
           STEWER GABRIEL
         </Text>

@@ -14,17 +14,19 @@ import { Text, View } from 'react-native';
 
 import { ApiError } from '@/api/errors';
 import { rotaInicialDoPapel, useAuth } from '@/auth/auth-context';
+import { LogoStewer } from '@/components/marca/Logo';
 import { AvisoLegal } from '@/components/ui/aviso-legal';
 import { AcaoLinha, Botao } from '@/components/ui/botao';
 import { Campo } from '@/components/ui/campo';
-import { Losango } from '@/components/ui/losango';
 import { TelaRolavel } from '@/components/ui/tela';
 import { LabelCaps, Titulo } from '@/components/ui/texto';
+import { useTema } from '@/theme/theme-context';
 
 import { AbasAcesso } from './_abas';
 
 export default function Entrar() {
   const router = useRouter();
+  const { tema } = useTema();
   const { entrar } = useAuth();
 
   const [email, setEmail] = useState('');
@@ -51,7 +53,7 @@ export default function Entrar() {
     <TelaRolavel>
       {/* margin:6px 0 42px 8px no design */}
       <View className="mb-[42px] ml-2 mt-[6px] self-start">
-        <Losango tamanho={40} sigla="SG" tamanhoSigla={13} />
+        <LogoStewer altura={44} cor={tema === 'dark' ? '#f3f3f3' : '#0A0A0A'} />
       </View>
 
       <LabelCaps papel="tela">O ATELIÊ, NO SEU TEMPO</LabelCaps>

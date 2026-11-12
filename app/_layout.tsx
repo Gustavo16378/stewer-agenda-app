@@ -11,7 +11,8 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { criarQueryClient } from '@/api/query-client';
-import { AuthProvider } from '@/auth/auth-context';
+import { AuthProvider, useAuth } from '@/auth/auth-context';
+import { Abertura } from '@/components/marca/Abertura';
 import { FONTES } from '@/theme/fonts';
 import { ThemeProvider, useTema } from '@/theme/theme-context';
 
@@ -21,6 +22,7 @@ void SplashScreen.preventAutoHideAsync();
 
 function Navegacao() {
   const { tema } = useTema();
+  const { status } = useAuth();
 
   // No navegador do computador o app esticava na largura toda e o layout, desenhado
   // para 390px, ficava espalhado. Na web ele vive numa coluna de celular centralizada,
@@ -43,6 +45,8 @@ function Navegacao() {
           }}
         />
       </View>
+      {/* a abertura de marca cobre tudo ate a sessao resolver (e no minimo 1,5 s) */}
+      <Abertura pronto={status !== 'carregando'} />
     </View>
   );
 }
