@@ -6,7 +6,7 @@ import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useMemo } from 'react';
-import { View } from 'react-native';
+import { Platform, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
@@ -22,17 +22,27 @@ void SplashScreen.preventAutoHideAsync();
 function Navegacao() {
   const { tema } = useTema();
 
+  // No navegador do computador o app esticava na largura toda e o layout, desenhado
+  // para 390px, ficava espalhado. Na web ele vive numa coluna de celular centralizada,
+  // com uma borda discreta separando do fundo.
+  const naWeb = Platform.OS === 'web';
+
   return (
-    <View className="flex-1 bg-canvas">
+    <View className={naWeb ? 'flex-1 items-center bg-sunken' : 'flex-1 bg-canvas'}>
       {/* no dark o conteudo da barra do sistema e claro, e vice-versa */}
       <StatusBar style={tema === 'dark' ? 'light' : 'dark'} />
-      <Stack
-        screenOptions={{
-          headerShown: false,
-          animation: 'fade',
-          contentStyle: { backgroundColor: 'transparent' },
-        }}
-      />
+      <View
+        className={naWeb ? 'w-full flex-1 bg-canvas web:border-x web:border-divider' : 'flex-1'}
+        style={naWeb ? { maxWidth: 480 } : undefined}
+      >
+        <Stack
+          screenOptions={{
+            headerShown: false,
+            animation: 'fade',
+            contentStyle: { backgroundColor: 'transparent' },
+          }}
+        />
+      </View>
     </View>
   );
 }
