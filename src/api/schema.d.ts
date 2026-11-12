@@ -370,6 +370,108 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/auth/eu/excluir": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Exclui a conta do cliente logado, confirmando a senha
+         * @description Cancela os horarios futuros, apaga as anotacoes e os dados pessoais.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["ExcluirContaRequest"];
+                };
+            };
+            responses: {
+                /** @description Conta excluida */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Senha nao confere */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/eu/preferencias": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Liga ou desliga o lembrete de horario por e-mail */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["PreferenciasRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Usuario"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/auth/eu/senha": {
         parameters: {
             query?: never;
@@ -515,6 +617,108 @@ export interface paths {
                 };
                 /** @description E-mail ja cadastrado no estabelecimento */
                 409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/senha/esqueci": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Manda um codigo de 6 digitos para o e-mail, se a conta existir
+         * @description Responde 204 com conta ou sem conta, para nao revelar quem e cliente.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["EsqueciSenhaRequest"];
+                };
+            };
+            responses: {
+                /** @description Pedido recebido */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/senha/redefinir": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Troca a senha com o codigo do e-mail e ja devolve a sessao */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["RedefinirSenhaRequest"];
+                };
+            };
+            responses: {
+                /** @description Senha trocada, sessao aberta */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TokenResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Codigo invalido, vencido ou ja usado */
+                422: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -1670,6 +1874,14 @@ export interface components {
                 [key: string]: string;
             }[];
         };
+        EsqueciSenhaRequest: {
+            email: string;
+            /** @description Slug do estabelecimento. Omitido, usa o tenant padrao. */
+            tenantSlug?: string;
+        };
+        ExcluirContaRequest: {
+            senha: string;
+        };
         /** @description Faixa de atendimento de um dia da semana */
         FaixaHoraria: {
             /**
@@ -1728,6 +1940,10 @@ export interface components {
         };
         /** Format: date-time */
         OffsetDateTime: string;
+        PreferenciasRequest: {
+            /** @description Receber lembrete do horario por e-mail */
+            lembreteEmail: boolean;
+        };
         Profissional: {
             id?: components["schemas"]["UUID"];
             tenantId?: components["schemas"]["UUID"];
@@ -1759,6 +1975,13 @@ export interface components {
              * @example true
              */
             ativo?: boolean;
+        };
+        RedefinirSenhaRequest: {
+            email: string;
+            codigo: string;
+            novaSenha: string;
+            /** @description Slug do estabelecimento. Omitido, usa o tenant padrao. */
+            tenantSlug?: string;
         };
         RegistrarRequest: {
             /** @example Joana Ribeiro */
@@ -1863,6 +2086,8 @@ export interface components {
              * @example 2022-03-10T12:15:50-04:00
              */
             criadoEm?: components["schemas"]["OffsetDateTime"];
+            /** @description Recebe lembrete do horario por e-mail */
+            lembreteEmail?: boolean;
         };
     };
     responses: never;

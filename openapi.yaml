@@ -260,6 +260,25 @@ components:
             additionalProperties:
               type: string
           description: "Detalhes por campo, quando houver falha de validacao"
+    EsqueciSenhaRequest:
+      type: object
+      required:
+      - email
+      properties:
+        email:
+          type: string
+          pattern: \S
+        tenantSlug:
+          type: string
+          description: "Slug do estabelecimento. Omitido, usa o tenant padrao."
+    ExcluirContaRequest:
+      type: object
+      required:
+      - senha
+      properties:
+        senha:
+          type: string
+          pattern: \S
     FaixaHoraria:
       type: object
       required:
@@ -363,6 +382,14 @@ components:
     OffsetDateTime:
       type: string
       format: date-time
+    PreferenciasRequest:
+      type: object
+      required:
+      - lembreteEmail
+      properties:
+        lembreteEmail:
+          type: boolean
+          description: Receber lembrete do horario por e-mail
     Profissional:
       type: object
       properties:
@@ -421,6 +448,27 @@ components:
           examples:
           - true
           description: "Se aparece na agenda. Omitido na criacao, assume true."
+    RedefinirSenhaRequest:
+      type: object
+      required:
+      - email
+      - codigo
+      - novaSenha
+      properties:
+        email:
+          type: string
+          pattern: \S
+        codigo:
+          type: string
+          pattern: "\\d{6}"
+        novaSenha:
+          type: string
+          minLength: 8
+          maxLength: 72
+          pattern: \S
+        tenantSlug:
+          type: string
+          description: "Slug do estabelecimento. Omitido, usa o tenant padrao."
     RegistrarRequest:
       type: object
       required:
@@ -609,6 +657,9 @@ components:
           examples:
           - 2022-03-10T12:15:50-04:00
           description: Quando a conta foi criada
+        lembreteEmail:
+          type: boolean
+          description: Recebe lembrete do horario por e-mail
   securitySchemes:
     bearerAuth:
       description: Authentication
@@ -818,6 +869,49 @@ paths:
           description: Bad Request
       security:
       - bearerAuth: []
+  /auth/eu/excluir:
+    post:
+      summary: "Exclui a conta do cliente logado, confirmando a senha"
+      description: "Cancela os horarios futuros, apaga as anotacoes e os dados pessoais."
+      tags:
+      - Auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ExcluirContaRequest"
+        required: true
+      responses:
+        "204":
+          description: Conta excluida
+        "422":
+          description: Senha nao confere
+        "400":
+          description: Bad Request
+      security:
+      - bearerAuth: []
+  /auth/eu/preferencias:
+    put:
+      summary: Liga ou desliga o lembrete de horario por e-mail
+      tags:
+      - Auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PreferenciasRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Usuario"
+        "400":
+          description: Bad Request
+      security:
+      - bearerAuth: []
   /auth/eu/senha:
     put:
       summary: "Troca a senha, exigindo a atual"
@@ -876,6 +970,45 @@ paths:
           description: Conta criada
         "409":
           description: E-mail ja cadastrado no estabelecimento
+        "400":
+          description: Bad Request
+  /auth/senha/esqueci:
+    post:
+      summary: "Manda um codigo de 6 digitos para o e-mail, se a conta existir"
+      description: "Responde 204 com conta ou sem conta, para nao revelar quem e cliente."
+      tags:
+      - Auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EsqueciSenhaRequest"
+        required: true
+      responses:
+        "204":
+          description: Pedido recebido
+        "400":
+          description: Bad Request
+  /auth/senha/redefinir:
+    post:
+      summary: Troca a senha com o codigo do e-mail e ja devolve a sessao
+      tags:
+      - Auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RedefinirSenhaRequest"
+        required: true
+      responses:
+        "200":
+          description: "Senha trocada, sessao aberta"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TokenResponse"
+        "422":
+          description: "Codigo invalido, vencido ou ja usado"
         "400":
           description: Bad Request
   /clientes:
