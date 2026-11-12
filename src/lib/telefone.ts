@@ -21,3 +21,24 @@ export function formatTelefone(bruto: string | null | undefined): string {
   }
   return bruto.trim();
 }
+
+/**
+ * Mascara enquanto a pessoa digita: "63985116783" vira "(63) 9 8511-6783". So digitos
+ * contam (no maximo 11, DDD + celular); o resto e ignorado. Fixo de 10 digitos sai como
+ * "(63) 3215-0000".
+ */
+export function mascaraTelefone(digitado: string): string {
+  let d = digitado.replace(/\D/g, '');
+  // numero salvo com o 55 do Brasil na frente (+5563...): tira o DDI
+  if ((d.length === 12 || d.length === 13) && d.startsWith('55')) d = d.slice(2);
+  d = d.slice(0, 11);
+  if (d.length === 0) return '';
+  if (d.length <= 2) return `(${d}`;
+  const ddd = `(${d.slice(0, 2)}) `;
+  const resto = d.slice(2);
+  if (d.length <= 10) {
+    // ainda digitando, ou fixo: 4 + 4
+    return resto.length <= 4 ? ddd + resto : `${ddd}${resto.slice(0, 4)}-${resto.slice(4)}`;
+  }
+  return `${ddd}${resto[0]} ${resto.slice(1, 5)}-${resto.slice(5)}`;
+}

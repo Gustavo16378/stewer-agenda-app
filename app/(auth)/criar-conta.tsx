@@ -17,6 +17,7 @@ import { rotaInicialDoPapel, useAuth } from '@/auth/auth-context';
 import { AvisoLegal } from '@/components/ui/aviso-legal';
 import { Botao } from '@/components/ui/botao';
 import { Campo } from '@/components/ui/campo';
+import { mascaraTelefone } from '@/lib/telefone';
 
 import { AbasAcesso } from './_abas';
 import { MolduraAcesso } from './_moldura';
@@ -92,8 +93,8 @@ export default function CriarConta() {
         className="mt-5"
         rotulo="WhatsApp"
         value={telefone}
-        onChangeText={setTelefone}
-        placeholder="(63) 9 0000-0000"
+        onChangeText={(t) => setTelefone(mascaraTelefone(t))}
+        placeholder="(63) 9 8511-6783"
         keyboardType="phone-pad"
         autoComplete="tel"
         maxLength={30}

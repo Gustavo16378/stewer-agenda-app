@@ -1,4 +1,4 @@
-import { formatTelefone } from '../telefone';
+import { formatTelefone, mascaraTelefone } from '../telefone';
 
 describe('formatTelefone', () => {
   it('formata celular com DDI', () => {
@@ -15,5 +15,21 @@ describe('formatTelefone', () => {
   });
   it('vazio vira string vazia', () => {
     expect(formatTelefone(undefined)).toBe('');
+  });
+});
+
+describe('mascaraTelefone', () => {
+  it('formata o celular enquanto digita', () => {
+    expect(mascaraTelefone('6')).toBe('(6');
+    expect(mascaraTelefone('63')).toBe('(63');
+    expect(mascaraTelefone('639')).toBe('(63) 9');
+    expect(mascaraTelefone('6398511')).toBe('(63) 9851-1');
+    expect(mascaraTelefone('63985116783')).toBe('(63) 9 8511-6783');
+  });
+  it('fixo de 10 digitos e entrada suja', () => {
+    expect(mascaraTelefone('6332150000')).toBe('(63) 3215-0000');
+    expect(mascaraTelefone('(63) 9 8511-67831234')).toBe('(63) 9 8511-6783');
+    expect(mascaraTelefone('abc')).toBe('');
+    expect(mascaraTelefone('+5563985116783')).toBe('(63) 9 8511-6783');
   });
 });
