@@ -3,8 +3,9 @@
  *
  * No celular: o Stewer atendendo ocupa o topo, a foto escurece ate o fundo e o titulo
  * assenta sobre ela; o formulario vem logo abaixo, com o teclado empurrando a tela.
- * Em tela larga: a foto vira a metade esquerda inteira, com a frase do Stewer, e o
- * formulario fica centralizado na direita.
+ * Em tela larga: a metade esquerda e um painel escuro com a foto do Stewer encostada a
+ * direita, na proporcao dela (nunca esticada nem cortada no meio da cabeca), e a frase
+ * dele no espaco escuro; o formulario fica centralizado na direita.
  *
  * Arquivo com `_` na frente: o Expo Router ignora como rota.
  */
@@ -29,6 +30,9 @@ import { useTema } from '@/theme/theme-context';
 
 // O Stewer cortando: a foto que diz o que o app agenda.
 const FOTO = PORTFOLIO[1]!;
+// Em tela larga, a foto em que ele aparece inteiro, com a luz quente do estudio.
+const FOTO_LARGA = PORTFOLIO[0]!;
+const ESCURO = '#0c0c0c';
 
 function Marca() {
   return (
@@ -53,30 +57,48 @@ export function MolduraAcesso({
 }) {
   const largo = useLayoutLargo();
   const insets = useSafeAreaInsets();
-  const { height } = useWindowDimensions();
+  const { height, width } = useWindowDimensions();
   const { tema } = useTema();
   const fundo = tema === 'dark' ? '12,12,12' : '242,237,229';
 
   if (largo) {
     return (
       <View className="flex-1 flex-row bg-fundo">
-        <View className="flex-1 overflow-hidden">
-          <Image
-            source={FOTO.fonte}
-            accessibilityLabel={FOTO.descricao}
-            style={StyleSheet.absoluteFill}
-            contentFit="cover"
-            contentPosition="top"
-            transition={300}
-          />
-          <LinearGradient
-            colors={['rgba(12,12,12,0.55)', 'rgba(12,12,12,0)', 'rgba(12,12,12,0.85)']}
-            locations={[0, 0.3, 1]}
-            style={StyleSheet.absoluteFill}
-          />
+        <View className="flex-1 overflow-hidden" style={{ backgroundColor: ESCURO }}>
+          {/* a foto na proporcao dela, encostada a direita, da altura da tela */}
+          <View
+            style={{
+              position: 'absolute',
+              top: 0,
+              bottom: 0,
+              right: 0,
+              width: Math.min(height * FOTO_LARGA.proporcao, (width - 520) * 0.68),
+            }}
+          >
+            <Image
+              source={FOTO_LARGA.fonte}
+              accessibilityLabel={FOTO_LARGA.descricao}
+              style={StyleSheet.absoluteFill}
+              contentFit="cover"
+              contentPosition="top"
+              transition={300}
+            />
+            {/* a borda esquerda da foto se dissolve no escuro */}
+            <LinearGradient
+              colors={[ESCURO, 'rgba(12,12,12,0)']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 0.45, y: 0 }}
+              style={StyleSheet.absoluteFill}
+            />
+            <LinearGradient
+              colors={['rgba(12,12,12,0)', 'rgba(12,12,12,0.75)']}
+              locations={[0.55, 1]}
+              style={StyleSheet.absoluteFill}
+            />
+          </View>
           <View className="flex-1 justify-between p-12">
             <Marca />
-            <View className="max-w-[460px] gap-4">
+            <View className="max-w-[440px] gap-4">
               <View className="h-px w-8 bg-latao" />
               <Text className="font-display-italic text-ds-30 text-marfim">“{SOBRE.citacao}”</Text>
               <Text className="font-sans text-ui text-marfim/75">Stewer Gabriel</Text>
