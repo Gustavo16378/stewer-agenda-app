@@ -30,6 +30,11 @@ jest.mock('@/auth/auth-context', () => ({
   rotaInicialDoPapel: () => '/(admin)/(tabs)/visao-geral',
 }));
 
+jest.mock('@/theme/theme-context', () => ({
+  useTema: () => ({ tema: 'light', preferencia: 'sistema', alternarTema: jest.fn() }),
+  useCores: () => ({ gold: '#C9A96A', textMuted: '#665D52' }),
+}));
+
 jest.mock('@/api/hooks', () => ({
   useProfissionais: () => ({
     data: [],
@@ -47,6 +52,7 @@ jest.mock('@/api/hooks', () => ({
   useDisponibilidadesDe: () => ({ grades: [], carregando: false, erro: null }),
   useAniversariantes: () => ({ data: [], isLoading: false, error: null }),
   useSumidos: () => ({ data: [], isLoading: false, error: null }),
+  useEstudioSalvo: () => ({ data: undefined }),
   useTodosClientes: () => ({
     data: [],
     isLoading: false,

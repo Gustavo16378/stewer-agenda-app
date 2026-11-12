@@ -1,6 +1,10 @@
 /**
  * [15 Dashboard] — tab VISÃO GERAL do ADMIN.
  *
+ * Redesenho (nov/2026): abre com o dia do Stewer (retrato, saudacao e o proximo
+ * cliente), a lista de hoje, os numeros da semana em quadros, aniversariantes e sumidos,
+ * e atalhos para Estudio, Auditoria e o site. O texto abaixo descreve os numeros.
+ *
  * Layout literal do frame 15: eyebrow "VISÃO GERAL", titulo Playfair 29 "Esta semana",
  * faixa "31 AGO — 06 SET"; tres blocos separados por divisor (`padding-bottom:30px`):
  *   1. "32" (Playfair 42, lh 1) + AGENDAMENTOS NA SEMANA, com mini grafico de 7 barras de
@@ -28,9 +32,11 @@
  * profissional. Sem ela, quem entra como administrador num aparelho compartilhado
  * fica administrador ate o token vencer.
  */
+import { Image } from 'expo-image';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { useMemo } from 'react';
-import { Pressable, RefreshControl, Text, View } from 'react-native';
+import { useMemo, type ReactNode } from 'react';
+import { Linking, Pressable, RefreshControl, Text, View } from 'react-native';
 
 import {
   useAgendaDeVariosDias,
@@ -39,33 +45,196 @@ import {
   useTodosClientes,
 } from '@/api/hooks';
 import type { Agendamento } from '@/api/types';
+import { useAuth } from '@/auth/auth-context';
 import { NumeroAnimado } from '@/components/atelie/NumeroAnimado';
 import { Relacionamento } from '@/components/ficha/Relacionamento';
+import { GeometriaDoRosto, MARCAS_RETRATO } from '@/components/marca/Geometria';
 import { AcaoLinha } from '@/components/ui/botao';
 import { Carregando, EstadoErro } from '@/components/ui/estados';
+import { IconeDaAba } from '@/components/ui/icones-abas';
 import { TelaRolavel } from '@/components/ui/tela';
-import { LabelCaps, Titulo } from '@/components/ui/texto';
+import { LabelCaps } from '@/components/ui/texto';
+import { FOTOS, SITE_DO_STEWER } from '@/content/atelie';
+import { useEstudio } from '@/content/estudio';
 import { cn } from '@/lib/cn';
 import {
   diaSemanaDe,
+  formatHora,
   formatFaixaDiasCaps,
   hojeCalendarDate,
   mesAnterior,
   noMesmoMesLocal,
   nomeMesCaps,
+  primeiroNome,
+  saudacao,
   semanaDe,
   wallTimeParaMinutos,
   type CalendarDate,
 } from '@/lib/datetime';
-import { formatCentavos, somaCentavos } from '@/lib/money';
+import { formatCentavosCurto, somaCentavos } from '@/lib/money';
+import { useLayoutLargo } from '@/lib/responsivo';
+import { useCores } from '@/theme/theme-context';
 
-const ALTURA_MAX_BARRA = 47; // px, a barra mais alta do frame
 const LETRAS = ['S', 'T', 'Q', 'Q', 'S', 'S', 'D']; // segunda..domingo, como o design
 
 const conta = (a: Agendamento) => a.status === 'AGENDADO' || a.status === 'CONCLUIDO';
+const MARFIM = '#F0EBE4';
+
+/**
+ * O dia do Stewer: retrato a direita, saudacao e a frase do dia a esquerda. Sempre escuro,
+ * como a parede do estudio, nos dois temas: e o unico bloco forte da tela.
+ */
+function Heroi({ hoje, carregando }: { hoje: Agendamento[]; carregando: boolean }) {
+  const { usuario } = useAuth();
+  const estudio = useEstudio();
+  const largo = useLayoutLargo();
+  const retrato = estudio.retratoEnviado ?? FOTOS.retrato;
+  const agora = Date.now();
+  const proximo = hoje.find((a) => a.status === 'AGENDADO' && Date.parse(a.fim ?? '') > agora);
+  const quantos = hoje.length;
+
+  let frase: string;
+  if (carregando) frase = 'Olhando a agenda de hoje…';
+  else if (quantos === 0) frase = 'Agenda livre hoje.';
+  else if (!proximo)
+    frase = `${quantos} ${quantos === 1 ? 'atendimento' : 'atendimentos'} hoje, todos feitos.`;
+  else
+    frase = `${quantos} ${quantos === 1 ? 'atendimento' : 'atendimentos'} hoje. O próximo é às ${formatHora(proximo.inicio)}, com ${primeiroNome(proximo.clienteNome)}.`;
+
+  const altura = largo ? 300 : 260;
+  return (
+    <View className="mt-6 overflow-hidden rounded-[3px] bg-[#0c0c0c]" style={{ height: altura }}>
+      <View
+        className="absolute bottom-0 right-0 top-0"
+        style={{ width: largo ? altura * 0.9 : '62%' }}
+      >
+        <Image
+          source={retrato.fonte}
+          accessibilityLabel={retrato.descricao}
+          contentFit="cover"
+          contentPosition="top"
+          style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
+          transition={300}
+        />
+        {estudio.retratoEnviado ? null : <GeometriaDoRosto marcas={MARCAS_RETRATO} atraso={400} />}
+        <LinearGradient
+          colors={['#0c0c0c', 'rgba(12,12,12,0)']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 0.6, y: 0 }}
+          style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
+          pointerEvents="none"
+        />
+      </View>
+      <View className="flex-1 justify-end p-6" style={{ maxWidth: largo ? 460 : '70%' }}>
+        <View className="mb-4 h-px w-8 bg-latao" />
+        <Text className="font-sans text-ui text-marfim/75">{saudacao()},</Text>
+        <Text
+          className="font-display text-marfim"
+          style={{ fontSize: largo ? 48 : 36, lineHeight: largo ? 54 : 42 }}
+          numberOfLines={1}
+        >
+          {primeiroNome(usuario?.nome) || 'Stewer'}.
+        </Text>
+        <Text className="mt-3 font-sans text-ui" style={{ color: MARFIM, opacity: 0.85 }}>
+          {frase}
+        </Text>
+      </View>
+    </View>
+  );
+}
+
+/** Os horarios de hoje, em ordem: hora grande, cliente e servico. Toque abre o horario. */
+function Hoje({ lista, aoAbrir }: { lista: Agendamento[]; aoAbrir: (id: string) => void }) {
+  if (lista.length === 0) return null;
+  const agora = Date.now();
+  return (
+    <View className="mt-10">
+      <Text accessibilityRole="header" className="font-display text-ds-24 text-texto">
+        Hoje
+      </Text>
+      <View className="mt-3">
+        {lista.slice(0, 6).map((a) => {
+          const passou = Date.parse(a.fim ?? '') < agora;
+          return (
+            <Pressable
+              key={a.id}
+              onPress={() => a.id && aoAbrir(a.id)}
+              accessibilityRole="button"
+              accessibilityLabel={`${formatHora(a.inicio)}, ${a.clienteNome ?? 'cliente'}, ${a.servicoNome ?? ''}`}
+              className={cn(
+                'flex-row items-center gap-4 border-b border-borda py-4',
+                passou && 'opacity-50'
+              )}
+              style={({ pressed }) => (pressed ? { opacity: 0.6 } : null)}
+            >
+              <Text className="w-16 font-display text-ds-20 text-latao">
+                {formatHora(a.inicio)}
+              </Text>
+              <View className="flex-1">
+                <Text className="font-sans-medium text-ui text-texto" numberOfLines={1}>
+                  {a.clienteNome}
+                </Text>
+                <Text className="font-sans text-ui-sm text-texto-3" numberOfLines={1}>
+                  {a.servicoNome}
+                  {a.primeiraVisita ? ', primeira vez' : ''}
+                </Text>
+              </View>
+              <Text className="font-sans text-ds-20 text-texto-3">›</Text>
+            </Pressable>
+          );
+        })}
+      </View>
+    </View>
+  );
+}
+
+/** Um numero da semana num quadro. */
+function Quadro({ children, className }: { children: ReactNode; className?: string }) {
+  return (
+    <View className={cn('p-1', className)}>
+      <View className="h-full rounded-[3px] bg-superficie p-5">{children}</View>
+    </View>
+  );
+}
+
+function Atalho({
+  titulo,
+  texto,
+  icone,
+  aoTocar,
+  rotulo,
+  largura,
+}: {
+  titulo: string;
+  texto: string;
+  icone: ReactNode;
+  aoTocar: () => void;
+  rotulo?: string;
+  largura: string;
+}) {
+  return (
+    <View className="p-1" style={{ width: largura as `${number}%` }}>
+      <Pressable
+        onPress={aoTocar}
+        accessibilityRole="link"
+        accessibilityLabel={rotulo ?? titulo}
+        className="h-full gap-3 rounded-[3px] border border-borda p-4"
+        style={({ pressed }) => (pressed ? { opacity: 0.75 } : null)}
+      >
+        {icone}
+        <View>
+          <Text className="font-sans-semibold text-ui text-texto">{titulo}</Text>
+          <Text className="font-sans text-ui-sm text-texto-3">{texto}</Text>
+        </View>
+      </Pressable>
+    </View>
+  );
+}
 
 export default function VisaoGeral() {
   const router = useRouter();
+  const largo = useLayoutLargo();
+  const cores = useCores();
   const hoje = hojeCalendarDate();
   const semana = useMemo(() => semanaDe(hoje), [hoje]);
   const agora = new Date();
@@ -128,6 +297,17 @@ export default function VisaoGeral() {
     void clientes.refetch();
   };
 
+  const deHoje = useMemo(
+    () =>
+      [...(agenda.porDia.get(hoje) ?? [])]
+        .filter(conta)
+        .sort((a, b) => Date.parse(a.inicio ?? '') - Date.parse(b.inicio ?? '')),
+    [agenda.porDia, hoje]
+  );
+  const larguraQuadro = largo ? 'w-1/4' : 'w-1/2';
+  const numero = 'font-display text-[44px] leading-[48px] text-texto';
+  const legenda = 'mt-2 font-sans text-ui-sm text-texto-3';
+
   return (
     <TelaRolavel
       insetInferior={false}
@@ -139,147 +319,149 @@ export default function VisaoGeral() {
       }
     >
       <View className="pt-10">
-        {/* SAIR na linha do eyebrow, igual a agenda do profissional: o design nao
-            desenhou saida para este papel, e o ADMIN nao tem aba de perfil. */}
+        {/* Conta (e o sair) na linha de cima: o ADMIN nao tem aba de perfil. */}
         <View className="flex-row items-center justify-between">
           <Text className="font-sans-medium text-ui-sm text-texto-3">Painel</Text>
           <AcaoLinha titulo="Conta" onPress={() => router.push('/conta' as never)} />
         </View>
-        <Titulo className="mt-3 text-ds-38">Esta semana</Titulo>
-        <LabelCaps papel="meta" className="mt-[14px]">
-          {formatFaixaDiasCaps(semana[0] ?? hoje, semana[6] ?? hoje)}
-        </LabelCaps>
+
+        <Heroi hoje={deHoje} carregando={carregando} />
+        <Hoje lista={deHoje} aoAbrir={(id) => router.push(`/agendamento/${id}` as never)} />
+
+        <View className="mt-12 flex-row items-end justify-between">
+          <Text accessibilityRole="header" className="font-display text-ds-24 text-texto">
+            Esta semana
+          </Text>
+          <LabelCaps papel="meta">
+            {formatFaixaDiasCaps(semana[0] ?? hoje, semana[6] ?? hoje)}
+          </LabelCaps>
+        </View>
 
         {carregando ? (
-          <Carregando className="mt-[38px]" />
+          <Carregando className="mt-8" />
         ) : erro ? (
-          <EstadoErro className="mt-[38px]" erro={erro} aoTentarDeNovo={refetch} />
+          <EstadoErro className="mt-8" erro={erro} aoTentarDeNovo={refetch} />
         ) : ids.length === 0 ? (
-          <Text className="mt-[38px] font-sans text-help text-ink/42">
+          <Text className="mt-6 font-sans text-ui text-texto-3">
             Sem profissionais ativos: não há agenda para somar. Cadastre a equipe na aba Equipe.
           </Text>
         ) : (
-          <>
-            {/* 1. agendamentos na semana */}
-            <View className="mt-[38px] border-b border-divider pb-[30px]">
-              <View className="flex-row items-end justify-between">
-                <View>
-                  <NumeroAnimado
-                    valor={totalSemana}
-                    className="font-display text-[52px] leading-[56px] text-texto"
-                  />
-                  <LabelCaps papel="micro" className="mt-3 tracking-button text-text-muted">
-                    Agendamentos na semana
-                  </LabelCaps>
-                </View>
-                <View className="flex-row items-end gap-[9px]">
-                  {porDia.map((lista, i) => {
-                    const dia = semana[i] as CalendarDate;
-                    const altura = Math.max(
-                      2,
-                      Math.round((lista.length / maxDia) * ALTURA_MAX_BARRA)
-                    );
-                    return (
-                      <View key={dia} className="items-center gap-2">
-                        <View
-                          className={cn('w-[18px]', dia === hoje ? 'bg-latao' : 'bg-borda')}
-                          style={{ height: altura }}
-                          accessibilityLabel={`${lista.length} em ${dia}`}
-                        />
-                        <Text className="font-sans-semibold text-micro text-ink/35">
-                          {LETRAS[i]}
-                        </Text>
-                      </View>
-                    );
-                  })}
-                </View>
+          <View className="mt-4 flex-row flex-wrap" style={{ marginHorizontal: -4 }}>
+            {/* 1. agendamentos na semana, com as barras por dia */}
+            <Quadro className={larguraQuadro}>
+              <NumeroAnimado valor={totalSemana} className={numero} />
+              <Text className={legenda}>agendamentos</Text>
+              <View className="mt-4 flex-row items-end gap-[6px]">
+                {porDia.map((lista, i) => {
+                  const dia = semana[i] as CalendarDate;
+                  const altura = Math.max(2, Math.round((lista.length / maxDia) * 34));
+                  return (
+                    <View key={dia} className="items-center gap-1">
+                      <View
+                        className={cn('w-3', dia === hoje ? 'bg-latao' : 'bg-borda')}
+                        style={{ height: altura }}
+                        accessibilityLabel={`${lista.length} em ${dia}`}
+                      />
+                      <Text className="font-sans-semibold text-micro text-texto-3">
+                        {LETRAS[i]}
+                      </Text>
+                    </View>
+                  );
+                })}
               </View>
-            </View>
+            </Quadro>
 
             {/* 2. taxa de ocupacao */}
-            <View className="mt-[30px] border-b border-divider pb-[30px]">
+            <Quadro className={larguraQuadro}>
               {ocupacao === null ? (
-                <Titulo className="text-[52px] leading-[56px]">sem grade</Titulo>
+                <Text className={numero}>sem grade</Text>
               ) : (
-                <NumeroAnimado
-                  valor={ocupacao}
-                  sufixo="%"
-                  className="font-display text-[52px] leading-[56px] text-texto"
-                />
+                <NumeroAnimado valor={ocupacao} sufixo="%" className={numero} />
               )}
-              <LabelCaps papel="micro" className="mt-3 tracking-button text-text-muted">
-                Taxa de ocupação
-              </LabelCaps>
-              <View className="mt-5 h-[3px] rounded-full bg-borda">
+              <Text className={legenda}>da agenda ocupada</Text>
+              <View className="mt-4 h-[3px] rounded-full bg-borda">
                 <View
                   className="h-full rounded-full bg-latao"
                   style={{ width: `${ocupacao ?? 0}%` }}
                 />
               </View>
               {grades.erro ? (
-                <Text className="mt-3 font-sans text-help text-red-500">{grades.erro.message}</Text>
-              ) : ocupacao === null && !grades.carregando ? (
-                <Text className="mt-3 font-sans text-help text-ink/38">
-                  Sem grade semanal cadastrada, não há horas ofertadas para comparar.
+                <Text className="mt-3 font-sans text-ui-sm text-cadeira">
+                  {grades.erro.message}
                 </Text>
               ) : null}
-            </View>
+            </Quadro>
 
             {/* 3. clientes novos no mes */}
-            <View className="mt-[30px] border-b border-divider pb-[30px]">
-              <View className="flex-row items-end justify-between">
-                <View>
-                  {clientes.data ? (
-                    <NumeroAnimado
-                      valor={novos.esteMes}
-                      className="font-display text-[52px] leading-[56px] text-texto"
-                    />
-                  ) : (
-                    <Titulo className="text-[52px] leading-[56px]">…</Titulo>
-                  )}
-                  <LabelCaps papel="micro" className="mt-3 tracking-button text-text-muted">
-                    Clientes novos no mês
-                  </LabelCaps>
-                </View>
-                {clientes.data ? (
-                  <LabelCaps papel="meta" className="pb-1 tracking-chip text-gold">
-                    {novos.delta >= 0 ? `+${novos.delta}` : `${novos.delta}`} VS.{' '}
-                    {nomeMesCaps(mesAnterior(agora))}
-                  </LabelCaps>
-                ) : null}
-              </View>
+            <Quadro className={larguraQuadro}>
+              {clientes.data ? (
+                <NumeroAnimado valor={novos.esteMes} className={numero} />
+              ) : (
+                <Text className={numero}>…</Text>
+              )}
+              <Text className={legenda}>clientes novos no mês</Text>
+              {clientes.data ? (
+                <Text className="mt-3 font-sans-medium text-ui-sm text-latao">
+                  {novos.delta >= 0 ? `+${novos.delta}` : `${novos.delta}`} vs.{' '}
+                  {nomeMesCaps(mesAnterior(agora)).toLowerCase()}
+                </Text>
+              ) : null}
               {clientes.error ? (
-                <Text className="mt-3 font-sans text-help text-red-500">
+                <Text className="mt-3 font-sans text-ui-sm text-cadeira">
                   {clientes.error.message}
                 </Text>
               ) : null}
-            </View>
+            </Quadro>
 
             {/* 4. receita estimada */}
-            <View className="mt-7 flex-row items-center justify-between">
-              <Text className="font-sans text-meta text-ink/55">Receita estimada da semana</Text>
-              <Titulo className="text-d-19">{formatCentavos(receita)}</Titulo>
-            </View>
-          </>
+            <Quadro className={larguraQuadro}>
+              {/* sem centavos e com o R$ pequeno: cabe no quadro mesmo com quatro digitos */}
+              <Text className={numero} numberOfLines={1}>
+                <Text className="font-display text-ds-20 text-texto-3">R$ </Text>
+                {formatCentavosCurto(Math.round(receita / 100) * 100)}
+              </Text>
+              <Text className={legenda}>receita estimada da semana</Text>
+            </Quadro>
+          </View>
         )}
 
         <Relacionamento />
 
-        <Pressable
-          onPress={() => router.push('/auditoria' as never)}
-          accessibilityRole="link"
-          accessibilityLabel="Abrir a auditoria"
-          className="mt-14 flex-row items-center justify-between rounded-[3px] border border-borda bg-superficie px-5 py-5"
-          style={({ pressed }) => (pressed ? { opacity: 0.8 } : null)}
-        >
-          <View className="flex-1">
-            <Text className="font-display text-ds-20 text-texto">Auditoria</Text>
-            <Text className="font-sans text-ui-sm text-texto-3">
-              Quem fez o quê e quando, em tudo do estúdio
-            </Text>
-          </View>
-          <Text className="font-sans text-ds-24 text-latao">›</Text>
-        </Pressable>
+        <Text accessibilityRole="header" className="mt-14 font-display text-ds-24 text-texto">
+          Atalhos
+        </Text>
+        <View className="mt-4 flex-row flex-wrap" style={{ marginHorizontal: -4 }}>
+          <Atalho
+            largura={largo ? '25%' : '50%'}
+            titulo="Estúdio"
+            texto="Retrato, fotos, endereço e contatos"
+            icone={<IconeDaAba rota="estudio" cor={cores.gold} />}
+            aoTocar={() => router.push('/estudio' as never)}
+            rotulo="Abrir o estúdio"
+          />
+          <Atalho
+            largura={largo ? '25%' : '50%'}
+            titulo="Auditoria"
+            texto="Quem fez o quê e quando"
+            icone={<IconeDaAba rota="auditoria" cor={cores.gold} />}
+            aoTocar={() => router.push('/auditoria' as never)}
+            rotulo="Abrir a auditoria"
+          />
+          <Atalho
+            largura={largo ? '25%' : '50%'}
+            titulo="Painel do site"
+            texto="Portfólio, cursos e textos"
+            icone={<IconeDaAba rota="visao-geral" cor={cores.gold} />}
+            aoTocar={() => void Linking.openURL(`${SITE_DO_STEWER}/admin`)}
+          />
+          <Atalho
+            largura={largo ? '25%' : '50%'}
+            titulo="Ver o site"
+            texto="stewergabriel.com"
+            icone={<IconeDaAba rota="inicio" cor={cores.gold} />}
+            aoTocar={() => void Linking.openURL(SITE_DO_STEWER)}
+          />
+        </View>
       </View>
     </TelaRolavel>
   );
