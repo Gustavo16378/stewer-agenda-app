@@ -41,6 +41,7 @@ import type {
   Imagem,
   ImagemRequest,
   Periodo,
+  RelatorioFinanceiro,
   Profissional,
   ProfissionalRequest,
   Servico,
@@ -237,6 +238,35 @@ export function useAgendaDoDia(data: CalendarDate, profissionalId?: string) {
   });
 }
 
+/** Semana ou mes de agenda num pedido so (ate 92 dias). */
+export function useAgendaDoPeriodo(
+  de: CalendarDate,
+  ate: CalendarDate,
+  profissionalId?: string,
+  habilitado = true
+) {
+  const { role } = useAuth();
+  const faltaProfissional = role === 'ADMIN' && !profissionalId;
+  return useQuery<Agendamento[], ApiError>({
+    queryKey: chaves.agendaDoPeriodo(de, ate, profissionalId),
+    queryFn: () => q.buscarAgendaDoPeriodo(de, ate, profissionalId),
+    enabled: habilitado && !!de && !!ate && !faltaProfissional,
+  });
+}
+
+/** O balanco do periodo (so ADMIN). */
+export function useFinanceiro(
+  de: CalendarDate,
+  ate: CalendarDate,
+  agrupar?: 'DIA' | 'SEMANA' | 'MES'
+) {
+  return useQuery<RelatorioFinanceiro, ApiError>({
+    queryKey: chaves.financeiro(de, ate, agrupar),
+    queryFn: () => q.buscarFinanceiro(de, ate, agrupar),
+    placeholderData: (anterior) => anterior,
+  });
+}
+
 export function useMeusAgendamentos(periodo: Periodo = 'todos') {
   return useQuery<Agendamento[], ApiError>({
     queryKey: chaves.meusAgendamentos(periodo),
@@ -326,6 +356,7 @@ export function useAtualizarStatus() {
       void qc.invalidateQueries({ queryKey: ['agendamentos'] });
       void qc.invalidateQueries({ queryKey: ['horarios-livres'] });
       void qc.invalidateQueries({ queryKey: ['cliente'] });
+      void qc.invalidateQueries({ queryKey: ['relatorio'] });
     },
   });
 }

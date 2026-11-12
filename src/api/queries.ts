@@ -32,6 +32,7 @@ import type {
   Imagem,
   ImagemRequest,
   Periodo,
+  RelatorioFinanceiro,
   Profissional,
   ProfissionalRequest,
   RemarcarRequest,
@@ -55,6 +56,10 @@ export const chaves = {
   profissionais: (incluirInativos: boolean) => ['profissionais', { incluirInativos }] as const,
   profissional: (id: string) => ['profissional', id] as const,
 
+  agendaDoPeriodo: (de: CalendarDate, ate: CalendarDate, profissionalId?: string) =>
+    ['agendamentos', 'periodo', de, ate, profissionalId ?? ''] as const,
+  financeiro: (de: CalendarDate, ate: CalendarDate, agrupar?: string) =>
+    ['relatorio', 'financeiro', de, ate, agrupar ?? ''] as const,
   agenda: (data: CalendarDate, profissionalId?: string) =>
     ['agendamentos', 'agenda', data, profissionalId ?? 'eu'] as const,
   meusAgendamentos: (periodo: Periodo) => ['agendamentos', 'meus', periodo] as const,
@@ -226,6 +231,30 @@ export function removerProfissional(id: string): Promise<void> {
  * `profissionalId` e obrigatorio para ADMIN e ignorado para PROFISSIONAL — mandar
  * para PROFISSIONAL nao quebra, mas o backend usa o profissional do token.
  */
+export function buscarAgendaDoPeriodo(
+  de: CalendarDate,
+  ate: CalendarDate,
+  profissionalId?: string
+): Promise<Agendamento[]> {
+  return desembrulha(
+    api.GET('/agendamentos/agenda/periodo', {
+      params: { query: { de, ate, ...(profissionalId ? { profissionalId } : {}) } },
+    })
+  );
+}
+
+export function buscarFinanceiro(
+  de: CalendarDate,
+  ate: CalendarDate,
+  agrupar?: 'DIA' | 'SEMANA' | 'MES'
+): Promise<RelatorioFinanceiro> {
+  return desembrulha(
+    api.GET('/relatorios/financeiro', {
+      params: { query: { de, ate, ...(agrupar ? { agrupar } : {}) } },
+    })
+  );
+}
+
 export function buscarAgendaDoDia(
   data: CalendarDate,
   profissionalId?: string

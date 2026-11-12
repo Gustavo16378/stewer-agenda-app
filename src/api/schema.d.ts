@@ -121,6 +121,51 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/agendamentos/agenda/periodo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Agenda de varios dias (semana, mes), com todos os status
+         * @description Ate 92 dias por pedido, contados no fuso do estabelecimento.
+         */
+        get: {
+            parameters: {
+                query: {
+                    /** @description Ultimo dia (incluido), YYYY-MM-DD */
+                    ate: components["schemas"]["LocalDate"];
+                    /** @description Primeiro dia, YYYY-MM-DD */
+                    de: components["schemas"]["LocalDate"];
+                    profissionalId?: components["schemas"]["UUID"];
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Agendamento"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/agendamentos/meus": {
         parameters: {
             query?: never;
@@ -2271,6 +2316,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/relatorios/financeiro": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Faturado, a receber, faltas e a serie do periodo (ate 400 dias)
+         * @description Compara com o mesmo tamanho de periodo logo antes. Sem agrupar: ate 31 dias por dia, ate 120 por semana, depois por mes.
+         */
+        get: {
+            parameters: {
+                query: {
+                    /** @description DIA, SEMANA ou MES */
+                    agrupar?: string;
+                    /** @description Ultimo dia (incluido), YYYY-MM-DD */
+                    ate: components["schemas"]["LocalDate"];
+                    /** @description Primeiro dia, YYYY-MM-DD */
+                    de: components["schemas"]["LocalDate"];
+                    /** @description So de um profissional */
+                    profissionalId?: components["schemas"]["UUID"];
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["RelatorioFinanceiro"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/servicos": {
         parameters: {
             query?: never;
@@ -3054,6 +3147,13 @@ export interface components {
              */
             horaFim: string;
         };
+        FatiaFinanceira: {
+            nome?: string;
+            /** Format: int32 */
+            atendimentos?: number;
+            /** Format: int64 */
+            faturadoCentavos?: number;
+        };
         /** @description Dados e perfil de visagismo do cliente; vazia se ninguem preencheu */
         Ficha: {
             dataNascimento?: components["schemas"]["LocalDate"];
@@ -3221,6 +3321,17 @@ export interface components {
         Momento: "ANTES" | "DEPOIS" | "OUTRA";
         /** Format: date-time */
         OffsetDateTime: string;
+        PontoFinanceiro: {
+            inicio?: components["schemas"]["LocalDate"];
+            /** Format: int64 */
+            faturadoCentavos?: number;
+            /** Format: int64 */
+            aReceberCentavos?: number;
+            /** Format: int32 */
+            atendimentos?: number;
+            /** Format: int32 */
+            faltas?: number;
+        };
         PreferenciasRequest: {
             /** @description Receber lembrete do horario por e-mail */
             lembreteEmail: boolean;
@@ -3288,6 +3399,20 @@ export interface components {
              * @example 1994-11-20
              */
             dataNascimento?: components["schemas"]["LocalDate"];
+        };
+        RelatorioFinanceiro: {
+            de?: components["schemas"]["LocalDate"];
+            ate?: components["schemas"]["LocalDate"];
+            /** @description DIA, SEMANA ou MES */
+            agrupamento?: string;
+            totais?: components["schemas"]["TotaisFinanceiros"];
+            /** @description O mesmo periodo imediatamente antes, para comparar */
+            anterior?: components["schemas"]["TotaisFinanceiros"];
+            serie?: components["schemas"]["PontoFinanceiro"][];
+            porServico?: components["schemas"]["FatiaFinanceira"][];
+            porProfissional?: components["schemas"]["FatiaFinanceira"][];
+            /** @description Segunda (1) a domingo (7) */
+            porDiaDaSemana?: components["schemas"]["FatiaFinanceira"][];
         };
         /** @description Novo horario do agendamento */
         RemarcarRequest: {
@@ -3360,6 +3485,31 @@ export interface components {
              */
             expiraEmSegundos?: number;
             usuario?: components["schemas"]["Usuario"];
+        };
+        TotaisFinanceiros: {
+            /** Format: int64 */
+            faturadoCentavos?: number;
+            /** Format: int64 */
+            aReceberCentavos?: number;
+            /** Format: int64 */
+            ticketMedioCentavos?: number;
+            /** Format: int32 */
+            atendimentos?: number;
+            /** Format: int32 */
+            agendados?: number;
+            /** Format: int32 */
+            faltas?: number;
+            /** Format: int32 */
+            cancelados?: number;
+            /** Format: int32 */
+            clientesAtendidos?: number;
+            /** Format: int32 */
+            clientesNovos?: number;
+            /**
+             * Format: int32
+             * @description Faltas sobre faltas mais atendimentos, em %
+             */
+            taxaDeFaltas?: number;
         };
         TrocarSenhaRequest: {
             senhaAtual: string;

@@ -522,6 +522,17 @@ components:
           externalDocs:
             description: As defined by 'partial-time' in RFC3339
             url: https://www.rfc-editor.org/rfc/rfc3339.html#section-5.6
+    FatiaFinanceira:
+      type: object
+      properties:
+        nome:
+          type: string
+        atendimentos:
+          type: integer
+          format: int32
+        faturadoCentavos:
+          type: integer
+          format: int64
     Ficha:
       type: object
       description: Dados e perfil de visagismo do cliente; vazia se ninguem preencheu
@@ -813,6 +824,23 @@ components:
     OffsetDateTime:
       type: string
       format: date-time
+    PontoFinanceiro:
+      type: object
+      properties:
+        inicio:
+          $ref: "#/components/schemas/LocalDate"
+        faturadoCentavos:
+          type: integer
+          format: int64
+        aReceberCentavos:
+          type: integer
+          format: int64
+        atendimentos:
+          type: integer
+          format: int32
+        faltas:
+          type: integer
+          format: int32
     PreferenciasRequest:
       type: object
       required:
@@ -948,6 +976,39 @@ components:
           examples:
           - 1994-11-20
           description: "Opcional. Vai para a ficha: o Stewer ve o aniversario no painel."
+    RelatorioFinanceiro:
+      type: object
+      properties:
+        de:
+          $ref: "#/components/schemas/LocalDate"
+        ate:
+          $ref: "#/components/schemas/LocalDate"
+        agrupamento:
+          type: string
+          description: "DIA, SEMANA ou MES"
+        totais:
+          $ref: "#/components/schemas/TotaisFinanceiros"
+        anterior:
+          $ref: "#/components/schemas/TotaisFinanceiros"
+          type: object
+          description: "O mesmo periodo imediatamente antes, para comparar"
+        serie:
+          type: array
+          items:
+            $ref: "#/components/schemas/PontoFinanceiro"
+        porServico:
+          type: array
+          items:
+            $ref: "#/components/schemas/FatiaFinanceira"
+        porProfissional:
+          type: array
+          items:
+            $ref: "#/components/schemas/FatiaFinanceira"
+        porDiaDaSemana:
+          type: array
+          items:
+            $ref: "#/components/schemas/FatiaFinanceira"
+          description: Segunda (1) a domingo (7)
     RemarcarRequest:
       type: object
       required:
@@ -1068,6 +1129,40 @@ components:
           description: Validade em segundos
         usuario:
           $ref: "#/components/schemas/Usuario"
+    TotaisFinanceiros:
+      type: object
+      properties:
+        faturadoCentavos:
+          type: integer
+          format: int64
+        aReceberCentavos:
+          type: integer
+          format: int64
+        ticketMedioCentavos:
+          type: integer
+          format: int64
+        atendimentos:
+          type: integer
+          format: int32
+        agendados:
+          type: integer
+          format: int32
+        faltas:
+          type: integer
+          format: int32
+        cancelados:
+          type: integer
+          format: int32
+        clientesAtendidos:
+          type: integer
+          format: int32
+        clientesNovos:
+          type: integer
+          format: int32
+        taxaDeFaltas:
+          type: integer
+          format: int32
+          description: "Faltas sobre faltas mais atendimentos, em %"
     TrocarSenhaRequest:
       type: object
       required:
@@ -1144,6 +1239,8 @@ tags:
   description: Sinais de vida da API
 - name: Profissionais
   description: Equipe que atende no estabelecimento
+- name: Relatorios
+  description: Financeiro e numeros do estudio
 - name: Servicos
   description: Catalogo de servicos do estabelecimento
 - name: Usuarios
@@ -1205,6 +1302,40 @@ paths:
                   $ref: "#/components/schemas/Agendamento"
         "422":
           description: ADMIN chamou sem informar profissionalId
+      security:
+      - bearerAuth: []
+  /agendamentos/agenda/periodo:
+    get:
+      summary: "Agenda de varios dias (semana, mes), com todos os status"
+      description: "Ate 92 dias por pedido, contados no fuso do estabelecimento."
+      tags:
+      - Agendamentos
+      parameters:
+      - description: "Ultimo dia (incluido), YYYY-MM-DD"
+        name: ate
+        in: query
+        schema:
+          $ref: "#/components/schemas/LocalDate"
+        required: true
+      - description: "Primeiro dia, YYYY-MM-DD"
+        name: de
+        in: query
+        schema:
+          $ref: "#/components/schemas/LocalDate"
+        required: true
+      - name: profissionalId
+        in: query
+        schema:
+          $ref: "#/components/schemas/UUID"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Agendamento"
       security:
       - bearerAuth: []
   /agendamentos/meus:
@@ -2363,6 +2494,45 @@ paths:
           description: Profissional ou servico nao encontrado
         "422":
           description: Servico ou profissional inativo
+      security:
+      - bearerAuth: []
+  /relatorios/financeiro:
+    get:
+      summary: "Faturado, a receber, faltas e a serie do periodo (ate 400 dias)"
+      description: "Compara com o mesmo tamanho de periodo logo antes. Sem agrupar:\
+        \ ate 31 dias por dia, ate 120 por semana, depois por mes."
+      tags:
+      - Relatorios
+      parameters:
+      - description: "DIA, SEMANA ou MES"
+        name: agrupar
+        in: query
+        schema:
+          type: string
+      - description: "Ultimo dia (incluido), YYYY-MM-DD"
+        name: ate
+        in: query
+        schema:
+          $ref: "#/components/schemas/LocalDate"
+        required: true
+      - description: "Primeiro dia, YYYY-MM-DD"
+        name: de
+        in: query
+        schema:
+          $ref: "#/components/schemas/LocalDate"
+        required: true
+      - description: So de um profissional
+        name: profissionalId
+        in: query
+        schema:
+          $ref: "#/components/schemas/UUID"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RelatorioFinanceiro"
       security:
       - bearerAuth: []
   /servicos:
