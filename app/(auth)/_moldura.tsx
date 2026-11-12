@@ -24,14 +24,10 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { LogoStewer } from '@/components/marca/Logo';
-import { PORTFOLIO, SOBRE } from '@/content/atelie';
+import { useEstudio } from '@/content/estudio';
 import { useLayoutLargo } from '@/lib/responsivo';
 import { useTema } from '@/theme/theme-context';
 
-// O Stewer cortando: a foto que diz o que o app agenda.
-const FOTO = PORTFOLIO[1]!;
-// Em tela larga, a foto em que ele aparece inteiro, com a luz quente do estudio.
-const FOTO_LARGA = PORTFOLIO[0]!;
 const ESCURO = '#0c0c0c';
 
 function Marca() {
@@ -59,6 +55,11 @@ export function MolduraAcesso({
   const insets = useSafeAreaInsets();
   const { height, width } = useWindowDimensions();
   const { tema } = useTema();
+  // O Stewer cortando: a foto que diz o que o app agenda. Em tela larga, a primeira (no
+  // app, a que ele aparece inteiro com a luz quente do estudio); no celular, a segunda.
+  const estudio = useEstudio();
+  const FOTO_LARGA = estudio.fotos[0]!;
+  const FOTO = estudio.fotos[1] ?? FOTO_LARGA;
   const fundo = tema === 'dark' ? '12,12,12' : '242,237,229';
 
   if (largo) {
@@ -100,7 +101,7 @@ export function MolduraAcesso({
             <Marca />
             <View className="max-w-[440px] gap-4">
               <View className="h-px w-8 bg-latao" />
-              <Text className="font-display-italic text-ds-30 text-marfim">“{SOBRE.citacao}”</Text>
+              <Text className="font-display-italic text-ds-30 text-marfim">“{estudio.frase}”</Text>
               <Text className="font-sans text-ui text-marfim/75">Stewer Gabriel</Text>
             </View>
           </View>

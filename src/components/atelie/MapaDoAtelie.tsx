@@ -3,14 +3,16 @@
  * o endereco e um pulso discreto em volta (uma unica animacao, que para para quem pede
  * menos movimento). Tocar no mapa abre o app de mapas do aparelho com a rota.
  *
- * O mapa e uma imagem gerada por scripts/make-map.py a partir do OpenStreetMap: funciona
- * sem internet, sem chave de API e sem SDK de mapa nativo. O endereco fica exatamente no
- * centro da imagem, e e no centro que o pino e desenhado.
+ * No endereco de sempre, o mapa e uma imagem gerada por scripts/make-map.py a partir do
+ * OpenStreetMap: funciona sem internet, sem chave de API e sem SDK de mapa nativo. Se o
+ * admin muda o endereco na aba Estudio, o mapa passa a ser montado com os blocos do
+ * OpenStreetMap em volta das coordenadas novas, nas mesmas cores. O endereco fica sempre
+ * no centro, e e no centro que o pino e desenhado.
  */
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect } from 'react';
-import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Linking, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -21,7 +23,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import Svg, { Path } from 'react-native-svg';
 
-import { LOCAL } from '@/content/atelie';
+import { type EstudioDoApp, useEstudio } from '@/content/estudio';
 import { cn } from '@/lib/cn';
 import { useLayoutLargo } from '@/lib/responsivo';
 import { useTema } from '@/theme/theme-context';
@@ -38,6 +40,67 @@ const ALTURA = { celular: 210, largo: 300 };
 const MAPA_W = 1600;
 const MAPA_H = 1000;
 const OURO = '#C9A96A';
+const BLOCO = 256;
+const ZOOM = 16;
+
+/** Posicao do endereco na grade de blocos do OpenStreetMap, em blocos (com fracao). */
+function noBloco(lat: number, lon: number) {
+  const n = 2 ** ZOOM;
+  const rad = (lat * Math.PI) / 180;
+  return {
+    x: ((lon + 180) / 360) * n,
+    y: ((1 - Math.log(Math.tan(rad) + 1 / Math.cos(rad)) / Math.PI) / 2) * n,
+  };
+}
+
+/**
+ * Endereco fora do mapa desenhado: 5 x 3 blocos de 256 px em volta do ponto, com o ponto
+ * no centro da janela. Na web um filtro deixa os blocos nos tons do app.
+ */
+function MapaDeBlocos({ estudio, tema }: { estudio: EstudioDoApp; tema: 'light' | 'dark' }) {
+  const { x, y } = noBloco(estudio.latitude, estudio.longitude);
+  const x0 = Math.floor(x) - 2;
+  const y0 = Math.floor(y) - 1;
+  const blocos: { bx: number; by: number }[] = [];
+  for (let by = y0; by <= y0 + 2; by++)
+    for (let bx = x0; bx <= x0 + 4; bx++) blocos.push({ bx, by });
+  const filtro =
+    tema === 'dark'
+      ? 'grayscale(1) invert(0.92) sepia(0.35) brightness(0.9) contrast(0.9)'
+      : 'grayscale(1) sepia(0.3) contrast(0.92) brightness(1.03)';
+  return (
+    <View
+      pointerEvents="none"
+      accessible
+      accessibilityRole="image"
+      accessibilityLabel={`Mapa das ruas em volta do ${estudio.nome}`}
+      style={[
+        estilos.blocos,
+        {
+          marginLeft: -(x - x0) * BLOCO,
+          marginTop: -(y - y0) * BLOCO,
+          // filtro so existe na web; no aparelho o mapa fica nas cores do OpenStreetMap
+          ...(Platform.OS === 'web' ? ({ filter: filtro } as object) : null),
+        },
+      ]}
+    >
+      {blocos.map(({ bx, by }) => (
+        <Image
+          key={`${bx}-${by}`}
+          source={{ uri: `https://tile.openstreetmap.org/${ZOOM}/${bx}/${by}.png` }}
+          style={{
+            position: 'absolute',
+            left: (bx - x0) * BLOCO,
+            top: (by - y0) * BLOCO,
+            width: BLOCO,
+            height: BLOCO,
+          }}
+          transition={200}
+        />
+      ))}
+    </View>
+  );
+}
 
 function Pulso() {
   const menosMovimento = useReducedMotion();
@@ -76,14 +139,15 @@ function Pino() {
 export function MapaDoAtelie() {
   const { tema } = useTema();
   const largo = useLayoutLargo();
-  const abrirRota = () => void Linking.openURL(LOCAL.mapa);
+  const estudio = useEstudio();
+  const abrirRota = () => void Linking.openURL(estudio.mapaUrl);
 
   // No celular, mapa em cima e endereco embaixo; em tela larga, lado a lado.
   return (
     <View className={largo ? 'flex-row items-center gap-8' : undefined}>
       <Pressable
         accessibilityRole="link"
-        accessibilityLabel={`Abrir ${LOCAL.nome} no mapa`}
+        accessibilityLabel={`Abrir ${estudio.nome} no mapa`}
         onPress={abrirRota}
         className={cn('overflow-hidden rounded-[3px] border border-borda', largo && 'flex-[1.3]')}
         style={({ pressed }) => (pressed ? { opacity: 0.92 } : null)}
@@ -92,15 +156,19 @@ export function MapaDoAtelie() {
           {/* Tamanho natural (1600x1000), centralizado e recortado pela janela: os nomes
               das ruas ficam no tamanho em que o mapa foi desenhado, sem esticar nem amassar.
               Medidas explicitas em vez de contentFit="none", que no navegador esticava. */}
-          <View style={estilos.mapa} pointerEvents="none">
-            <Image
-              source={MAPAS[tema]}
-              style={{ width: MAPA_W, height: MAPA_H }}
-              contentFit="fill"
-              transition={250}
-              accessibilityLabel={`Mapa das ruas em volta do ${LOCAL.nome}, na 204 Sul`}
-            />
-          </View>
+          {estudio.noMapaPadrao ? (
+            <View style={estilos.mapa} pointerEvents="none">
+              <Image
+                source={MAPAS[tema]}
+                style={{ width: MAPA_W, height: MAPA_H }}
+                contentFit="fill"
+                transition={250}
+                accessibilityLabel={`Mapa das ruas em volta do ${estudio.nome}, na 204 Sul`}
+              />
+            </View>
+          ) : (
+            <MapaDeBlocos estudio={estudio} tema={tema} />
+          )}
           {/* escurece as bordas para o mapa assentar no fundo da tela */}
           <LinearGradient
             colors={
@@ -124,7 +192,7 @@ export function MapaDoAtelie() {
           />
           <Pino />
           <View className="absolute left-3 top-3 rounded-[3px] bg-fundo/80 px-3 py-[6px]">
-            <Text className="font-sans-medium text-ui-xs text-texto">{LOCAL.regiao}</Text>
+            <Text className="font-sans-medium text-ui-xs text-texto">{estudio.regiao}</Text>
           </View>
           <Text
             className="absolute bottom-2 right-3 rounded-[2px] bg-fundo/80 px-[6px] py-[2px] font-sans text-texto-2"
@@ -137,10 +205,10 @@ export function MapaDoAtelie() {
 
       <View className={largo ? 'flex-1' : undefined}>
         <View className={largo ? 'gap-1' : 'mt-6 gap-1'}>
-          <Text className="font-display text-ds-24 text-texto">{LOCAL.nome}</Text>
-          <Text className="font-sans-medium text-ui-sm text-latao">{LOCAL.descricao}</Text>
-          <Paragrafo>{LOCAL.endereco}</Paragrafo>
-          <Paragrafo className="text-texto-3">{LOCAL.horario}</Paragrafo>
+          <Text className="font-display text-ds-24 text-texto">{estudio.nome}</Text>
+          <Text className="font-sans-medium text-ui-sm text-latao">{estudio.descricao}</Text>
+          <Paragrafo>{estudio.endereco}</Paragrafo>
+          <Paragrafo className="text-texto-3">{estudio.horario}</Paragrafo>
         </View>
         <View className="mt-6 flex-row gap-3">
           <BotaoAtelie className="flex-1" titulo="Como chegar" onPress={abrirRota} />
@@ -148,7 +216,7 @@ export function MapaDoAtelie() {
             className="flex-1"
             variante="contorno"
             titulo="WhatsApp"
-            onPress={() => void Linking.openURL(LOCAL.whatsapp)}
+            onPress={() => void Linking.openURL(estudio.whatsappUrl)}
           />
         </View>
       </View>
@@ -158,6 +226,13 @@ export function MapaDoAtelie() {
 
 const TAM = 34;
 const estilos = StyleSheet.create({
+  blocos: {
+    position: 'absolute',
+    left: '50%',
+    top: '50%',
+    width: BLOCO * 5,
+    height: BLOCO * 3,
+  },
   mapa: {
     position: 'absolute',
     left: '50%',

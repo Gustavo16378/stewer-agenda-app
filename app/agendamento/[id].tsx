@@ -36,7 +36,7 @@ import { BotaoAtelie } from '@/components/atelie/base';
 import { CabecalhoVoltar } from '@/components/ui/cabecalho';
 import { Carregando, EstadoErro } from '@/components/ui/estados';
 import { TelaRolavel } from '@/components/ui/tela';
-import { LOCAL } from '@/content/atelie';
+import { useEstudio } from '@/content/estudio';
 import { cn } from '@/lib/cn';
 import { confirmar } from '@/lib/confirmar';
 import {
@@ -126,6 +126,7 @@ function ResumoDoCliente({ clienteId }: { clienteId: string }) {
 
 function DetalheAgendamento() {
   const router = useRouter();
+  const LOCAL = useEstudio();
   const { role } = useAuth();
   const { id, origem, data, periodo } = useLocalSearchParams<{
     id: string;
@@ -264,7 +265,7 @@ function DetalheAgendamento() {
                   className="self-center"
                   variante="texto"
                   titulo="Como chegar"
-                  onPress={() => void Linking.openURL(LOCAL.mapa)}
+                  onPress={() => void Linking.openURL(LOCAL.mapaUrl)}
                 />
               )}
             </View>

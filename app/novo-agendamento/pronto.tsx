@@ -11,11 +11,12 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 import { BotaoAtelie } from '@/components/atelie/base';
 import { SDesenhado } from '@/components/marca/SDesenhado';
 import { Tela } from '@/components/ui/tela';
-import { LOCAL } from '@/content/atelie';
+import { useEstudio } from '@/content/estudio';
 import { calendarDateDoInstante, diaPorExtenso, formatHora } from '@/lib/datetime';
 
 export default function HorarioMarcado() {
   const router = useRouter();
+  const LOCAL = useEstudio();
   const { inicio, servico, profissional, remarcado } = useLocalSearchParams<{
     inicio?: string;
     servico?: string;
@@ -64,7 +65,7 @@ export default function HorarioMarcado() {
             <BotaoAtelie
               variante="contorno"
               titulo="Como chegar"
-              onPress={() => void Linking.openURL(LOCAL.mapa)}
+              onPress={() => void Linking.openURL(LOCAL.mapaUrl)}
             />
             <BotaoAtelie
               variante="texto"

@@ -35,7 +35,7 @@ import { useRetratoDoProfissional } from '@/components/atelie/retrato';
 import { Campo } from '@/components/ui/campo';
 import { Carregando, EstadoErro } from '@/components/ui/estados';
 import { TelaRolavel } from '@/components/ui/tela';
-import { LOCAL } from '@/content/atelie';
+import { useEstudio } from '@/content/estudio';
 import {
   calendarDateDoInstante,
   diaPorExtenso,
@@ -72,6 +72,7 @@ function mensagemDoErro(erro: ApiError): string {
 
 export default function Confirmacao() {
   const router = useRouter();
+  const LOCAL = useEstudio();
   const { servicoId, profissionalId, inicio, fim } = useLocalSearchParams<{
     servicoId?: string;
     profissionalId?: string;

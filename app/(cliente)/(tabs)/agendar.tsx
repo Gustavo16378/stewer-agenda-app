@@ -9,7 +9,7 @@ import { useRouter } from 'expo-router';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { BotaoAtelie } from '@/components/atelie/base';
-import { PORTFOLIO } from '@/content/atelie';
+import { useEstudio } from '@/content/estudio';
 import { LARGURA_CONTEUDO, useLayoutLargo } from '@/lib/responsivo';
 import { useTema } from '@/theme/theme-context';
 
@@ -20,12 +20,11 @@ const PASSOS = [
   { titulo: 'Confirmar', texto: 'Você revisa tudo antes. Dá para remarcar depois.' },
 ];
 
-const FOTO = PORTFOLIO[0]!;
-
 export default function AgendarCliente() {
   const router = useRouter();
   const largo = useLayoutLargo();
   const { tema } = useTema();
+  const FOTO = useEstudio().fotos[0]!;
   const fundo = tema === 'dark' ? '12,12,12' : '242,237,229';
 
   return (
