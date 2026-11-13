@@ -119,3 +119,36 @@ test('admin ve o painel da semana e a equipe', async ({ page }, info) => {
   await expect(naTela(page, /^Stewer/)).toBeVisible();
   await registrar(page, info, '02 equipe');
 });
+
+test('admin envia uma foto so para a equipe e depois volta para a do perfil', async ({
+  page,
+}, info) => {
+  await entrar(page, SEED.admin, SEED.senha);
+
+  await test.step('o atalho do topo diz "Meu perfil" e leva ao perfil', async () => {
+    await botao(page, 'Meu perfil').click();
+    await expect(naTela(page, 'Dados pessoais')).toBeVisible();
+    await page.goBack();
+  });
+
+  await aba(page, 'Equipe');
+  await botao(page, /^Editar/)
+    .first()
+    .click();
+  await expect(naTela(page, 'Foto na equipe')).toBeVisible();
+  await expect(naTela(page, /URL da foto/)).toHaveCount(0);
+
+  await test.step('envia outra foto', async () => {
+    const escolha = page.waitForEvent('filechooser');
+    await botao(page, /^(Enviar outra foto|Trocar foto)$/).click();
+    await (await escolha).setFiles('e2e/arquivos/perfil.jpg');
+    await expect(botao(page, 'Usar a do perfil')).toBeVisible();
+    await expect(naTela(page, /Foto só da equipe/)).toBeVisible();
+    await registrar(page, info, '01 foto so da equipe');
+  });
+
+  await test.step('volta para a foto do perfil', async () => {
+    await botao(page, 'Usar a do perfil').click();
+    await expect(botao(page, 'Enviar outra foto')).toBeVisible();
+  });
+});

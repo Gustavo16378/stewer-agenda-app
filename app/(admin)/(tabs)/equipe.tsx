@@ -18,16 +18,27 @@
  * ADICIONAR PROFISSIONAL: o admin busca a pessoa por nome ou e-mail (GET /usuarios) e
  * escolhe na lista; quem ja tem ficha nao aparece. A pessoa precisa ter criado conta
  * no app antes (o fluxo e: ela baixa o app, cria a conta, o dono promove).
- *   TODO(API): nao ha upload de foto; `fotoUrl` e so uma URL digitada.
+ * FOTO: por padrao a ficha usa a foto de perfil da conta da pessoa. Na edicao, o admin
+ * pode enviar uma foto so para a equipe (PUT /profissionais/{id}/foto) ou voltar para a
+ * do perfil (DELETE). A URL digitada saiu da tela; a que ja existir e preservada.
  * GERENCIAR navega para app/profissional/[id]/disponibilidade — a API aceita ADMIN la.
  */
 import { useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { Modal, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Modal,
+  Pressable,
+  RefreshControl,
+  ScrollView,
+  Text,
+  View,
+} from 'react-native';
 
 import {
   useDebounce,
   useDisponibilidade,
+  useFotoDoProfissional,
   usePessoas,
   useProfissionais,
   useRemoverProfissional,
@@ -52,6 +63,7 @@ import {
   isDiaSemana,
   nomeDiaSemanaCurtoCaps,
 } from '@/lib/datetime';
+import { escolherFoto } from '@/lib/foto';
 import { PAINEL_CENTRALIZADO } from '@/lib/responsivo';
 
 interface Formulario {
@@ -372,19 +384,16 @@ export default function GestaoDeEquipe() {
                   textAlignVertical="top"
                   erro={salvar.error?.violacaoDe('bio')}
                 />
-                <Campo
-                  className="mt-[22px]"
-                  rotulo="URL da foto"
-                  value={form.fotoUrl}
-                  onChangeText={(v) => setForm({ ...form, fotoUrl: v })}
-                  placeholder="https://cdn.stewer.dev/fotos/gabriel.webp"
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  keyboardType="url"
-                  maxLength={500}
-                  ajuda="Sem upload na API: cole o endereço de uma imagem já hospedada."
-                  erro={salvar.error?.violacaoDe('fotoUrl')}
-                />
+                {form.id ? (
+                  <FotoNaFicha
+                    profissional={(equipe.data ?? []).find((p) => p.id === form.id) ?? null}
+                  />
+                ) : (
+                  <Text className="mt-[22px] font-sans text-ui-sm text-texto-3">
+                    A foto na equipe é a do perfil da pessoa. Depois de adicionar, dá para enviar
+                    outra só para a equipe.
+                  </Text>
+                )}
                 <View className="mt-[22px] flex-row items-center justify-between border-b border-divider py-[19px]">
                   <Text className="font-sans text-body-lg text-text-body">Aparece na agenda</Text>
                   <Interruptor
@@ -426,6 +435,78 @@ export default function GestaoDeEquipe() {
         </View>
       </Modal>
     </TelaRolavel>
+  );
+}
+
+/**
+ * A foto da ficha: mostra a que o cliente ve e deixa enviar uma so para a equipe, ou
+ * voltar para a do perfil da conta.
+ */
+function FotoNaFicha({ profissional }: { profissional: Profissional | null }) {
+  const retrato = useRetratoDoProfissional(profissional);
+  const foto = useFotoDoProfissional();
+  const [escolhendo, setEscolhendo] = useState(false);
+  const [erro, setErro] = useState<string | null>(null);
+  if (!profissional?.id) return null;
+  const id = profissional.id;
+  const propria = !!profissional.fotoId;
+  const ocupado = escolhendo || foto.isPending;
+
+  async function enviarOutra() {
+    setErro(null);
+    setEscolhendo(true);
+    try {
+      const base64 = await escolherFoto('galeria', { lado: 800, qualidade: 0.82, quadrada: true });
+      if (base64) await foto.mutateAsync({ id, base64 });
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : 'Não deu para enviar a foto.');
+    } finally {
+      setEscolhendo(false);
+    }
+  }
+
+  const situacao = propria
+    ? 'Foto só da equipe. É a que o cliente vê na hora de marcar.'
+    : profissional.fotoVersao
+      ? 'Usando a foto do perfil da conta.'
+      : 'A conta ainda não tem foto de perfil. Envie uma aqui ou pelo perfil.';
+
+  return (
+    <View className="mt-[22px] gap-2">
+      <LabelCaps papel="secao" className="text-texto-2">
+        Foto na equipe
+      </LabelCaps>
+      <View className="flex-row items-center gap-4">
+        <SlotImagem
+          fonte={retrato}
+          altura={72}
+          className="w-[72px] rounded-token"
+          acessibilidade={`Foto de ${profissional.nome ?? 'profissional'} na equipe`}
+        />
+        <View className="flex-1 gap-2">
+          <Text className="font-sans text-ui-sm text-texto-3">{situacao}</Text>
+          <View className="flex-row flex-wrap items-center gap-x-5 gap-y-2">
+            <AcaoLinha
+              titulo={propria ? 'Trocar foto' : 'Enviar outra foto'}
+              destaque
+              disabled={ocupado}
+              onPress={() => void enviarOutra()}
+            />
+            {propria ? (
+              <AcaoLinha
+                titulo="Usar a do perfil"
+                disabled={ocupado}
+                onPress={() => foto.mutate({ id, base64: null })}
+              />
+            ) : null}
+            {ocupado ? <ActivityIndicator size="small" /> : null}
+          </View>
+        </View>
+      </View>
+      {erro || foto.error ? (
+        <Text className="font-sans text-ui-sm text-cadeira">{erro ?? foto.error?.message}</Text>
+      ) : null}
+    </View>
   );
 }
 
