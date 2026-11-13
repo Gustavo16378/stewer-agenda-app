@@ -50,7 +50,7 @@ import { Baixa } from '@/components/agenda/Baixa';
 import { NumeroAnimado } from '@/components/atelie/NumeroAnimado';
 import { Relacionamento } from '@/components/ficha/Relacionamento';
 import { GeometriaDoRosto, MARCAS_RETRATO } from '@/components/marca/Geometria';
-import { AcaoLinha } from '@/components/ui/botao';
+import { AtalhoDoPerfil } from '@/components/ui/atalho-perfil';
 import { Carregando, EstadoErro } from '@/components/ui/estados';
 import { IconeDaAba } from '@/components/ui/icones-abas';
 import { TelaRolavel } from '@/components/ui/tela';
@@ -330,10 +330,10 @@ export default function VisaoGeral() {
       }
     >
       <View className="pt-10">
-        {/* Conta (e o sair) na linha de cima: o ADMIN nao tem aba de perfil. */}
+        {/* O perfil (e o sair) na linha de cima: o ADMIN nao tem aba de perfil. */}
         <View className="flex-row items-center justify-between">
           <Text className="font-sans-medium text-ui-sm text-texto-3">Painel</Text>
-          <AcaoLinha titulo="Conta" onPress={() => router.push('/conta' as never)} />
+          <AtalhoDoPerfil aoTocar={() => router.push('/conta' as never)} />
         </View>
 
         <Heroi hoje={deHoje} carregando={carregando} />

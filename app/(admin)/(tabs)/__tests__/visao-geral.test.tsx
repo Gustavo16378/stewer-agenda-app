@@ -53,6 +53,8 @@ jest.mock('@/api/hooks', () => ({
   useAniversariantes: () => ({ data: [], isLoading: false, error: null }),
   useSumidos: () => ({ data: [], isLoading: false, error: null }),
   useEstudioSalvo: () => ({ data: undefined }),
+  useMeuProfissional: () => ({ profissional: null }),
+  useFotoDeUsuario: () => ({ data: undefined }),
   useTodosClientes: () => ({
     data: [],
     isLoading: false,
@@ -80,16 +82,16 @@ beforeEach(() => {
   mockPush.mockClear();
 });
 
-describe('VisaoGeral — caminho para a conta do ADMIN', () => {
-  it('mostra a acao CONTA', async () => {
+describe('VisaoGeral — caminho para o perfil do ADMIN', () => {
+  it('mostra o atalho MEU PERFIL', async () => {
     const tela = await renderizarTela();
-    expect(tela.getByText('Conta')).toBeTruthy();
+    expect(tela.getByText('Meu perfil')).toBeTruthy();
   });
 
-  it('tocar em CONTA abre a tela de conta', async () => {
+  it('tocar em MEU PERFIL abre a tela de conta', async () => {
     const tela = await renderizarTela();
 
-    fireEvent.press(tela.getByText('Conta'));
+    fireEvent.press(tela.getByText('Meu perfil'));
 
     await waitFor(() => expect(mockPush).toHaveBeenCalledWith('/conta'));
   });

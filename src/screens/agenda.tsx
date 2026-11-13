@@ -47,6 +47,7 @@ import { useAuth } from '@/auth/auth-context';
 import { Baixa } from '@/components/agenda/Baixa';
 import { CalendarioMes } from '@/components/agenda/CalendarioMes';
 import { BotaoAtelie } from '@/components/atelie/base';
+import { AtalhoDoPerfil } from '@/components/ui/atalho-perfil';
 import { Carregando, EstadoErro, EstadoVazio } from '@/components/ui/estados';
 import { IconeDaAba } from '@/components/ui/icones-abas';
 import { TelaRolavel } from '@/components/ui/tela';
@@ -248,11 +249,7 @@ export default function AgendaDoDia() {
       <View className="pt-10">
         <View className="flex-row items-center justify-between">
           <Text className="font-sans-medium text-ui-sm text-texto-3">Sua agenda</Text>
-          <BotaoAtelie
-            variante="texto"
-            titulo="Conta"
-            onPress={() => router.push('/conta' as never)}
-          />
+          <AtalhoDoPerfil aoTocar={() => router.push('/conta' as never)} />
         </View>
 
         <View className="mt-1 flex-row items-end justify-between gap-3">

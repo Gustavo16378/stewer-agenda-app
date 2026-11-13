@@ -13,6 +13,7 @@ import { useState } from 'react';
 import { ActivityIndicator, Platform, Pressable, Text, View } from 'react-native';
 
 import { useAuth } from '@/auth/auth-context';
+import { useReservaDaMinhaFoto } from '@/components/atelie/retrato';
 import { AcaoLinha, Botao } from '@/components/ui/botao';
 import { CabecalhoVoltar } from '@/components/ui/cabecalho';
 import { AvatarPessoa } from '@/components/ui/imagem';
@@ -64,6 +65,8 @@ function LinhaAcao({ rotulo, aoTocar }: { rotulo: string; aoTocar: () => void })
  */
 function FotoDaConta() {
   const { usuario, trocarFoto } = useAuth();
+  // sem foto de perfil, mostra a mesma que aparece na Equipe (o "+" continua para subir uma)
+  const reserva = useReservaDaMinhaFoto();
   const [ocupado, setOcupado] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
 
@@ -96,6 +99,7 @@ function FotoDaConta() {
           fotoVersao={usuario?.fotoVersao}
           nome={usuario?.nome}
           tamanho={72}
+          fonteReserva={reserva}
         />
         <View className="absolute -bottom-1 -right-1 h-7 w-7 items-center justify-center rounded-full border-2 border-fundo bg-latao">
           {ocupado ? (
