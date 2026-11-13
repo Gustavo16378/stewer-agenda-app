@@ -404,8 +404,10 @@ export default function AgendaDoDia() {
                       accessibilityLabel={`${bloco.hora}, ${bloco.item.clienteNome ?? ''}, ${bloco.item.servicoNome ?? ''}`}
                       className={cn(
                         'flex-row items-center gap-3 rounded-[3px] border border-borda bg-superficie px-5 py-4',
-                        bloco.item.status === 'AGENDADO' && 'border-l-2 border-l-latao',
-                        bloco.item.status !== 'AGENDADO' && 'opacity-60'
+                        // so o que ainda vai acontecer leva o filete dourado; o resto fica sem
+                        // ele e com o selo do status. Sem esmaecer: opacidade derrubava o
+                        // contraste do texto abaixo do minimo de leitura (WCAG AA).
+                        bloco.item.status === 'AGENDADO' && 'border-l-2 border-l-latao'
                       )}
                       style={({ pressed }) => (pressed ? { opacity: 0.75 } : null)}
                     >
@@ -561,10 +563,7 @@ function VistaDaSemana({
                   onPress={() => aoAbrir(a)}
                   accessibilityRole="button"
                   accessibilityLabel={`${formatHora(a.inicio)}, ${a.clienteNome ?? ''}, ${a.servicoNome ?? ''}`}
-                  className={cn(
-                    'flex-1 flex-row items-center gap-3 py-1',
-                    a.status !== 'AGENDADO' && 'opacity-60'
-                  )}
+                  className="flex-1 flex-row items-center gap-3 py-1"
                 >
                   <Text className="w-12 font-sans-semibold text-ui text-texto">
                     {formatHora(a.inicio)}
@@ -619,10 +618,12 @@ function Selo({ children, apagado }: { children: string; apagado?: boolean }) {
     <View
       className={cn(
         'mt-1 self-start rounded-full px-3 py-[3px]',
-        apagado ? 'bg-borda/60' : 'bg-latao/14'
+        // "Primeira visita" so com contorno: o fundo dourado deixava o texto dourado
+        // abaixo do contraste minimo no tema claro
+        apagado ? 'bg-borda/60' : 'border border-latao/50'
       )}
     >
-      <Text className={cn('font-sans-medium text-ui-xs', apagado ? 'text-texto-3' : 'text-latao')}>
+      <Text className={cn('font-sans-medium text-ui-xs', apagado ? 'text-texto-2' : 'text-latao')}>
         {children}
       </Text>
     </View>
