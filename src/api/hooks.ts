@@ -208,6 +208,18 @@ export function useSalvarProfissional() {
   });
 }
 
+/** Envia (base64) ou tira (null) a foto da equipe de um profissional. */
+export function useFotoDoProfissional() {
+  const qc = useQueryClient();
+  return useMutation<Profissional, ApiError, { id: string; base64: string | null }>({
+    mutationFn: ({ id, base64 }) =>
+      base64 ? q.trocarFotoDoProfissional(id, base64) : q.tirarFotoDoProfissional(id),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['profissionais'] });
+    },
+  });
+}
+
 export function useRemoverProfissional() {
   const qc = useQueryClient();
   return useMutation<void, ApiError, string>({

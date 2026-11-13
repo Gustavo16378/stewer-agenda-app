@@ -222,6 +222,21 @@ export function removerProfissional(id: string): Promise<void> {
   return desembrulha(api.DELETE('/profissionais/{id}', { params: { path: { id } } }));
 }
 
+/** Foto so da equipe, no lugar da foto de perfil (JPEG em base64, ja reduzido). */
+export function trocarFotoDoProfissional(id: string, conteudoBase64: string) {
+  return desembrulha(
+    api.PUT('/profissionais/{id}/foto', {
+      params: { path: { id } },
+      body: { tipoConteudo: 'image/jpeg', conteudoBase64 },
+    })
+  );
+}
+
+/** Tira a foto da equipe: volta a valer a foto de perfil da conta. */
+export function tirarFotoDoProfissional(id: string) {
+  return desembrulha(api.DELETE('/profissionais/{id}/foto', { params: { path: { id } } }));
+}
+
 // ---------------------------------------------------------------------------
 // Agendamentos
 // ---------------------------------------------------------------------------

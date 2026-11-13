@@ -2007,6 +2007,98 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/profissionais/{id}/foto": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Poe uma foto so da equipe, no lugar da foto de perfil da conta */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: components["schemas"]["UUID"];
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["ImagemRequest"];
+                };
+            };
+            responses: {
+                /** @description Foto trocada */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Profissional"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Profissional inexistente ou removido */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Arquivo que nao e imagem, ou grande demais */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        post?: never;
+        /** Tira a foto da equipe: volta a valer a foto de perfil da conta */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: components["schemas"]["UUID"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Foto retirada */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Profissional"];
+                    };
+                };
+                /** @description Profissional inexistente ou removido */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/profissionais/{profissionalId}/bloqueios": {
         parameters: {
             query?: never;
@@ -3346,6 +3438,8 @@ export interface components {
             especialidade?: string;
             bio?: string;
             fotoUrl?: string;
+            /** @description Foto propria da equipe, servida em /imagens/{fotoId}; nulo: usa a foto de perfil */
+            fotoId?: components["schemas"]["UUID"];
             /**
              * @description Quando a foto de perfil da conta mudou; nulo se nao tem foto
              * @example 2022-03-10T12:15:50-04:00

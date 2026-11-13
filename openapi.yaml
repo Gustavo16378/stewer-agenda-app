@@ -870,6 +870,11 @@ components:
           type: string
         fotoUrl:
           type: string
+        fotoId:
+          $ref: "#/components/schemas/UUID"
+          type: string
+          description: "Foto propria da equipe, servida em /imagens/{fotoId}; nulo:\
+            \ usa a foto de perfil"
         fotoVersao:
           $ref: "#/components/schemas/OffsetDateTime"
           type: string
@@ -2314,6 +2319,59 @@ paths:
           description: Tentativa de trocar o usuario da ficha
         "400":
           description: Bad Request
+      security:
+      - bearerAuth: []
+  /profissionais/{id}/foto:
+    put:
+      summary: "Poe uma foto so da equipe, no lugar da foto de perfil da conta"
+      tags:
+      - Profissionais
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: "#/components/schemas/UUID"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ImagemRequest"
+        required: true
+      responses:
+        "200":
+          description: Foto trocada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Profissional"
+        "422":
+          description: "Arquivo que nao e imagem, ou grande demais"
+        "404":
+          description: Profissional inexistente ou removido
+        "400":
+          description: Bad Request
+      security:
+      - bearerAuth: []
+    delete:
+      summary: "Tira a foto da equipe: volta a valer a foto de perfil da conta"
+      tags:
+      - Profissionais
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: "#/components/schemas/UUID"
+      responses:
+        "200":
+          description: Foto retirada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Profissional"
+        "404":
+          description: Profissional inexistente ou removido
       security:
       - bearerAuth: []
   /profissionais/{profissionalId}/bloqueios:
