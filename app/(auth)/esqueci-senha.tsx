@@ -75,7 +75,7 @@ export default function EsqueciSenha() {
     <TelaRolavel larguraMaxima={440}>
       <CabecalhoVoltar />
       <LabelCaps papel="tela" className="mt-8">
-        O ateliê, no seu tempo
+        Recuperar acesso
       </LabelCaps>
       <Titulo className="mt-[14px] text-d-31">Esqueci a senha.</Titulo>
 

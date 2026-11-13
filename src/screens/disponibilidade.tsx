@@ -604,8 +604,8 @@ export function TelaDisponibilidade({
             </LabelCaps>
             <Titulo className="mt-3 text-d-23">
               {diaEmEdicao === null
-                ? 'Hora de parede do ateliê'
-                : `${nomeDiaSemana(diaEmEdicao)} no ateliê`}
+                ? 'Horário do estúdio'
+                : `${nomeDiaSemana(diaEmEdicao)} no estúdio`}
             </Titulo>
             {diaEmEdicao !== null && ligados.length > 1 ? (
               <View className="mt-5 flex-row items-center justify-between border-b border-divider py-[19px]">

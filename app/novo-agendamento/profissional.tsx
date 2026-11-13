@@ -77,7 +77,7 @@ export default function EscolhaDeProfissional() {
         <EstadoVazio
           eyebrow="Novo agendamento"
           titulo="Escolha o serviço primeiro."
-          descricao="Comece pelo serviço, para o ateliê saber quanto tempo reservar."
+          descricao="Comece pelo serviço, para o estúdio saber quanto tempo reservar."
           acao={{
             titulo: 'Novo agendamento',
             aoTocar: () => router.replace('/novo-agendamento/servico' as never),
@@ -112,7 +112,7 @@ export default function EscolhaDeProfissional() {
             className="mt-8"
             eyebrow="Equipe"
             titulo="Nenhum profissional disponível."
-            descricao="Em breve, novos profissionais do ateliê."
+            descricao="Em breve, novos profissionais no estúdio."
           />
         ) : (
           <>
