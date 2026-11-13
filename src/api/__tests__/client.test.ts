@@ -262,7 +262,7 @@ describe('erro de rede', () => {
       kind: 'rede',
       message: expect.stringMatching(/Sem conexão/),
     });
-    await jest.advanceTimersByTimeAsync(60_000);
+    await jest.advanceTimersByTimeAsync(120_000);
     await esperado;
   });
 
@@ -276,7 +276,7 @@ describe('erro de rede', () => {
       api.GET('/servicos', { params: { query: { incluirInativos: false } } })
     );
     const esperado = expect(chamada).rejects.toBeInstanceOf(ApiError);
-    await jest.advanceTimersByTimeAsync(60_000);
+    await jest.advanceTimersByTimeAsync(120_000);
     await esperado;
 
     expect(deslogar).not.toHaveBeenCalled();
@@ -359,8 +359,8 @@ describe('timeout', () => {
     );
     const esperado = expect(chamada).rejects.toMatchObject({ kind: 'rede' });
 
-    // 3 tentativas de TIMEOUT_MS, mais as esperas entre elas.
-    await jest.advanceTimersByTimeAsync(3 * TIMEOUT_MS + 20_000);
+    // 5 tentativas de TIMEOUT_MS, mais as esperas entre elas.
+    await jest.advanceTimersByTimeAsync(5 * TIMEOUT_MS + 30_000);
     await esperado;
   });
 
@@ -381,7 +381,7 @@ describe('servidor acordando', () => {
   afterEach(() => jest.useRealTimers());
 
   /** Deixa as esperas entre tentativas passarem sem segurar o teste. */
-  async function correrOsRelogios(ms = 60_000) {
+  async function correrOsRelogios(ms = 120_000) {
     await jest.advanceTimersByTimeAsync(ms);
   }
 
@@ -426,7 +426,7 @@ describe('servidor acordando', () => {
     await correrOsRelogios();
     await esperado;
 
-    expect(fetchMock).toHaveBeenCalledTimes(3);
+    expect(fetchMock).toHaveBeenCalledTimes(5);
   });
 
   it('erro comum (404) NAO e repetido', async () => {

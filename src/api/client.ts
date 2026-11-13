@@ -119,11 +119,12 @@ export const TIMEOUT_MS = 15_000;
  * devolve 502/503 ou a conexao nem completa — e uma unica tentativa com
  * timeout de 15s falharia sempre que o primeiro cliente do dia abrisse o app.
  *
- * Com 3 tentativas e as esperas abaixo, a janela coberta passa de 70s, que e
- * mais do que o tempo tipico de acordar.
+ * Com 5 tentativas e as esperas abaixo, a janela coberta passa de um minuto e
+ * meio. Com 3 (pouco mais de 70s) o primeiro login da noite chegou a desistir
+ * antes do servidor terminar de subir.
  */
-const TENTATIVAS = 3;
-const ESPERA_ENTRE_TENTATIVAS_MS = [3_000, 8_000];
+const TENTATIVAS = 5;
+const ESPERA_ENTRE_TENTATIVAS_MS = [3_000, 5_000, 8_000, 10_000];
 
 /** Respostas que, nesta hospedagem, significam "ainda subindo". */
 const STATUS_ACORDANDO = new Set([502, 503, 504]);
