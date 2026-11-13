@@ -29,6 +29,17 @@ export function useServidorAcordando(): boolean {
   return acordando;
 }
 
+/** Aviso embaixo de um botao enviando, enquanto o servidor acorda (login, criar conta). */
+export function AvisoConectando({ enviando }: { enviando: boolean }) {
+  const acordando = useServidorAcordando();
+  if (!enviando || !acordando) return null;
+  return (
+    <Corpo accessibilityLiveRegion="polite" className="mt-3 text-center text-ui-sm text-texto-3">
+      Conectando ao servidor. Na primeira vez do dia isso leva até um minuto.
+    </Corpo>
+  );
+}
+
 export function Carregando({ className }: { className?: string }) {
   const cores = useCores();
   const acordando = useServidorAcordando();

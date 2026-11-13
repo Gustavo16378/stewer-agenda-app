@@ -17,6 +17,7 @@ import { rotaInicialDoPapel, useAuth } from '@/auth/auth-context';
 import { AvisoLegal } from '@/components/ui/aviso-legal';
 import { Botao } from '@/components/ui/botao';
 import { Campo } from '@/components/ui/campo';
+import { AvisoConectando } from '@/components/ui/estados';
 import { mascaraData, nascimentoValido } from '@/lib/datetime';
 import { mascaraTelefone } from '@/lib/telefone';
 
@@ -151,6 +152,8 @@ export default function CriarConta() {
         disabled={!podeEnviar}
         onPress={() => void aoCriar()}
       />
+
+      <AvisoConectando enviando={enviando} />
 
       <AvisoLegal />
     </MolduraAcesso>

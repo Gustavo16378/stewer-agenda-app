@@ -19,6 +19,7 @@ import { rotaInicialDoPapel, useAuth } from '@/auth/auth-context';
 import { AvisoLegal } from '@/components/ui/aviso-legal';
 import { AcaoLinha, Botao } from '@/components/ui/botao';
 import { Campo } from '@/components/ui/campo';
+import { AvisoConectando } from '@/components/ui/estados';
 
 import { AbasAcesso } from './_abas';
 import { MolduraAcesso } from './_moldura';
@@ -94,6 +95,8 @@ export default function Entrar() {
         disabled={!podeEnviar}
         onPress={() => void aoEntrar()}
       />
+
+      <AvisoConectando enviando={enviando} />
 
       <View className="mt-5 items-center">
         <AcaoLinha
