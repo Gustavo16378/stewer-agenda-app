@@ -89,6 +89,11 @@ components:
           description: "Servicos do atendimento, na ordem; a soma das duracoes define\
             \ o fim"
           maxItems: 6
+        jaAtendido:
+          type: boolean
+          description: "So equipe. true lanca um atendimento que JA aconteceu (o cliente\
+            \ foi atendido sem marcar pelo app): o inicio fica no passado, ate 30\
+            \ dias atras, fora da grade se for o caso, e o agendamento ja nasce CONCLUIDO"
     Aniversariante:
       type: object
       properties:

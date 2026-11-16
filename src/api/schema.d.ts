@@ -3033,6 +3033,8 @@ export interface components {
             clienteId?: components["schemas"]["UUID"];
             /** @description Servicos do atendimento, na ordem; a soma das duracoes define o fim */
             servicoIds?: string[];
+            /** @description So equipe. true lanca um atendimento que JA aconteceu (o cliente foi atendido sem marcar pelo app): o inicio fica no passado, ate 30 dias atras, fora da grade se for o caso, e o agendamento ja nasce CONCLUIDO */
+            jaAtendido?: boolean;
         };
         Aniversariante: {
             id?: components["schemas"]["UUID"];
