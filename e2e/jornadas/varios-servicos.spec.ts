@@ -17,8 +17,14 @@ test('cliente marca dois servicos no mesmo agendamento', async ({ page, request 
     await expect(naTela(page, 'O que vamos fazer?')).toBeVisible();
     await expect(botao(page, 'Continuar')).toBeDisabled();
 
-    const corte = page.getByRole('checkbox', { name: /^Corte/ }).filter({ visible: true }).first();
-    const barba = page.getByRole('checkbox', { name: /^Barba/ }).filter({ visible: true }).first();
+    const corte = page
+      .getByRole('checkbox', { name: /^Corte/ })
+      .filter({ visible: true })
+      .first();
+    const barba = page
+      .getByRole('checkbox', { name: /^Barba/ })
+      .filter({ visible: true })
+      .first();
     await corte.click();
     await barba.click();
     await expect(corte).toBeChecked();

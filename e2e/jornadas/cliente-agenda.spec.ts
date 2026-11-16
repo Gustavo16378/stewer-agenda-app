@@ -36,7 +36,11 @@ test('cliente cria a conta, marca, remarca e cancela um horario', async ({ page 
     await expect(naTela(page, 'O que vamos fazer?')).toBeVisible();
     await semRolagemLateral(page);
     await registrar(page, info, '04 servico');
-    await page.getByRole('checkbox', { name: /^Corte/ }).filter({ visible: true }).first().click();
+    await page
+      .getByRole('checkbox', { name: /^Corte/ })
+      .filter({ visible: true })
+      .first()
+      .click();
     await botao(page, 'Continuar').click();
   });
 
