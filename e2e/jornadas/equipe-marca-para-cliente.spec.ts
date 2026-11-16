@@ -10,7 +10,7 @@ import { botao, entrar, naTela, registrar, SEED, semRolagemLateral, unico } from
 const HORA = /^\d\d:\d\d$/;
 
 test('Stewer cadastra um cliente novo e marca o horario dele', async ({ page }, info) => {
-  const { nome } = unico('WhatsApp');
+  const { nome } = unico('Pedido');
 
   await test.step('na agenda, o atalho para marcar', async () => {
     await entrar(page, SEED.stewer, SEED.senha);
