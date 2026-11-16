@@ -14,6 +14,8 @@
  *   cadastro -> POST /clientes { nome, telefone, email? }
  *
  * `?novo=1` abre ja no formulario de cliente novo (atalho da lista de clientes).
+ * `?jaAtendido=1` e o mesmo comeco para lancar um atendimento que ja aconteceu: o
+ * param segue pelo fluxo e o passo 3 pergunta "quando foi" em vez de mostrar horarios.
  */
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
@@ -65,7 +67,8 @@ function LinhaCliente({ cliente, aoTocar }: { cliente: ClienteResumo; aoTocar: (
 export default function ParaQuem() {
   const router = useRouter();
   const { role } = useAuth();
-  const { novo } = useLocalSearchParams<{ novo?: string }>();
+  const { novo, jaAtendido } = useLocalSearchParams<{ novo?: string; jaAtendido?: string }>();
+  const lancando = jaAtendido === '1';
 
   const [busca, setBusca] = useState('');
   const clientes = useClientesInfinitos(busca);
@@ -86,7 +89,11 @@ export default function ParaQuem() {
     if (!id) return;
     router.push({
       pathname: '/novo-agendamento/servico',
-      params: { clienteId: id, clienteNome: nomeDoCliente ?? '' },
+      params: {
+        clienteId: id,
+        clienteNome: nomeDoCliente ?? '',
+        ...(lancando ? { jaAtendido: '1' } : {}),
+      },
     } as never);
   }
 
@@ -122,9 +129,13 @@ export default function ParaQuem() {
   return (
     <TelaRolavel>
       <CabecalhoDoFluxo
-        contexto="Novo agendamento"
-        titulo="Para quem?"
-        descricao="Busque quem já é cliente ou cadastre quem pediu pelo WhatsApp."
+        contexto={lancando ? 'Atendimento já feito' : 'Novo agendamento'}
+        titulo={lancando ? 'Quem você atendeu?' : 'Para quem?'}
+        descricao={
+          lancando
+            ? 'Busque o cliente ou cadastre quem veio sem marcar pelo app.'
+            : 'Busque quem já é cliente ou cadastre quem pediu pelo WhatsApp.'
+        }
       />
 
       <Campo

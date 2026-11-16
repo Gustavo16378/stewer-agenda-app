@@ -13,6 +13,8 @@ export interface ExtrasDoFluxo {
   clienteId?: string;
   clienteNome?: string;
   agendamentoId?: string;
+  /** '1': a equipe lancando um atendimento que ja aconteceu (passo 3 vira "quando foi"). */
+  jaAtendido?: string;
 }
 
 /** Lista de ids -> o valor do param `servicoIds`. */
@@ -35,6 +37,7 @@ export function useFluxoDeAgendamento() {
     agendamentoId?: string;
     servicoIds?: string;
     servicoId?: string;
+    jaAtendido?: string;
   }>();
   const servicoIds = servicosDosParams(p.servicoIds, p.servicoId);
 
@@ -42,6 +45,7 @@ export function useFluxoDeAgendamento() {
     ...(p.clienteId ? { clienteId: p.clienteId } : {}),
     ...(p.clienteNome ? { clienteNome: p.clienteNome } : {}),
     ...(p.agendamentoId ? { agendamentoId: p.agendamentoId } : {}),
+    ...(p.jaAtendido === '1' ? { jaAtendido: '1' } : {}),
   };
 
   return {
@@ -52,12 +56,18 @@ export function useFluxoDeAgendamento() {
     /** Os mesmos servicos, prontos para o param `servicoIds` do proximo passo. */
     paramServicos: paramDeServicos(servicoIds),
     remarcando: !!p.agendamentoId,
+    /** Lancando um atendimento que ja aconteceu, em vez de marcar um horario. */
+    jaAtendido: p.jaAtendido === '1',
     paraCliente: !!p.clienteId,
     /** Eyebrow das telas do fluxo. */
     eyebrow: p.agendamentoId
       ? 'Remarcar horário'
-      : p.clienteNome
-        ? `Para ${p.clienteNome}`
-        : 'Novo agendamento',
+      : p.jaAtendido === '1'
+        ? p.clienteNome
+          ? `Atendimento já feito · ${p.clienteNome}`
+          : 'Atendimento já feito'
+        : p.clienteNome
+          ? `Para ${p.clienteNome}`
+          : 'Novo agendamento',
   };
 }

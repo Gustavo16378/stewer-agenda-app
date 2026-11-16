@@ -29,6 +29,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useDisponibilidade, useHorariosLivres } from '@/api/hooks';
 import type { HorarioLivre } from '@/api/types';
 import { BarraDeResumo, CabecalhoDoFluxo } from '@/components/atelie/fluxo';
+import { Campo } from '@/components/ui/campo';
 import { Carregando, EstadoErro, EstadoVazio } from '@/components/ui/estados';
 import { cn } from '@/lib/cn';
 import {
@@ -39,6 +40,7 @@ import {
   parseCalendarDate,
   parseInstant,
   somaDias,
+  toInstant,
   type CalendarDate,
 } from '@/lib/datetime';
 import { useFluxoDeAgendamento } from '@/lib/fluxo-agendamento';
@@ -111,7 +113,7 @@ function ChipDia({
   );
 }
 
-export default function DataEHorario() {
+function DataEHorario() {
   const router = useRouter();
   const largo = useLayoutLargo();
   const insets = useSafeAreaInsets();
@@ -319,4 +321,145 @@ export default function DataEHorario() {
       />
     </View>
   );
+}
+
+/** Ate quantos dias atras da para lancar pela tela (a API aceita ate 30). */
+const DIAS_PARA_TRAS = 14;
+
+/** "1500" -> "15:00", enquanto digita. */
+function mascaraHora(texto: string): string {
+  const d = texto.replace(/\D/g, '').slice(0, 4);
+  return d.length <= 2 ? d : `${d.slice(0, 2)}:${d.slice(2)}`;
+}
+
+/** "15:00" no dia escolhido -> o instante, no relogio do aparelho (o do estudio). */
+function instanteDe(dia: CalendarDate, hora: string): Date | null {
+  const m = /^(\d{2}):(\d{2})$/.exec(hora);
+  const base = parseCalendarDate(dia);
+  if (!m || !base) return null;
+  const h = Number(m[1]);
+  const min = Number(m[2]);
+  if (h > 23 || min > 59) return null;
+  base.setHours(h, min, 0, 0);
+  return base;
+}
+
+/**
+ * Passo 3 de quem lanca um atendimento que ja aconteceu: em vez dos horarios livres,
+ * o dia (hoje ou ate duas semanas para tras) e a hora em que comecou, digitada. Nada de
+ * grade nem horario ocupado: o atendimento aconteceu, e o registro tem de refletir isso.
+ */
+function QuandoFoi() {
+  const router = useRouter();
+  const largo = useLayoutLargo();
+  const insets = useSafeAreaInsets();
+  const { profissionalId } = useLocalSearchParams<{ profissionalId?: string }>();
+  const { extras, eyebrow, paramServicos } = useFluxoDeAgendamento();
+
+  const hoje = hojeCalendarDate();
+  // hoje primeiro, depois ontem, anteontem...
+  const dias = useMemo(
+    () =>
+      Array.from({ length: DIAS_PARA_TRAS }, (_, i) => somaDias(hoje, -i)).filter(
+        (d): d is CalendarDate => !!d
+      ),
+    [hoje]
+  );
+
+  const [dia, setDia] = useState<CalendarDate>(hoje);
+  const [hora, setHora] = useState('');
+
+  const quando = instanteDe(dia, hora);
+  const noFuturo = !!quando && quando.getTime() > Date.now();
+  const valido = !!quando && !noFuturo;
+  const horaInvalida = hora.length === 5 && !quando;
+
+  function continuar() {
+    if (!quando || noFuturo) return;
+    router.push({
+      pathname: '/novo-agendamento/confirmar',
+      params: {
+        servicoIds: paramServicos,
+        profissionalId: profissionalId ?? '',
+        inicio: toInstant(quando),
+        ...extras,
+      },
+    } as never);
+  }
+
+  return (
+    <View className="flex-1 bg-fundo" style={{ paddingTop: insets.top }}>
+      <ScrollView
+        className="flex-1"
+        contentContainerStyle={[
+          { paddingBottom: 40 },
+          largo && { width: '100%', maxWidth: 760, alignSelf: 'center', paddingTop: 24 },
+        ]}
+      >
+        <View className="px-7">
+          <CabecalhoDoFluxo
+            passo={3}
+            contexto={eyebrow}
+            titulo="Quando foi?"
+            descricao="O dia e a hora em que o atendimento começou."
+          />
+        </View>
+
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          className="mt-7"
+          contentContainerClassName="gap-2 px-7"
+          accessibilityLabel="Dias"
+        >
+          {dias.map((d, i) => (
+            <ChipDia
+              key={d}
+              dia={d}
+              disponivel
+              selecionado={d === dia}
+              mostraMes={i === 0 || parseCalendarDate(d)?.getDate() === 1}
+              aoTocar={() => setDia(d)}
+            />
+          ))}
+        </ScrollView>
+
+        <View className="px-7">
+          <Text className="mt-8 font-display text-ds-24 text-texto">
+            {dia === hoje ? 'Hoje' : diaPorExtenso(dia)}
+          </Text>
+          <Campo
+            className="mt-5"
+            rotulo="Que horas começou?"
+            value={hora}
+            onChangeText={(t) => setHora(mascaraHora(t))}
+            placeholder="15:00"
+            keyboardType="number-pad"
+            maxLength={5}
+            erro={
+              noFuturo
+                ? 'Esse horário ainda não chegou. Para o que vai acontecer, marque um horário.'
+                : horaInvalida
+                  ? 'Hora inválida. Use o formato 15:00.'
+                  : undefined
+            }
+          />
+        </View>
+      </ScrollView>
+
+      <BarraDeResumo
+        linha1={valido ? `às ${hora}` : 'Digite a hora'}
+        linha2={diaPorExtenso(dia)}
+        titulo="Continuar"
+        ativo={valido}
+        aoTocar={continuar}
+      />
+    </View>
+  );
+}
+
+/** Passo 3: horarios livres para marcar, ou "quando foi" para lancar o que ja aconteceu. */
+export default function Passo3() {
+  const { jaAtendido } = useFluxoDeAgendamento();
+  return jaAtendido ? <QuandoFoi /> : <DataEHorario />;
 }

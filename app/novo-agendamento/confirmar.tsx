@@ -61,6 +61,10 @@ function mensagemDoErro(erro: ApiError): string {
       return 'Esse horário já passou. Escolha outro.';
     case 'FORA_DA_DISPONIBILIDADE':
       return 'O profissional não atende nesse horário. Escolha outro.';
+    case 'ATENDIMENTO_NO_FUTURO':
+      return 'Esse horário ainda não chegou. Para o que vai acontecer, marque um horário.';
+    case 'ATENDIMENTO_ANTIGO_DEMAIS':
+      return 'Dá para registrar atendimentos de até 30 dias atrás.';
     case 'STATUS_FINAL':
       return 'Esse agendamento já foi encerrado e não pode ser remarcado.';
   }
@@ -82,7 +86,7 @@ export default function Confirmacao() {
   }>();
 
   const { role } = useAuth();
-  const { clienteId, clienteNome, agendamentoId, remarcando, eyebrow, servicoIds } =
+  const { clienteId, clienteNome, agendamentoId, remarcando, eyebrow, servicoIds, jaAtendido } =
     useFluxoDeAgendamento();
   const servicos = useServicos(false);
   const profissionais = useProfissionais(false);
@@ -160,6 +164,7 @@ export default function Confirmacao() {
         servicoId: servicoIds[0],
         servicoIds,
         inicio,
+        ...(jaAtendido ? { jaAtendido: true } : {}),
         ...(clienteId ? { clienteId } : {}),
         ...(observacao.trim() ? { observacao: observacao.trim() } : {}),
       },
@@ -175,7 +180,7 @@ export default function Confirmacao() {
       <CabecalhoDoFluxo
         passo={remarcando ? undefined : 4}
         contexto={eyebrow}
-        titulo={remarcando ? 'Novo horário' : 'Tudo certo?'}
+        titulo={remarcando ? 'Novo horário' : jaAtendido ? 'Confere o atendimento' : 'Tudo certo?'}
       />
 
       <View>
@@ -255,7 +260,9 @@ export default function Confirmacao() {
               </View>
               <View className="h-px bg-borda" />
               <View className="flex-row items-baseline justify-between p-6">
-                <Text className="font-sans text-ui text-texto-2">Valor, pago no local</Text>
+                <Text className="font-sans text-ui text-texto-2">
+                  {jaAtendido ? 'Valor do atendimento' : 'Valor, pago no local'}
+                </Text>
                 <Text className="font-display text-ds-30 text-texto">
                   {formatCentavos(centavosTotais)}
                 </Text>
@@ -265,10 +272,14 @@ export default function Confirmacao() {
             {remarcando ? null : (
               <Campo
                 className="mt-6"
-                rotulo="Recado para o Stewer"
+                rotulo={jaAtendido ? 'Anotação' : 'Recado para o Stewer'}
                 value={observacao}
                 onChangeText={setObservacao}
-                placeholder="Algo que ele deva saber antes (opcional)"
+                placeholder={
+                  jaAtendido
+                    ? 'Algo sobre o atendimento (opcional)'
+                    : 'Algo que ele deva saber antes (opcional)'
+                }
                 multiline
                 numberOfLines={3}
                 maxLength={OBSERVACAO_MAX}
@@ -280,7 +291,9 @@ export default function Confirmacao() {
             <Text className="mt-5 font-sans text-ui-sm text-texto-3">
               {remarcando
                 ? 'O horário antigo fica livre para outra pessoa assim que você confirmar.'
-                : 'Se não puder vir, cancele ou remarque pelo app para liberar o horário.'}
+                : jaAtendido
+                  ? 'Entra como concluído, no histórico do cliente e no financeiro. O cliente não recebe aviso.'
+                  : 'Se não puder vir, cancele ou remarque pelo app para liberar o horário.'}
             </Text>
 
             {erroEnvio && !erroEnvio.temViolacoes ? (
@@ -291,7 +304,13 @@ export default function Confirmacao() {
 
             <BotaoAtelie
               className="mt-8"
-              titulo={remarcando ? 'Confirmar novo horário' : 'Confirmar horário'}
+              titulo={
+                remarcando
+                  ? 'Confirmar novo horário'
+                  : jaAtendido
+                    ? 'Registrar atendimento'
+                    : 'Confirmar horário'
+              }
               carregando={enviando}
               onPress={confirmar}
             />
