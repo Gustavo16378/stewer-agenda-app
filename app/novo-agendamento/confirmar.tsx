@@ -156,6 +156,8 @@ export default function Confirmacao() {
     criar.mutate(
       {
         profissionalId,
+        // `servicoId` (o primeiro) junto da lista: a API de antes da lista so le ele
+        servicoId: servicoIds[0],
         servicoIds,
         inicio,
         ...(clienteId ? { clienteId } : {}),
