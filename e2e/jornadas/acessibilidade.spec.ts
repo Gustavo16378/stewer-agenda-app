@@ -6,7 +6,7 @@
 import { AxeBuilder } from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 
-import { entrar, naTela, novoCliente, SEED } from '../apoio';
+import { botao, entrar, naTela, novoCliente, SEED } from '../apoio';
 
 const REGRAS = ['color-contrast', 'button-name', 'link-name', 'image-alt', 'label'];
 
@@ -38,10 +38,12 @@ test('inicio e fluxo de agendamento', async ({ page, request }) => {
   await expect(naTela(page, 'O que vamos fazer?')).toBeVisible();
   await auditar(page, 'servico');
   await page
-    .getByRole('button', { name: /^Corte/ })
+    .getByRole('checkbox', { name: /^Corte/ })
     .filter({ visible: true })
     .first()
     .click();
+  await auditar(page, 'servico marcado');
+  await botao(page, 'Continuar').click();
   await expect(naTela(page, 'Com quem?')).toBeVisible();
   await auditar(page, 'profissional');
   await page
