@@ -23,6 +23,7 @@ import { ActivityIndicator, FlatList, Pressable, Text, TextInput, View } from 'r
 
 import { useClientesInfinitos } from '@/api/hooks';
 import type { ClienteResumo } from '@/api/types';
+import { BotaoAtelie } from '@/components/atelie/base';
 import { Carregando, EstadoErro, EstadoVazio } from '@/components/ui/estados';
 import { AvatarIniciais } from '@/components/ui/imagem';
 import { Tela } from '@/components/ui/tela';
@@ -105,6 +106,17 @@ export default function ListaDeClientes() {
                 </LabelCaps>
               ) : null}
             </View>
+            <BotaoAtelie
+              className="mt-6"
+              variante="contorno"
+              titulo="Cadastrar cliente e marcar horário"
+              onPress={() =>
+                router.push({
+                  pathname: '/novo-agendamento/cliente',
+                  params: { novo: '1' },
+                } as never)
+              }
+            />
             <View className="mt-7 flex-row items-center gap-3 rounded-token border border-field-border px-4 py-[14px]">
               <IconeBusca />
               <TextInput
@@ -148,7 +160,7 @@ export default function ListaDeClientes() {
           ) : (
             <EstadoVazio
               titulo="Ainda não há clientes."
-              descricao="Quem se cadastrar pelo app aparece aqui."
+              descricao="Quem se cadastrar pelo app, ou quem você cadastrar aqui, aparece nesta lista."
             />
           )
         }

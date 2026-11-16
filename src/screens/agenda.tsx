@@ -292,6 +292,12 @@ export default function AgendaDoDia() {
           </View>
         </View>
 
+        <BotaoAtelie
+          className="mt-5"
+          titulo="Marcar horário para um cliente"
+          onPress={() => router.push('/novo-agendamento/cliente' as never)}
+        />
+
         <View className="mt-5 flex-row items-center gap-2">
           <View className="flex-1 flex-row gap-2" accessibilityRole="radiogroup">
             {MODOS.map((m) => {
