@@ -394,18 +394,19 @@ export function useRemarcar() {
 export function useHorariosLivres(
   profissionalId: string | undefined,
   data: CalendarDate | undefined,
-  servicoId: string | undefined,
+  servicoIds: readonly string[],
   ignorarAgendamentoId?: string
 ) {
   return useQuery<HorariosLivres, ApiError>({
     queryKey: chaves.horariosLivres(
       profissionalId ?? '',
       data ?? '',
-      servicoId ?? '',
+      servicoIds.join(','),
       ignorarAgendamentoId
     ),
-    queryFn: () => q.buscarHorariosLivres(profissionalId!, data!, servicoId!, ignorarAgendamentoId),
-    enabled: !!profissionalId && !!data && !!servicoId,
+    queryFn: () =>
+      q.buscarHorariosLivres(profissionalId!, data!, [...servicoIds], ignorarAgendamentoId),
+    enabled: !!profissionalId && !!data && servicoIds.length > 0,
   });
 }
 

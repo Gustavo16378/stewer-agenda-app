@@ -68,9 +68,9 @@ export const chaves = {
   horariosLivres: (
     profissionalId: string,
     data: CalendarDate,
-    servicoId: string,
+    servicoIds: string,
     ignorarAgendamentoId?: string
-  ) => ['horarios-livres', profissionalId, data, servicoId, ignorarAgendamentoId ?? ''] as const,
+  ) => ['horarios-livres', profissionalId, data, servicoIds, ignorarAgendamentoId ?? ''] as const,
 
   pessoas: (busca: string) => ['usuarios', { busca }] as const,
   administradores: () => ['usuarios', 'admins'] as const,
@@ -302,14 +302,19 @@ export function atualizarStatus(id: string, status: StatusAgendamento): Promise<
 export function buscarHorariosLivres(
   profissionalId: string,
   data: CalendarDate,
-  servicoId: string,
+  servicoIds: string[],
   ignorarAgendamentoId?: string
 ): Promise<HorariosLivres> {
+  // varios servicos vao como o mesmo param repetido: ?servicoId=a&servicoId=b
   return desembrulha(
     api.GET('/profissionais/{profissionalId}/horarios-livres', {
       params: {
         path: { profissionalId },
-        query: { data, servicoId, ...(ignorarAgendamentoId ? { ignorarAgendamentoId } : {}) },
+        query: {
+          data,
+          servicoId: servicoIds,
+          ...(ignorarAgendamentoId ? { ignorarAgendamentoId } : {}),
+        },
       },
     })
   );

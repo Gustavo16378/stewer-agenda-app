@@ -2353,7 +2353,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Slots livres do profissional em um dia, fatiados pela duracao do servico */
+        /** Slots livres do profissional em um dia, fatiados pela duracao dos servicos */
         get: {
             parameters: {
                 query: {
@@ -2364,8 +2364,8 @@ export interface paths {
                     data: components["schemas"]["LocalDate"];
                     /** @description Ao remarcar: o agendamento que esta sendo movido, para que o horario atual dele conte como livre */
                     ignorarAgendamentoId?: components["schemas"]["UUID"];
-                    /** @description Servico desejado; a duracao dele define o tamanho do slot */
-                    servicoId: components["schemas"]["UUID"];
+                    /** @description Servico desejado. Repita o parametro para mais de um (?servicoId=a&servicoId=b): o slot tem a soma das duracoes */
+                    servicoId: string[];
                 };
                 header?: never;
                 path: {
@@ -2953,9 +2953,17 @@ export interface components {
             clienteNome?: string;
             profissionalId?: components["schemas"]["UUID"];
             profissionalNome?: string;
+            /** @description O primeiro servico do atendimento */
             servicoId?: components["schemas"]["UUID"];
+            /**
+             * @description Todos os servicos, juntos com " + "
+             * @example Corte + Barba
+             */
             servicoNome?: string;
-            /** Format: int32 */
+            /**
+             * Format: int32
+             * @description Tempo total reservado na agenda
+             */
             duracaoMinutos?: number;
             /** Format: int64 */
             precoCentavos?: number;
@@ -2966,13 +2974,15 @@ export interface components {
             createdAt?: components["schemas"]["OffsetDateTime"];
             /** @description Na agenda do dia: o cliente ainda nao teve nenhum atendimento concluido antes deste. Nulo fora da agenda. */
             primeiraVisita?: boolean;
+            /** @description Cada servico do atendimento, na ordem */
+            servicos?: components["schemas"]["ServicoDoAgendamento"][];
         };
         /** @description Dados para reservar um horario */
         AgendamentoRequest: {
             /** @description Profissional que vai atender */
             profissionalId: components["schemas"]["UUID"];
-            /** @description Servico desejado; a duracao dele define o fim do atendimento */
-            servicoId: components["schemas"]["UUID"];
+            /** @description Um servico so. Use servicoIds para marcar mais de um */
+            servicoId?: components["schemas"]["UUID"];
             /**
              * @description Inicio do atendimento em ISO-8601 com offset
              * @example 2026-03-02T09:00:00Z
@@ -2982,6 +2992,8 @@ export interface components {
             observacao?: string;
             /** @description Cliente do agendamento. Obrigatorio para PROFISSIONAL e ADMIN; ignorado quando quem chama e CLIENTE */
             clienteId?: components["schemas"]["UUID"];
+            /** @description Servicos do atendimento, na ordem; a soma das duracoes define o fim */
+            servicoIds?: string[];
         };
         Aniversariante: {
             id?: components["schemas"]["UUID"];
@@ -3320,10 +3332,16 @@ export interface components {
         HorariosLivres: {
             data?: components["schemas"]["LocalDate"];
             profissionalId?: components["schemas"]["UUID"];
+            /** @description O primeiro servico pedido */
             servicoId?: components["schemas"]["UUID"];
-            /** Format: int32 */
+            /**
+             * Format: int32
+             * @description Soma das duracoes dos servicos: o tamanho de cada slot
+             */
             duracaoMinutos?: number;
             horarios?: components["schemas"]["HorarioLivre"][];
+            /** @description Todos os servicos considerados no calculo */
+            servicoIds?: string[];
         };
         Imagem: {
             id?: components["schemas"]["UUID"];
@@ -3542,6 +3560,14 @@ export interface components {
             updatedAt?: components["schemas"]["OffsetDateTime"];
             /** @description Fotos de exemplo, em ordem; a URL e GET /imagens/{id} */
             fotos?: string[];
+        };
+        ServicoDoAgendamento: {
+            servicoId?: components["schemas"]["UUID"];
+            nome?: string;
+            /** Format: int32 */
+            duracaoMinutos?: number;
+            /** Format: int64 */
+            precoCentavos?: number;
         };
         ServicoRequest: {
             /** @example Consultoria de imagem */

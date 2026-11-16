@@ -16,12 +16,18 @@ components:
         profissionalNome:
           type: string
         servicoId:
+          description: O primeiro servico do atendimento
+          type: string
           $ref: "#/components/schemas/UUID"
         servicoNome:
           type: string
+          description: "Todos os servicos, juntos com \" + \""
+          examples:
+          - Corte + Barba
         duracaoMinutos:
           type: integer
           format: int32
+          description: Tempo total reservado na agenda
         precoCentavos:
           type: integer
           format: int64
@@ -39,37 +45,50 @@ components:
           type: boolean
           description: "Na agenda do dia: o cliente ainda nao teve nenhum atendimento\
             \ concluido antes deste. Nulo fora da agenda."
+        servicos:
+          type: array
+          items:
+            $ref: "#/components/schemas/ServicoDoAgendamento"
+          description: "Cada servico do atendimento, na ordem"
     AgendamentoRequest:
+      description: Dados para reservar um horario
       type: object
       required:
       - profissionalId
-      - servicoId
       - inicio
-      description: Dados para reservar um horario
       properties:
         profissionalId:
-          $ref: "#/components/schemas/UUID"
-          type: string
           description: Profissional que vai atender
-        servicoId:
-          $ref: "#/components/schemas/UUID"
           type: string
-          description: Servico desejado; a duracao dele define o fim do atendimento
+          $ref: "#/components/schemas/UUID"
+        servicoId:
+          description: Um servico so. Use servicoIds para marcar mais de um
+          type: string
+          $ref: "#/components/schemas/UUID"
         inicio:
-          $ref: "#/components/schemas/OffsetDateTime"
+          description: Inicio do atendimento em ISO-8601 com offset
           type: string
           examples:
           - 2026-03-02T09:00:00Z
-          description: Inicio do atendimento em ISO-8601 com offset
+          $ref: "#/components/schemas/OffsetDateTime"
         observacao:
           type: string
-          maxLength: 2000
           description: Recado do cliente para o profissional
+          maxLength: 2000
         clienteId:
-          $ref: "#/components/schemas/UUID"
-          type: string
           description: Cliente do agendamento. Obrigatorio para PROFISSIONAL e ADMIN;
             ignorado quando quem chama e CLIENTE
+          type: string
+          $ref: "#/components/schemas/UUID"
+        servicoIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+            pattern: "[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
+          description: "Servicos do atendimento, na ordem; a soma das duracoes define\
+            \ o fim"
+          maxItems: 6
     Aniversariante:
       type: object
       properties:
@@ -107,12 +126,12 @@ components:
       properties:
         texto:
           type: string
-          maxLength: 8000
           pattern: \S
+          maxLength: 8000
         agendamentoId:
-          $ref: "#/components/schemas/UUID"
-          type: string
           description: Atendimento a que a anotacao se refere; opcional
+          type: string
+          $ref: "#/components/schemas/UUID"
     AtualizarPerfilRequest:
       type: object
       required:
@@ -121,37 +140,37 @@ components:
       properties:
         nome:
           type: string
-          maxLength: 120
           pattern: \S
+          maxLength: 120
         email:
           type: string
-          maxLength: 180
           pattern: \S
+          maxLength: 180
         telefone:
           type: string
           maxLength: 30
         dataNascimento:
-          $ref: "#/components/schemas/LocalDate"
+          description: "Opcional; nulo mantem o que ja estava. Vai para a ficha: o\
+            \ Stewer ve o aniversario no painel."
           type: string
           examples:
           - 1994-11-20
-          description: "Opcional; nulo mantem o que ja estava. Vai para a ficha: o\
-            \ Stewer ve o aniversario no painel."
+          $ref: "#/components/schemas/LocalDate"
     AtualizarStatusRequest:
+      description: Novo status do agendamento
       type: object
       required:
       - status
-      description: Novo status do agendamento
       properties:
         status:
-          $ref: "#/components/schemas/StatusAgendamento"
+          description: Situacao final desejada
           type: string
           examples:
           - CANCELADO
-          description: Situacao final desejada
+          $ref: "#/components/schemas/StatusAgendamento"
     Bloqueio:
-      type: object
       description: Janela em que o profissional nao atende
+      type: object
       properties:
         id:
           $ref: "#/components/schemas/UUID"
@@ -166,22 +185,22 @@ components:
         createdAt:
           $ref: "#/components/schemas/OffsetDateTime"
     BloqueioRequest:
+      description: Janela em que o profissional nao atende
       type: object
       required:
       - inicio
       - fim
-      description: Janela em que o profissional nao atende
       properties:
         inicio:
-          $ref: "#/components/schemas/OffsetDateTime"
           type: string
           examples:
           - 2026-03-10T13:00:00Z
-        fim:
           $ref: "#/components/schemas/OffsetDateTime"
+        fim:
           type: string
           examples:
           - 2026-03-10T15:00:00Z
+          $ref: "#/components/schemas/OffsetDateTime"
         motivo:
           type: string
           examples:
@@ -203,11 +222,11 @@ components:
         createdAt:
           $ref: "#/components/schemas/OffsetDateTime"
         fotoVersao:
-          $ref: "#/components/schemas/OffsetDateTime"
+          description: Quando a foto de perfil mudou; nulo se nao tem foto
           type: string
           examples:
           - 2022-03-10T12:15:50-04:00
-          description: Quando a foto de perfil mudou; nulo se nao tem foto
+          $ref: "#/components/schemas/OffsetDateTime"
         agendamentos:
           type: array
           items:
@@ -234,17 +253,17 @@ components:
           format: int64
           description: Atendimentos concluidos
         ultimaVisita:
-          $ref: "#/components/schemas/OffsetDateTime"
-          type: string
-          examples:
-          - 2022-03-10T12:15:50-04:00
           description: Inicio do ultimo atendimento concluido; nulo se nunca veio
-        fotoVersao:
-          $ref: "#/components/schemas/OffsetDateTime"
           type: string
           examples:
           - 2022-03-10T12:15:50-04:00
+          $ref: "#/components/schemas/OffsetDateTime"
+        fotoVersao:
           description: Quando a foto de perfil mudou; nulo se nao tem foto
+          type: string
+          examples:
+          - 2022-03-10T12:15:50-04:00
+          $ref: "#/components/schemas/OffsetDateTime"
     ClienteSumido:
       type: object
       properties:
@@ -268,8 +287,8 @@ components:
           format: int32
           description: Intervalo medio entre visitas; nulo com uma visita so
     Disponibilidade:
-      type: object
       description: Faixa de atendimento recorrente
+      type: object
       properties:
         id:
           $ref: "#/components/schemas/UUID"
@@ -278,25 +297,25 @@ components:
         diaSemana:
           type: integer
           format: int16
+          description: 0 = domingo ... 6 = sabado
           examples:
           - 1
-          description: 0 = domingo ... 6 = sabado
         horaInicio:
           type: string
           format: time
-          examples:
-          - 09:00
           externalDocs:
             description: As defined by 'partial-time' in RFC3339
             url: https://www.rfc-editor.org/rfc/rfc3339.html#section-5.6
+          examples:
+          - 09:00
         horaFim:
           type: string
           format: time
-          examples:
-          - 18:00
           externalDocs:
             description: As defined by 'partial-time' in RFC3339
             url: https://www.rfc-editor.org/rfc/rfc3339.html#section-5.6
+          examples:
+          - 18:00
     DispositivoRequest:
       type: object
       required:
@@ -304,35 +323,35 @@ components:
       properties:
         token:
           type: string
-          maxLength: 255
-          pattern: \S
           description: "Token do Expo Push (ExponentPushToken[...])"
+          pattern: \S
+          maxLength: 255
     Erro:
-      type: object
       description: Resposta de erro padronizada
+      type: object
       properties:
         codigo:
           type: string
+          description: Codigo estavel do erro
           examples:
           - RECURSO_NAO_ENCONTRADO
-          description: Codigo estavel do erro
         mensagem:
           type: string
+          description: Mensagem legivel
           examples:
           - Servico nao encontrado
-          description: Mensagem legivel
         status:
           type: integer
           format: int32
+          description: Status HTTP
           examples:
           - 404
-          description: Status HTTP
         timestamp:
-          $ref: "#/components/schemas/OffsetDateTime"
+          description: Momento do erro (UTC)
           type: string
           examples:
           - 2022-03-10T12:15:50-04:00
-          description: Momento do erro (UTC)
+          $ref: "#/components/schemas/OffsetDateTime"
         violacoes:
           type: array
           items:
@@ -381,9 +400,9 @@ components:
         frase:
           type: string
         retrato:
-          $ref: "#/components/schemas/Imagem"
-          type: object
           description: Retrato do Stewer; nulo usa o que vem no app
+          type: object
+          $ref: "#/components/schemas/Imagem"
         fotos:
           type: array
           items:
@@ -431,9 +450,9 @@ components:
           minimum: -180
         linkMapa:
           type: string
-          maxLength: 500
           description: "Link do Google Maps; se tiver coordenadas, elas preenchem\
             \ o mapa"
+          maxLength: 500
         whatsapp:
           type: string
           examples:
@@ -451,11 +470,11 @@ components:
           maxLength: 200
         frase:
           type: string
-          maxLength: 240
           description: Frase que aparece na tela de entrar
+          maxLength: 240
     EventoAuditoria:
-      type: object
       description: Quem fez o que e quando
+      type: object
       properties:
         id:
           $ref: "#/components/schemas/UUID"
@@ -491,37 +510,37 @@ components:
           type: string
           pattern: \S
     FaixaHoraria:
+      description: Faixa de atendimento de um dia da semana
       type: object
       required:
       - diaSemana
       - horaInicio
       - horaFim
-      description: Faixa de atendimento de um dia da semana
       properties:
         diaSemana:
           type: integer
           format: int32
+          description: 0 = domingo ... 6 = sabado
           examples:
           - 1
-          description: 0 = domingo ... 6 = sabado
           maximum: 6
           minimum: 0
         horaInicio:
           type: string
           format: time
-          examples:
-          - 09:00
           externalDocs:
             description: As defined by 'partial-time' in RFC3339
             url: https://www.rfc-editor.org/rfc/rfc3339.html#section-5.6
+          examples:
+          - 09:00
         horaFim:
           type: string
           format: time
-          examples:
-          - 18:00
           externalDocs:
             description: As defined by 'partial-time' in RFC3339
             url: https://www.rfc-editor.org/rfc/rfc3339.html#section-5.6
+          examples:
+          - 18:00
     FatiaFinanceira:
       type: object
       properties:
@@ -558,11 +577,11 @@ components:
         evitar:
           type: string
         atualizadaEm:
-          $ref: "#/components/schemas/OffsetDateTime"
+          description: Ultima vez que alguem salvou; nulo se nunca foi preenchida
           type: string
           examples:
           - 2022-03-10T12:15:50-04:00
-          description: Ultima vez que alguem salvou; nulo se nunca foi preenchida
+          $ref: "#/components/schemas/OffsetDateTime"
     FichaRequest:
       type: object
       properties:
@@ -575,10 +594,10 @@ components:
           maxLength: 40
         etiquetas:
           type: array
-          maxItems: 12
           items:
             type: string
             maxLength: 40
+          maxItems: 12
         formatoRosto:
           type: string
           examples:
@@ -640,8 +659,8 @@ components:
           pattern: \S
         conteudoBase64:
           type: string
-          maxLength: 900000
           pattern: \S
+          maxLength: 900000
     FotoRequest:
       type: object
       required:
@@ -655,9 +674,9 @@ components:
           type: string
           maxLength: 200
         agendamentoId:
-          $ref: "#/components/schemas/UUID"
-          type: string
           description: Atendimento a que a foto pertence (opcional)
+          type: string
+          $ref: "#/components/schemas/UUID"
         tipoConteudo:
           type: string
           examples:
@@ -665,13 +684,13 @@ components:
           pattern: \S
         conteudoBase64:
           type: string
-          maxLength: 2100000
           pattern: \S
+          maxLength: 2100000
     GradeSemanal:
+      description: Faixas de atendimento da semana inteira
       type: object
       required:
       - faixas
-      description: Faixas de atendimento da semana inteira
       properties:
         faixas:
           type: array
@@ -679,30 +698,40 @@ components:
             $ref: "#/components/schemas/FaixaHoraria"
           description: Faixas da semana. Lista vazia zera a agenda do profissional.
     HorarioLivre:
-      type: object
       description: Janela livre pronta para ser reservada
+      type: object
       properties:
         inicio:
           $ref: "#/components/schemas/OffsetDateTime"
         fim:
           $ref: "#/components/schemas/OffsetDateTime"
     HorariosLivres:
-      type: object
       description: Slots livres de um profissional em um dia
+      type: object
       properties:
         data:
           $ref: "#/components/schemas/LocalDate"
         profissionalId:
           $ref: "#/components/schemas/UUID"
         servicoId:
+          description: O primeiro servico pedido
+          type: string
           $ref: "#/components/schemas/UUID"
         duracaoMinutos:
           type: integer
           format: int32
+          description: "Soma das duracoes dos servicos: o tamanho de cada slot"
         horarios:
           type: array
           items:
             $ref: "#/components/schemas/HorarioLivre"
+        servicoIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+            pattern: "[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
+          description: Todos os servicos considerados no calculo
     Imagem:
       type: object
       properties:
@@ -715,9 +744,6 @@ components:
           format: int32
     ImagemRequest:
       type: object
-      required:
-      - tipoConteudo
-      - conteudoBase64
       properties:
         tipo:
           type: string
@@ -733,9 +759,12 @@ components:
           pattern: \S
         conteudoBase64:
           type: string
-          maxLength: 2100000
-          pattern: \S
           description: "A imagem em base64 (JPEG, PNG ou WebP, ate 1,5 MB)"
+          pattern: \S
+          maxLength: 2100000
+      required:
+      - tipoConteudo
+      - conteudoBase64
     LocalDate:
       type: string
       format: date
@@ -765,9 +794,9 @@ components:
           pattern: \S
         tenantSlug:
           type: string
+          description: "Slug do estabelecimento. Omitido, usa o tenant padrao."
           examples:
           - stewer-gabriel
-          description: "Slug do estabelecimento. Omitido, usa o tenant padrao."
     MetricasCliente:
       type: object
       properties:
@@ -810,11 +839,11 @@ components:
           type: string
           description: Com quem ele mais atende
         proximoHorario:
-          $ref: "#/components/schemas/OffsetDateTime"
+          description: Proximo horario marcado; nulo se nao tem
           type: string
           examples:
           - 2022-03-10T12:15:50-04:00
-          description: Proximo horario marcado; nulo se nao tem
+          $ref: "#/components/schemas/OffsetDateTime"
     Momento:
       type: string
       enum:
@@ -871,16 +900,16 @@ components:
         fotoUrl:
           type: string
         fotoId:
-          $ref: "#/components/schemas/UUID"
-          type: string
           description: "Foto propria da equipe, servida em /imagens/{fotoId}; nulo:\
             \ usa a foto de perfil"
+          type: string
+          $ref: "#/components/schemas/UUID"
         fotoVersao:
-          $ref: "#/components/schemas/OffsetDateTime"
+          description: Quando a foto de perfil da conta mudou; nulo se nao tem foto
           type: string
           examples:
           - 2022-03-10T12:15:50-04:00
-          description: Quando a foto de perfil da conta mudou; nulo se nao tem foto
+          $ref: "#/components/schemas/OffsetDateTime"
         ativo:
           type: boolean
         createdAt:
@@ -893,11 +922,11 @@ components:
       - usuarioId
       properties:
         usuarioId:
-          $ref: "#/components/schemas/UUID"
+          description: Usuario do estabelecimento que passa a atender
           type: string
           examples:
           - 3f4a1c8e-6b2d-4f11-9c7a-0d5e8b2a1f34
-          description: Usuario do estabelecimento que passa a atender
+          $ref: "#/components/schemas/UUID"
         especialidade:
           type: string
           examples:
@@ -915,9 +944,9 @@ components:
           maxLength: 500
         ativo:
           type: boolean
+          description: "Se aparece na agenda. Omitido na criacao, assume true."
           examples:
           - true
-          description: "Se aparece na agenda. Omitido na criacao, assume true."
     RedefinirSenhaRequest:
       type: object
       required:
@@ -933,9 +962,9 @@ components:
           pattern: "\\d{6}"
         novaSenha:
           type: string
+          pattern: \S
           minLength: 8
           maxLength: 72
-          pattern: \S
         tenantSlug:
           type: string
           description: "Slug do estabelecimento. Omitido, usa o tenant padrao."
@@ -950,14 +979,14 @@ components:
           type: string
           examples:
           - Joana Ribeiro
-          maxLength: 120
           pattern: \S
+          maxLength: 120
         email:
           type: string
           examples:
           - joana@exemplo.dev
-          maxLength: 180
           pattern: \S
+          maxLength: 180
         telefone:
           type: string
           examples:
@@ -965,22 +994,22 @@ components:
           maxLength: 30
         senha:
           type: string
-          minLength: 8
           examples:
           - dev12345
-          maxLength: 72
           pattern: \S
+          minLength: 8
+          maxLength: 72
         tenantSlug:
           type: string
+          description: "Slug do estabelecimento. Omitido, usa o tenant padrao."
           examples:
           - stewer-gabriel
-          description: "Slug do estabelecimento. Omitido, usa o tenant padrao."
         dataNascimento:
-          $ref: "#/components/schemas/LocalDate"
+          description: "Opcional. Vai para a ficha: o Stewer ve o aniversario no painel."
           type: string
           examples:
           - 1994-11-20
-          description: "Opcional. Vai para a ficha: o Stewer ve o aniversario no painel."
+          $ref: "#/components/schemas/LocalDate"
     RelatorioFinanceiro:
       type: object
       properties:
@@ -994,9 +1023,9 @@ components:
         totais:
           $ref: "#/components/schemas/TotaisFinanceiros"
         anterior:
-          $ref: "#/components/schemas/TotaisFinanceiros"
-          type: object
           description: "O mesmo periodo imediatamente antes, para comparar"
+          type: object
+          $ref: "#/components/schemas/TotaisFinanceiros"
         serie:
           type: array
           items:
@@ -1015,21 +1044,21 @@ components:
             $ref: "#/components/schemas/FatiaFinanceira"
           description: Segunda (1) a domingo (7)
     RemarcarRequest:
+      description: Novo horario do agendamento
       type: object
       required:
       - inicio
-      description: Novo horario do agendamento
       properties:
         inicio:
-          $ref: "#/components/schemas/OffsetDateTime"
+          description: Novo inicio em ISO-8601 com offset
           type: string
           examples:
           - 2026-03-02T10:00:00Z
-          description: Novo inicio em ISO-8601 com offset
+          $ref: "#/components/schemas/OffsetDateTime"
         profissionalId:
-          $ref: "#/components/schemas/UUID"
-          type: string
           description: "Outro profissional para atender; omitido, continua o mesmo"
+          type: string
+          $ref: "#/components/schemas/UUID"
     Role:
       type: string
       enum:
@@ -1050,15 +1079,15 @@ components:
         duracaoMinutos:
           type: integer
           format: int32
+          description: Duracao em minutos
           examples:
           - 60
-          description: Duracao em minutos
         precoCentavos:
           type: integer
           format: int64
+          description: Preco em centavos
           examples:
           - 25000
-          description: Preco em centavos
         ativo:
           type: boolean
         createdAt:
@@ -1072,6 +1101,19 @@ components:
             format: uuid
             pattern: "[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
           description: "Fotos de exemplo, em ordem; a URL e GET /imagens/{id}"
+    ServicoDoAgendamento:
+      type: object
+      properties:
+        servicoId:
+          $ref: "#/components/schemas/UUID"
+        nome:
+          type: string
+        duracaoMinutos:
+          type: integer
+          format: int32
+        precoCentavos:
+          type: integer
+          format: int64
     ServicoRequest:
       type: object
       required:
@@ -1083,8 +1125,8 @@ components:
           type: string
           examples:
           - Consultoria de imagem
-          maxLength: 140
           pattern: \S
+          maxLength: 140
         descricao:
           type: string
           examples:
@@ -1100,15 +1142,15 @@ components:
         precoCentavos:
           type: integer
           format: int64
+          description: Preco em centavos
           examples:
           - 25000
-          description: Preco em centavos
           minimum: 0
         ativo:
           type: boolean
+          description: "Servico visivel para agendamento. Omitido, assume true."
           examples:
           - true
-          description: "Servico visivel para agendamento. Omitido, assume true."
     StatusAgendamento:
       type: string
       enum:
@@ -1129,9 +1171,9 @@ components:
         expiraEmSegundos:
           type: integer
           format: int64
+          description: Validade em segundos
           examples:
           - 28800
-          description: Validade em segundos
         usuario:
           $ref: "#/components/schemas/Usuario"
     TotaisFinanceiros:
@@ -1179,9 +1221,9 @@ components:
           pattern: \S
         novaSenha:
           type: string
+          pattern: \S
           minLength: 8
           maxLength: 72
-          pattern: \S
     UUID:
       type: string
       format: uuid
@@ -1202,25 +1244,25 @@ components:
         role:
           $ref: "#/components/schemas/Role"
         criadoEm:
-          $ref: "#/components/schemas/OffsetDateTime"
+          description: Quando a conta foi criada
           type: string
           examples:
           - 2022-03-10T12:15:50-04:00
-          description: Quando a conta foi criada
+          $ref: "#/components/schemas/OffsetDateTime"
         lembreteEmail:
           type: boolean
           description: Recebe lembrete do horario por e-mail
         fotoVersao:
-          $ref: "#/components/schemas/OffsetDateTime"
+          description: Quando a foto de perfil mudou; nulo se nao tem foto
           type: string
           examples:
           - 2022-03-10T12:15:50-04:00
-          description: Quando a foto de perfil mudou; nulo se nao tem foto
+          $ref: "#/components/schemas/OffsetDateTime"
         dataNascimento:
-          $ref: "#/components/schemas/LocalDate"
-          type: string
           description: Aniversario informado pelo proprio cliente (ou pela equipe
             na ficha)
+          type: string
+          $ref: "#/components/schemas/LocalDate"
   securitySchemes:
     bearerAuth:
       description: Authentication
@@ -2513,7 +2555,8 @@ paths:
       - bearerAuth: []
   /profissionais/{profissionalId}/horarios-livres:
     get:
-      summary: "Slots livres do profissional em um dia, fatiados pela duracao do servico"
+      summary: "Slots livres do profissional em um dia, fatiados pela duracao dos\
+        \ servicos"
       tags:
       - Agendamentos
       parameters:
@@ -2535,11 +2578,17 @@ paths:
         in: query
         schema:
           $ref: "#/components/schemas/UUID"
-      - description: Servico desejado; a duracao dele define o tamanho do slot
+      - description: "Servico desejado. Repita o parametro para mais de um (?servicoId=a&servicoId=b):\
+          \ o slot tem a soma das duracoes"
         name: servicoId
         in: query
         schema:
-          $ref: "#/components/schemas/UUID"
+          type: array
+          items:
+            type: string
+            format: uuid
+            pattern: "[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
+          minItems: 1
         required: true
       responses:
         "200":
@@ -2779,16 +2828,16 @@ paths:
         schema:
           type: integer
           format: int32
-          default: 0
           minimum: 0
+          default: 0
       - name: tamanho
         in: query
         schema:
           type: integer
           format: int32
-          default: 20
           maximum: 100
           minimum: 1
+          default: 20
       responses:
         "200":
           description: OK
@@ -2884,3 +2933,8 @@ info:
   title: Stewer Agenda API
   version: 1.0.0
   description: API de agendamento do estudio de visagismo e consultoria de imagem.
+servers:
+- url: http://localhost:8080
+  description: Auto generated value
+- url: http://0.0.0.0:8080
+  description: Auto generated value
