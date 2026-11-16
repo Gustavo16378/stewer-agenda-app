@@ -48,6 +48,7 @@ import {
   hojeCalendarDate,
   parseInstant,
 } from '@/lib/datetime';
+import { paramDeServicos } from '@/lib/fluxo-agendamento';
 import { formatCentavos } from '@/lib/money';
 
 /** Metricas do resumo, derivadas de ClienteDetalhe.agendamentos (nao ha endpoint). */
@@ -151,7 +152,11 @@ function DetalheAgendamento() {
     if (!a.id || !a.servicoId || !a.profissionalId) return;
     router.push({
       pathname: '/novo-agendamento/horario',
-      params: { servicoId: a.servicoId, profissionalId: a.profissionalId, agendamentoId: a.id },
+      params: {
+        servicoIds: paramDeServicos(a.servicos?.map((s) => s.servicoId) ?? [a.servicoId]),
+        profissionalId: a.profissionalId,
+        agendamentoId: a.id,
+      },
     } as never);
   }
   const final = isStatusFinal(item?.status);

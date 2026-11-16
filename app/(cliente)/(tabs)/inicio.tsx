@@ -38,6 +38,7 @@ import {
   primeiroNome,
   saudacao,
 } from '@/lib/datetime';
+import { paramDeServicos } from '@/lib/fluxo-agendamento';
 import { formatCentavos, formatDuracao } from '@/lib/money';
 import { LARGURA_CONTEUDO, useLayoutLargo } from '@/lib/responsivo';
 import { useTema } from '@/theme/theme-context';
@@ -280,7 +281,7 @@ export default function InicioCliente() {
     router.push({
       pathname: '/novo-agendamento/horario',
       params: {
-        servicoId: item.servicoId ?? '',
+        servicoIds: paramDeServicos(item.servicos?.map((s) => s.servicoId) ?? [item.servicoId]),
         profissionalId: item.profissionalId ?? '',
         agendamentoId: item.id ?? '',
       },

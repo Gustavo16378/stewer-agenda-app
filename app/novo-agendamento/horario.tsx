@@ -10,7 +10,8 @@
  *
  * Dados:
  *   grade    <- GET /profissionais/{id}/disponibilidade  (quais dias da semana atendem)
- *   horarios <- GET /profissionais/{id}/horarios-livres?data=&servicoId=
+ *   horarios <- GET /profissionais/{id}/horarios-livres?data=&servicoId=a&servicoId=b
+ *               (com varios servicos o slot tem a soma das duracoes)
  *
  * DATAS -- o cuidado desta tela:
  *   - `?data=` e o DIA DE CALENDARIO LOCAL (toCalendarDate); nunca toISOString().slice.
@@ -114,11 +115,9 @@ export default function DataEHorario() {
   const router = useRouter();
   const largo = useLayoutLargo();
   const insets = useSafeAreaInsets();
-  const { servicoId, profissionalId } = useLocalSearchParams<{
-    servicoId?: string;
-    profissionalId?: string;
-  }>();
-  const { extras, agendamentoId, remarcando, eyebrow } = useFluxoDeAgendamento();
+  const { profissionalId } = useLocalSearchParams<{ profissionalId?: string }>();
+  const { extras, agendamentoId, remarcando, eyebrow, servicoIds, paramServicos } =
+    useFluxoDeAgendamento();
 
   const hoje = hojeCalendarDate();
   const dias = useMemo(
@@ -161,7 +160,7 @@ export default function DataEHorario() {
   const horarios = useHorariosLivres(
     profissionalId,
     diaSelecionado ?? undefined,
-    servicoId,
+    servicoIds,
     agendamentoId
   );
 
@@ -191,7 +190,7 @@ export default function DataEHorario() {
     router.push({
       pathname: '/novo-agendamento/confirmar',
       params: {
-        servicoId: servicoId ?? '',
+        servicoIds: paramServicos,
         profissionalId: profissionalId ?? '',
         inicio: slot.inicio,
         fim: slot.fim ?? '',

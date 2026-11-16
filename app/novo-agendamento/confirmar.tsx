@@ -7,11 +7,13 @@
  * divisor, VALOR em Playfair 24), nota "Cancelamento sem custo...", botao primario
  * CONFIRMAR AGENDAMENTO e a acao em caps ALTERAR DATA OU HORÁRIO.
  *
- * Recebe servicoId, profissionalId e o `inicio` (INSTANTE ISO cru do slot) por params.
+ * Recebe os servicos (`servicoIds`, um ou mais), profissionalId e o `inicio` (INSTANTE
+ * ISO cru do slot) por params. Com mais de um servico, o ticket lista cada um e o valor
+ * e a soma.
  * Nome do servico e do profissional vem das listas ja em cache (useServicos /
  * useProfissionais) — nao ha GET por id necessario aqui.
  *
- * Acao: POST /agendamentos { profissionalId, servicoId, inicio, observacao? }.
+ * Acao: POST /agendamentos { profissionalId, servicoIds, inicio, observacao? }.
  * `inicio` vai exatamente como veio do slot: ja e ISO com offset.
  *
  * DESVIO consciente: o campo OBSERVAÇÃO nao esta no frame, mas `AgendamentoRequest`
@@ -73,15 +75,15 @@ function mensagemDoErro(erro: ApiError): string {
 export default function Confirmacao() {
   const router = useRouter();
   const LOCAL = useEstudio();
-  const { servicoId, profissionalId, inicio, fim } = useLocalSearchParams<{
-    servicoId?: string;
+  const { profissionalId, inicio, fim } = useLocalSearchParams<{
     profissionalId?: string;
     inicio?: string;
     fim?: string;
   }>();
 
   const { role } = useAuth();
-  const { clienteId, clienteNome, agendamentoId, remarcando, eyebrow } = useFluxoDeAgendamento();
+  const { clienteId, clienteNome, agendamentoId, remarcando, eyebrow, servicoIds } =
+    useFluxoDeAgendamento();
   const servicos = useServicos(false);
   const profissionais = useProfissionais(false);
   const criar = useCriarAgendamento();
@@ -90,10 +92,17 @@ export default function Confirmacao() {
 
   const [observacao, setObservacao] = useState('');
 
-  const servico = useMemo(
-    () => servicos.data?.find((s) => s.id === servicoId) ?? null,
-    [servicos.data, servicoId]
+  // os servicos escolhidos, na ordem em que serao feitos
+  const escolhidos = useMemo(
+    () =>
+      servicoIds
+        .map((id) => servicos.data?.find((s) => s.id === id))
+        .filter((s): s is NonNullable<typeof s> => !!s),
+    [servicos.data, servicoIds]
   );
+  const minutosTotais = escolhidos.reduce((t, s) => t + (s.duracaoMinutos ?? 0), 0);
+  const centavosTotais = escolhidos.reduce((t, s) => t + (s.precoCentavos ?? 0), 0);
+  const nomeDosServicos = escolhidos.map((s) => s.nome).join(' + ');
   const profissional = useMemo(
     () => profissionais.data?.find((p) => p.id === profissionalId) ?? null,
     [profissionais.data, profissionalId]
@@ -103,12 +112,12 @@ export default function Confirmacao() {
   const erroCarga = servicos.error ?? profissionais.error;
   const erroEnvio = remarcando ? remarcar.error : criar.error;
 
-  const faltaParametro = !servicoId || !profissionalId || !inicio;
+  const faltaParametro = servicoIds.length === 0 || !profissionalId || !inicio;
 
-  // o `fim` vem do slot; se faltar, deriva da duracao do servico, como o backend faz
+  // o `fim` vem do slot; se faltar, deriva da soma das duracoes, como o backend faz
   const horario = fim
     ? formatFaixaHoras(inicio, fim)
-    : formatFaixaPorDuracao(inicio, servico?.duracaoMinutos);
+    : formatFaixaPorDuracao(inicio, minutosTotais);
 
   /** Para onde voltar depois: o cliente ve os horarios dele; a equipe, o detalhe criado. */
   function aoTerminar(id: string | undefined, inicioFinal?: string) {
@@ -118,7 +127,7 @@ export default function Confirmacao() {
         pathname: '/novo-agendamento/pronto',
         params: {
           inicio: inicioFinal ?? inicio ?? '',
-          servico: servico?.nome ?? '',
+          servico: nomeDosServicos,
           profissional: profissional?.nome ?? '',
           ...(remarcando ? { remarcado: '1' } : {}),
         },
@@ -147,7 +156,7 @@ export default function Confirmacao() {
     criar.mutate(
       {
         profissionalId,
-        servicoId,
+        servicoIds,
         inicio,
         ...(clienteId ? { clienteId } : {}),
         ...(observacao.trim() ? { observacao: observacao.trim() } : {}),
@@ -204,11 +213,30 @@ export default function Confirmacao() {
               <View className="h-px bg-borda" />
               <View className="gap-5 p-6">
                 {clienteNome ? <LinhaTicket rotulo="Cliente" valor={clienteNome} /> : null}
-                <LinhaTicket
-                  rotulo="Serviço"
-                  valor={servico?.nome ?? ''}
-                  detalhe={formatDuracao(servico?.duracaoMinutos)}
-                />
+                {escolhidos.length > 1 ? (
+                  <View className="gap-[2px]">
+                    <Text className="font-sans text-ui-sm text-texto-3">Serviços</Text>
+                    {escolhidos.map((s) => (
+                      <View key={s.id} className="flex-row items-baseline justify-between gap-3">
+                        <Text className="flex-1 font-sans-medium text-ui-lg text-texto">
+                          {s.nome}
+                        </Text>
+                        <Text className="font-sans text-ui-sm text-texto-2">
+                          {formatDuracao(s.duracaoMinutos)} · {formatCentavos(s.precoCentavos)}
+                        </Text>
+                      </View>
+                    ))}
+                    <Text className="mt-1 font-sans text-ui-sm text-texto-2">
+                      {formatDuracao(minutosTotais)} no total
+                    </Text>
+                  </View>
+                ) : (
+                  <LinhaTicket
+                    rotulo="Serviço"
+                    valor={nomeDosServicos}
+                    detalhe={formatDuracao(minutosTotais)}
+                  />
+                )}
                 <View className="flex-row items-center gap-3">
                   {foto ? (
                     <Image
@@ -227,7 +255,7 @@ export default function Confirmacao() {
               <View className="flex-row items-baseline justify-between p-6">
                 <Text className="font-sans text-ui text-texto-2">Valor, pago no local</Text>
                 <Text className="font-display text-ds-30 text-texto">
-                  {formatCentavos(servico?.precoCentavos)}
+                  {formatCentavos(centavosTotais)}
                 </Text>
               </View>
             </View>
