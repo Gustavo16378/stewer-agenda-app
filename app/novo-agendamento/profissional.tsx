@@ -17,7 +17,7 @@
  */
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
 
@@ -32,14 +32,14 @@ import { iniciaisDe } from '@/components/ui/imagem';
 import { TelaRolavel } from '@/components/ui/tela';
 import { cn } from '@/lib/cn';
 import { useFluxoDeAgendamento } from '@/lib/fluxo-agendamento';
+import { useLayoutLargo } from '@/lib/responsivo';
 
 export default function EscolhaDeProfissional() {
   const router = useRouter();
-  const { servicoId } = useLocalSearchParams<{ servicoId?: string }>();
-  const { extras, eyebrow } = useFluxoDeAgendamento();
+  const { extras, eyebrow, servicoIds, paramServicos } = useFluxoDeAgendamento();
 
   // TODO(API): nao existe vinculo servico x profissional. `GET /profissionais` devolve a
-  // equipe inteira e nada diz quem executa o `servicoId` escolhido no passo 01 — nem o
+  // equipe inteira e nada diz quem executa os servicos escolhidos no passo 01 — nem o
   // `POST /agendamentos` recusa a combinacao. Com dois profissionais de catalogos
   // diferentes, esta tela oferece quem nao faz o servico. Faltaria
   // `GET /servicos/{servicoId}/profissionais -> 200 Profissional[]` (ou
@@ -56,7 +56,7 @@ export default function EscolhaDeProfissional() {
   function avancar(profissionalId: string) {
     router.push({
       pathname: '/novo-agendamento/horario',
-      params: { servicoId: servicoId ?? '', profissionalId, ...extras },
+      params: { servicoIds: paramServicos, profissionalId, ...extras },
     } as never);
   }
 
@@ -70,7 +70,7 @@ export default function EscolhaDeProfissional() {
   // Sem servico o passo 03 nao consegue pedir os horarios livres
   // (`GET /profissionais/{id}/horarios-livres` exige `servicoId`). Isso acontece em deep
   // link ou reload no dev, nao no fluxo normal — dai voltar ao passo 01 em vez de travar.
-  if (!servicoId) {
+  if (servicoIds.length === 0) {
     return (
       <TelaRolavel>
         <CabecalhoVoltar />
@@ -144,6 +144,10 @@ export default function EscolhaDeProfissional() {
  * O profissional como uma ficha com retrato (redesenho, nov/2026): a foto ocupa o card,
  * o nome assenta sobre ela em Playfair, a especialidade em latao. Sem foto, as iniciais
  * em Playfair grande sobre o couro.
+ *
+ * Em tela larga (notebook) o card tem ~700px de largura: com a foto de ponta a ponta e
+ * 340px de altura, o retrato (que e vertical) virava uma faixa com so o cabelo e os
+ * olhos. Ali o retrato vai para uma coluna propria em 4:5, do lado do nome e da bio.
  */
 function CardProfissional({
   profissional,
@@ -155,6 +159,25 @@ function CardProfissional({
   aoTocar: () => void;
 }) {
   const foto = useRetratoDoProfissional(profissional);
+  const largo = useLayoutLargo();
+
+  const retrato = foto ? (
+    <Image
+      source={foto}
+      accessibilityLabel={`Retrato de ${profissional.nome ?? 'profissional'}`}
+      style={StyleSheet.absoluteFill}
+      contentFit="cover"
+      contentPosition="top"
+      transition={250}
+    />
+  ) : (
+    <View className="flex-1 items-center justify-center">
+      <Text className="font-display text-[96px] text-latao/40">
+        {iniciaisDe(profissional.nome)}
+      </Text>
+    </View>
+  );
+
   return (
     <Pressable
       accessibilityRole="button"
@@ -164,44 +187,49 @@ function CardProfissional({
       onPress={aoTocar}
       className={cn(
         'mt-6 overflow-hidden rounded-[3px] border bg-superficie',
-        selecionado ? 'border-latao' : 'border-borda'
+        selecionado ? 'border-latao' : 'border-borda',
+        largo && 'flex-row'
       )}
       style={({ pressed }) => (pressed ? { transform: [{ scale: 0.99 }] } : null)}
     >
-      <View style={{ height: 340 }}>
-        {foto ? (
-          <Image
-            source={foto}
-            accessibilityLabel={`Retrato de ${profissional.nome ?? 'profissional'}`}
-            style={StyleSheet.absoluteFill}
-            contentFit="cover"
-            contentPosition="top"
-            transition={250}
-          />
-        ) : (
-          <View className="flex-1 items-center justify-center">
-            <Text className="font-display text-[96px] text-latao/40">
-              {iniciaisDe(profissional.nome)}
-            </Text>
+      {largo ? (
+        <>
+          <View style={{ width: 300, aspectRatio: 4 / 5 }}>{retrato}</View>
+          <View className="flex-1 justify-end gap-1 p-8">
+            {profissional.especialidade ? (
+              <Text className="font-sans-medium text-ui-sm text-latao">
+                {profissional.especialidade}
+              </Text>
+            ) : null}
+            <Text className="font-display text-ds-38 text-texto">{profissional.nome}</Text>
+            {profissional.bio ? (
+              <Text className="mt-3 font-sans text-ui text-texto-2">{profissional.bio}</Text>
+            ) : null}
           </View>
-        )}
-        <LinearGradient
-          colors={['rgba(12,12,12,0)', 'rgba(12,12,12,0.85)']}
-          locations={[0.45, 1]}
-          style={StyleSheet.absoluteFill}
-        />
-        <View className="absolute bottom-0 left-0 right-0 gap-1 p-6">
-          {profissional.especialidade ? (
-            <Text className="font-sans-medium text-ui-sm text-[#C9A96A]">
-              {profissional.especialidade}
-            </Text>
+        </>
+      ) : (
+        <>
+          <View style={{ height: 340 }}>
+            {retrato}
+            <LinearGradient
+              colors={['rgba(12,12,12,0)', 'rgba(12,12,12,0.85)']}
+              locations={[0.45, 1]}
+              style={StyleSheet.absoluteFill}
+            />
+            <View className="absolute bottom-0 left-0 right-0 gap-1 p-6">
+              {profissional.especialidade ? (
+                <Text className="font-sans-medium text-ui-sm text-[#C9A96A]">
+                  {profissional.especialidade}
+                </Text>
+              ) : null}
+              <Text className="font-display text-ds-30 text-marfim">{profissional.nome}</Text>
+            </View>
+          </View>
+          {profissional.bio ? (
+            <Text className="px-6 py-5 font-sans text-ui text-texto-2">{profissional.bio}</Text>
           ) : null}
-          <Text className="font-display text-ds-30 text-marfim">{profissional.nome}</Text>
-        </View>
-      </View>
-      {profissional.bio ? (
-        <Text className="px-6 py-5 font-sans text-ui text-texto-2">{profissional.bio}</Text>
-      ) : null}
+        </>
+      )}
     </Pressable>
   );
 }
