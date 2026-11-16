@@ -36,6 +36,7 @@ export type FotoConteudo = Schemas['FotoConteudo'];
 export type FotoRequest = Schemas['FotoRequest'];
 export type MetricasCliente = Schemas['MetricasCliente'];
 export type ClienteResumo = Schemas['ClienteResumo'];
+export type CadastrarClienteRequest = Schemas['CadastrarClienteRequest'];
 export type Disponibilidade = Schemas['Disponibilidade'];
 export type Erro = Schemas['Erro'];
 export type FaixaHoraria = Schemas['FaixaHoraria'];

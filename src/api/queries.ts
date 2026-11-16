@@ -10,6 +10,7 @@ import { api, desembrulha, desembrulhaCriado } from './client';
 import { TENANT_SLUG } from './config';
 import type {
   Agendamento,
+  CadastrarClienteRequest,
   AgendamentoRequest,
   Anotacao,
   AnotacaoRequest,
@@ -340,6 +341,11 @@ export function buscarClientes(params: {
       params: { query: { ...(busca ? { busca } : {}), pagina, tamanho } },
     })
   );
+}
+
+/** Equipe cadastrando quem pediu horario por fora do app (WhatsApp, telefone). */
+export function cadastrarCliente(body: CadastrarClienteRequest): Promise<ClienteDetalhe> {
+  return desembrulhaCriado<ClienteDetalhe>(api.POST('/clientes', { body }));
 }
 
 export function buscarCliente(id: string): Promise<ClienteDetalhe> {

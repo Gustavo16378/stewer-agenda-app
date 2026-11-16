@@ -206,6 +206,33 @@ components:
           examples:
           - Consulta medica
           maxLength: 240
+    CadastrarClienteRequest:
+      type: object
+      required:
+      - nome
+      - telefone
+      properties:
+        nome:
+          type: string
+          examples:
+          - Joana Ribeiro
+          pattern: \S
+          maxLength: 120
+        telefone:
+          type: string
+          examples:
+          - (63) 99999-0003
+          pattern: \S
+          maxLength: 30
+        email:
+          type: string
+          description: "Opcional. Com ele, o cliente cria a conta depois e herda o\
+            \ historico"
+          maxLength: 180
+        dataNascimento:
+          description: Opcional. Vai para a ficha (aniversariantes)
+          type: string
+          $ref: "#/components/schemas/LocalDate"
     ClienteDetalhe:
       type: object
       properties:
@@ -1807,6 +1834,27 @@ paths:
                   $ref: "#/components/schemas/ClienteResumo"
         "403":
           description: Somente profissional ou admin
+      security:
+      - bearerAuth: []
+    post:
+      summary: Cadastra um cliente pelo painel
+      description: "Para marcar horario para quem pediu por fora do app. Nome e telefone\
+        \ bastam; com e-mail, o cliente pode criar a conta depois e assumir o cadastro."
+      tags:
+      - Clientes
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CadastrarClienteRequest"
+        required: true
+      responses:
+        "201":
+          description: Cliente cadastrado
+        "400":
+          description: "Nome ou telefone faltando, e-mail invalido"
+        "409":
+          description: E-mail ja usado por outro cliente
       security:
       - bearerAuth: []
   /clientes/aniversariantes:

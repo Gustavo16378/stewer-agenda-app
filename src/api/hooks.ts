@@ -18,6 +18,7 @@ import type { CalendarDate } from '@/lib/datetime';
 import { ApiError } from './errors';
 import * as q from './queries';
 import type {
+  CadastrarClienteRequest,
   Aniversariante,
   ClienteSumido,
   Estudio,
@@ -445,6 +446,17 @@ export function useClientesInfinitos(busca: string) {
       }),
     getNextPageParam: (ultimaPagina, todasAsPaginas) =>
       ultimaPagina.length < TAMANHO_PAGINA_CLIENTES ? undefined : todasAsPaginas.length,
+  });
+}
+
+export function useCadastrarCliente() {
+  const qc = useQueryClient();
+  return useMutation<ClienteDetalhe, ApiError, CadastrarClienteRequest>({
+    mutationFn: (body) => q.cadastrarCliente(body),
+    onSuccess: (criado) => {
+      if (criado.id) qc.setQueryData(chaves.cliente(criado.id), criado);
+      void qc.invalidateQueries({ queryKey: ['clientes'] });
+    },
   });
 }
 

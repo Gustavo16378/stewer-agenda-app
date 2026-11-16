@@ -1032,7 +1032,46 @@ export interface paths {
             };
         };
         put?: never;
-        post?: never;
+        /**
+         * Cadastra um cliente pelo painel
+         * @description Para marcar horario para quem pediu por fora do app. Nome e telefone bastam; com e-mail, o cliente pode criar a conta depois e assumir o cadastro.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["CadastrarClienteRequest"];
+                };
+            };
+            responses: {
+                /** @description Cliente cadastrado */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Nome ou telefone faltando, e-mail invalido */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description E-mail ja usado por outro cliente */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
         delete?: never;
         options?: never;
         head?: never;
@@ -3051,6 +3090,16 @@ export interface components {
             fim: components["schemas"]["OffsetDateTime"];
             /** @example Consulta medica */
             motivo?: string;
+        };
+        CadastrarClienteRequest: {
+            /** @example Joana Ribeiro */
+            nome: string;
+            /** @example (63) 99999-0003 */
+            telefone: string;
+            /** @description Opcional. Com ele, o cliente cria a conta depois e herda o historico */
+            email?: string;
+            /** @description Opcional. Vai para a ficha (aniversariantes) */
+            dataNascimento?: components["schemas"]["LocalDate"];
         };
         ClienteDetalhe: {
             id?: components["schemas"]["UUID"];
