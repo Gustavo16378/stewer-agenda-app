@@ -297,6 +297,17 @@ export default function AgendaDoDia() {
           titulo="Marcar horário para um cliente"
           onPress={() => router.push('/novo-agendamento/cliente' as never)}
         />
+        <BotaoAtelie
+          className="mt-3"
+          variante="contorno"
+          titulo="Registrar atendimento já feito"
+          onPress={() =>
+            router.push({
+              pathname: '/novo-agendamento/cliente',
+              params: { jaAtendido: '1' },
+            } as never)
+          }
+        />
 
         <View className="mt-5 flex-row items-center gap-2">
           <View className="flex-1 flex-row gap-2" accessibilityRole="radiogroup">

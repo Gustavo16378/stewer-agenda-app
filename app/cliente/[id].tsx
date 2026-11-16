@@ -351,6 +351,17 @@ function FichaDoCliente() {
               } as never)
             }
           />
+          <BotaoAtelie
+            className="mt-3"
+            variante="contorno"
+            titulo="Registrar atendimento já feito"
+            onPress={() =>
+              router.push({
+                pathname: '/novo-agendamento/servico',
+                params: { clienteId: id, clienteNome: cliente.data?.nome ?? '', jaAtendido: '1' },
+              } as never)
+            }
+          />
         </View>
       )}
 
