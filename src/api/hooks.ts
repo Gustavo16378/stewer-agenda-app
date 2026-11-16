@@ -351,6 +351,10 @@ export function useCriarAgendamento() {
       if (criado.id) qc.setQueryData(chaves.agendamento(criado.id), criado);
       void qc.invalidateQueries({ queryKey: ['agendamentos'] });
       void qc.invalidateQueries({ queryKey: ['horarios-livres'] });
+      // a ficha do cliente (visitas, ultima visita, proximos) mudou com o horario novo
+      if (criado.clienteId)
+        void qc.invalidateQueries({ queryKey: chaves.cliente(criado.clienteId) });
+      void qc.invalidateQueries({ queryKey: ['clientes'] });
     },
   });
 }
